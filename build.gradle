@@ -13,3 +13,8 @@ buildscript {
 apply plugin: 'base'
 apply plugin: 'me.champeau.jbake'
 
+
+task publish(type: GradleBuild) {
+    buildFile = 'publish.gradle'
+    tasks = ['publishGhPages']
+}
