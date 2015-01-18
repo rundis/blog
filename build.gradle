@@ -1,0 +1,15 @@
+buildscript {
+  repositories {
+      jcenter()
+  }
+
+  dependencies {
+    classpath 'me.champeau.gradle:jbake-gradle-plugin:0.2'
+    classpath 'org.asciidoctor:asciidoctor-java-integration:0.1.4'
+    classpath 'org.freemarker:freemarker:2.3.19'
+  }
+}
+
+apply plugin: 'base'
+apply plugin: 'me.champeau.jbake'
+

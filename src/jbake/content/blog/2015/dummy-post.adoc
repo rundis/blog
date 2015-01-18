@@ -1,0 +1,8 @@
+= Dummy post
+Magnus Rundberget
+2015-01-18
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: blog, asciidoc
+
+This is my first dummy post
