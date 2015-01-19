@@ -68,7 +68,7 @@ The above project is a really simple project definition. To run my app I just ha
 [source,bash]
 ----
 lein ring uberjar
-jave -jar target/boot-sample-0.1.0-standalone.jar
+java -jar target/boot-sample-0.1.0-standalone.jar
 ----
 
 
