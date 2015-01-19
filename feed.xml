@@ -6,19 +6,340 @@
     <atom:link href="http://rundis.github.io/blog//feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 19 Jan 2015 06:20:54 +0100</pubDate>
-    <lastBuildDate>Mon, 19 Jan 2015 06:20:54 +0100</lastBuildDate>
+    <pubDate>Mon, 19 Jan 2015 21:52:05 +0100</pubDate>
+    <lastBuildDate>Mon, 19 Jan 2015 21:52:05 +0100</lastBuildDate>
 
     <item>
-      <title>Dummy post</title>
-      <link>http://rundis.github.io/blog//blog/2015/dummy-post.html</link>
-      <pubDate>Sun, 18 Jan 2015 00:00:00 +0100</pubDate>
-      <guid isPermaLink="false">blog/2015/dummy-post.html</guid>
+      <title>Bootifying my ring app</title>
+      <link>http://rundis.github.io/blog//blog/2015/bootify-ring.html</link>
+      <pubDate>Mon, 19 Jan 2015 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">blog/2015/bootify-ring.html</guid>
       	<description>
-	&lt;div id=&quot;preamble&quot;&gt;
+	&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_a_little_background&quot;&gt;A little background&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;This is my first dummy post&lt;/p&gt;
+&lt;p&gt;A few weeks back I noticed a tweet about &lt;a href=&quot;https://github.com/boot-clj/boot&quot;&gt;boot-clj&lt;/a&gt;. This weekend I finally had some time to look into whether it could
+be a viable alternative to &lt;a href=&quot;https://github.com/technomancy/leiningen&quot;&gt;Leiningen&lt;/a&gt; for our apps or not.
+We have a couple of ring based apps running as uberjars, so I decided to try to make a boot build for one of the projects. For the purpose of this blogpost however
+I&amp;#8217;ve created a sample app. Source available on &lt;a href=&quot;https://github.com/rundis/boot-sample&quot;&gt;github&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_why_bother_with_an_alternative_when_there_is_leiningen&quot;&gt;Why bother with an alternative when there is Leiningen ?&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I haven&amp;#8217;t been in the clojuresphere all that long.
+I do have a history as java and groovy developer and have been through a history of using &lt;a href=&quot;http://ant.apache.org/&quot;&gt;ant&lt;/a&gt;,
+&lt;a href=&quot;http://maven.apache.org/&quot;&gt;maven&lt;/a&gt; and lately &lt;a href=&quot;https://www.gradle.org/&quot;&gt;gradle&lt;/a&gt; for my builds.
+In terms of development experience Leiningen is definately a step up from all of them. However I feel Leiningen has left me longing
+as soon as my builds have become a bit more elaborate (testing javascript, transpiling, create artifacts, upload to repo, run migrations
+deploy to different environments etc). I&amp;#8217;m sure all of this is achievable with Lein, but is it really architected to excel for that purpose ?
+TBH I&amp;#8217;d love to see gradle get some serious clojure love, but it doesn&amp;#8217;t seem to be coming anytime soon. Maybe boot will be my next build tooling love :)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Reading up a bit on boot checked a few boxes for some of my longings though:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Your build doesn&amp;#8217;t have to be all declarative&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Sensible abstractions and libraries to allow you to compose and extend your build using the full power of clojure&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Compose build pipelines somewhat similar to how you would compose middlewares in ring&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Task is the fundamental building block&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Tasks typically works on immutable filesets (files treated as values, you never touch the filesystem directly yourself !)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Possibility of complete classpath isolation at task level&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Great repl and commandline support.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&amp;#8230; and surely a lots more&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_lein_boot&quot;&gt;Lein &amp;#8594; Boot&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_leningen_project&quot;&gt;Leningen project&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;project.clj&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defproject boot-sample &quot;0.1.0&quot;
+  :description &quot;Boot sample application&quot;
+  :url &quot;https://github.com/rundis/boot-sample&quot;
+  :min-lein-version &quot;2.0.0&quot;
+  :dependencies [[org.clojure/clojure &quot;1.6.0&quot;]
+                 [compojure &quot;1.2.1&quot;]
+                 [liberator &quot;0.12.2&quot;]
+                 [ring/ring-jetty-adapter &quot;1.3.1&quot;]
+                 [ring/ring-json &quot;0.3.1&quot;]
+                 [bouncer &quot;0.3.1&quot;]
+                 [io.aviso/pretty &quot;0.1.14&quot;]]
+  :ring {:handler boot-sample.core/app                       &lt;b&gt;(1)&lt;/b&gt;
+         :port 3360}
+  :profiles {:dev {:plugins [[lein-ring &quot;0.8.13&quot;]]
+                   :test-paths ^:replace []}
+             :test {:dependencies [[midje &quot;1.6.3&quot;]]
+                    :plugins [[lein-midje &quot;3.1.3&quot;]]
+                    :test-paths [&quot;test&quot;]
+                    :resource-paths [&quot;test/resources&quot;]}})
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;The entry point for my ring app&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The above project is a really simple project definition. To run my app I just have to execute:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;lein ring uberjar
+jave -jar target/boot-sample-0.1.0-standalone.jar&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;core.clj&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(ns boot-sample.core
+  (:require [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.json :refer [wrap-json-params]]
+            [compojure.core :refer [defroutes ANY GET]]
+            [liberator.core :refer [defresource resource]]))
+
+(defn index-handler [req]
+  &quot;Hello Boot sample (or maybe Lein still)&quot;)
+
+(defresource booters
+  :available-media-types       [&quot;application/json&quot;]
+  :allowed-methods             [:get]
+  :handle-ok                   (fn [ctx] [{:id &quot;Pod1&quot;} {:id &quot;Pod 2&quot;}]))
+
+(defroutes app-routes
+  (ANY &quot;/&quot; [] index-handler)
+  (ANY &quot;/booters&quot; [] booters))
+
+
+(def app (-&amp;gt; app-routes
+             wrap-keyword-params
+             wrap-json-params
+             wrap-params))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Hey. Hang on. There is no main method here, how can the java -jar command work without one ?
+Well, because the ring plugin creates one for us.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;cat target classes/boot_sample/core/main.clj&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;gives us&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(do
+  (clojure.core/ns boot-sample.core.main
+   (:require ring.server.leiningen)
+                   (:gen-class))
+  (clojure.core/defn -main []
+    (ring.server.leiningen/serve
+     (quote {:ring {:auto-reload? false,
+                    :stacktraces? false,
+                    :open-browser? false,
+                    :port 3360,
+                    :handler boot-sample.core/app}}))))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;That&amp;#8217;s useful to know in case boot-clj doesn&amp;#8217;t happen to have a ring task that does something similar.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_boot_me_up&quot;&gt;Boot me up&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Boot comes with a range of predefined tasks that I can compose to get quite close to the Leiningen build above.
+I&amp;#8217;ll focus on getting that uberjar up and running.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I could have done it all on the command line or in the boot repl, but lets just be a little declarative (still functions don&amp;#8217;t worry!).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;build.boot&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(set-env!
+ :resource-paths #{&quot;src&quot;}                                &lt;b&gt;(1)&lt;/b&gt;
+ :dependencies &apos;[[org.clojure/clojure &quot;1.6.0&quot;]
+                 [compojure &quot;1.2.1&quot;]
+                 [liberator &quot;0.12.2&quot;]
+                 [ring/ring-jetty-adapter &quot;1.3.1&quot;]
+                 [ring/ring-json &quot;0.3.1&quot;]
+                 [bouncer &quot;0.3.1&quot;]
+                 [io.aviso/pretty &quot;0.1.14&quot;]])
+
+(task-options!
+ pom {:project &apos;boot-Sample
+      :version &quot;0.1.0&quot;}
+ aot {:namespace &apos;#{boot-sample.core}}                  &lt;b&gt;(2)&lt;/b&gt;
+ jar {:main &apos;boot_sample.core                           &lt;b&gt;(3)&lt;/b&gt;
+      :manifest {&quot;Description&quot; &quot;Sample boot app&quot;
+                 &quot;Url&quot; &quot;https://github.com/rundis/boot-sample&quot;}})
+
+
+(deftask build
+  &quot;Build uberjar&quot;
+  []
+  (comp (aot) (pom) (uber) (jar)))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;To bundle your sources in the output jar, you have to specify src as a resource-path. A small gotcha there.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;We need to aot our core.clj namespace so that java -jar can invoke it&amp;#8217;s main method&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;We need to help java -jar with the location of our main class in the jar&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;However you might remember from above that there is no main method in core.clj.
+So the last piece of the puzzle is to add one. It&amp;#8217;t not that hard.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(ns boot-sample.core
+  (:require [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.json :refer [wrap-json-params]]
+            [compojure.core :refer [defroutes ANY GET]]
+            [liberator.core :refer [defresource resource]]
+            [ring.adapter.jetty :as jetty])                                &lt;b&gt;(1)&lt;/b&gt;
+  (:gen-class))                                                            &lt;b&gt;(2)&lt;/b&gt;
+
+
+;; ... the other stuff
+
+(defn -main []
+  (jetty/run-jetty app {:port 3360}))                                     &lt;b&gt;(3)&lt;/b&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Using the jetty ring adapter&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The :gen-class directive generates the necessary stuff for our main method to be invokable from java
+during aot compilation&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Fire away&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Note&lt;/div&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;At the time of writing there was a regression in boot that caused aot to fail.
+I needed to build boot from source, should be fixed in the next release though.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;git clone git@github.com:boot-clj/boot.git
+cd boot/boot/core
+lein install&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Now all is set to try it out:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;boot build
+java -jar target/boot-sample-0.1.0.jar&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_all_is_well_then&quot;&gt;All is well then ?&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Unfortunately not quite. For uberjar projects it seems boot-clj at the time of writing has some serious
+performance challenges.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;On my machine generating the uberjar takes:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Leiningen : 12 seconds&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;boot-clj  : 46 seconds !&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;It&amp;#8217;s not like Leiningen is lightning fast in the first place. But for this scenario boot just doesn&amp;#8217;t cut it.
+I reported an &lt;a href=&quot;https://github.com/boot-clj/boot/issues/94&quot;&gt;issue&lt;/a&gt; and got prompt responses from the developers
+which can only be a good sign.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_concluding_remarks&quot;&gt;Concluding remarks&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;My initial question of whether or not I feel we could use boot for our current projects gets a thumbs down for now.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I think boot-clj carries a lot of promise and have some really great ideas. It&amp;#8217;s going to be interesting to
+see if boot-clj becomes a viable alternative to leiningen. I suppose a porting and/or interop story with lein
+and lein plugins might be needed in addition to maturing both the model and obviously its performance characteristics.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m certainly keen on trying it out more. I might try out the clojurescript support next and maybe churn out some custom tasks
+just for fun.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
