@@ -4,7 +4,7 @@ Magnus Rundberget
 :jbake-type: post
 :jbake-status: published
 :jbake-tags: blog, asciidoc
-
+:id: bootify_ring
 
 == A little background
 A few weeks back I noticed a tweet about https://github.com/boot-clj/boot[boot-clj]. This weekend I finally had some time to look into whether it could
