@@ -1,0 +1,246 @@
+= Bootifying my ring app
+Magnus Rundberget
+2015-01-19
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: blog, asciidoc
+
+
+== A little background
+A few weeks back I noticed a tweet about https://github.com/boot-clj/boot[boot-clj]. This weekend I finally had some time to look into whether it could
+be a viable alternative to https://github.com/technomancy/leiningen[Leiningen] for our apps or not.
+We have a couple of ring based apps running as uberjars, so I decided to try to make a boot build for one of the projects. For the purpose of this blogpost however
+I've created a sample app. Source available on https://github.com/rundis/boot-sample[github]
+
+== Why bother with an alternative when there is Leiningen ?
+I haven't been in the clojuresphere all that long.
+I do have a history as java and groovy developer and have been through a history of using http://ant.apache.org/[ant],
+http://maven.apache.org/[maven] and lately https://www.gradle.org/[gradle] for my builds.
+In terms of development experience Leiningen is definately a step up from all of them. However I feel Leiningen has left me longing
+as soon as my builds have become a bit more elaborate (testing javascript, transpiling, create artifacts, upload to repo, run migrations
+deploy to different environments etc). I'm sure all of this is achievable with Lein, but is it really architected to excel for that purpose ?
+TBH I'd love to see gradle get some serious clojure love, but it doesn't seem to be coming anytime soon. Maybe boot will be my next build tooling love :)
+
+.Reading up a bit on boot checked a few boxes for some of my longings though:
+* Your build doesn't have to be all declarative
+* Sensible abstractions and libraries to allow you to compose and extend your build using the full power of clojure
+* Compose build pipelines somewhat similar to how you would compose middlewares in ring
+* Task is the fundamental building block
+* Tasks typically works on immutable filesets (files treated as values, you never touch the filesystem directly yourself !)
+* Possibility of complete classpath isolation at task level
+* Great repl and commandline support.
+* ... and surely a lots more
+
+
+== Lein -> Boot
+
+=== Leningen project
+
+project.clj
+[source,clojure]
+----
+(defproject boot-sample "0.1.0"
+  :description "Boot sample application"
+  :url "https://github.com/rundis/boot-sample"
+  :min-lein-version "2.0.0"
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [compojure "1.2.1"]
+                 [liberator "0.12.2"]
+                 [ring/ring-jetty-adapter "1.3.1"]
+                 [ring/ring-json "0.3.1"]
+                 [bouncer "0.3.1"]
+                 [io.aviso/pretty "0.1.14"]]
+  :ring {:handler boot-sample.core/app                       // <1>
+         :port 3360}
+  :profiles {:dev {:plugins [[lein-ring "0.8.13"]]
+                   :test-paths ^:replace []}
+             :test {:dependencies [[midje "1.6.3"]]
+                    :plugins [[lein-midje "3.1.3"]]
+                    :test-paths ["test"]
+                    :resource-paths ["test/resources"]}})
+
+
+----
+
+<1> The entry point for my ring app
+
+The above project is a really simple project definition. To run my app I just have to execute:
+[source,bash]
+----
+lein ring uberjar
+jave -jar target/boot-sample-0.1.0-standalone.jar
+----
+
+
+core.clj
+[source,clojure]
+----
+(ns boot-sample.core
+  (:require [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.json :refer [wrap-json-params]]
+            [compojure.core :refer [defroutes ANY GET]]
+            [liberator.core :refer [defresource resource]]))
+
+(defn index-handler [req]
+  "Hello Boot sample (or maybe Lein still)")
+
+(defresource booters
+  :available-media-types       ["application/json"]
+  :allowed-methods             [:get]
+  :handle-ok                   (fn [ctx] [{:id "Pod1"} {:id "Pod 2"}]))
+
+(defroutes app-routes
+  (ANY "/" [] index-handler)
+  (ANY "/booters" [] booters))
+
+
+(def app (-> app-routes
+             wrap-keyword-params
+             wrap-json-params
+             wrap-params))
+----
+
+Hey. Hang on. There is no main method here, how can the java -jar command work without one ?
+Well, because the ring plugin creates one for us.
+
+[source,bash]
+----
+cat target classes/boot_sample/core/main.clj
+----
+gives us
+[source,clojure]
+----
+(do
+  (clojure.core/ns boot-sample.core.main
+   (:require ring.server.leiningen)
+                   (:gen-class))
+  (clojure.core/defn -main []
+    (ring.server.leiningen/serve
+     (quote {:ring {:auto-reload? false,
+                    :stacktraces? false,
+                    :open-browser? false,
+                    :port 3360,
+                    :handler boot-sample.core/app}}))))
+----
+
+That's useful to know in case boot-clj doesn't happen to have a ring task that does something similar.
+
+
+=== Boot me up
+
+Boot comes with a range of predefined tasks that I can compose to get quite close to the Leiningen build above.
+I'll focus on getting that uberjar up and running.
+
+I could have done it all on the command line or in the boot repl, but lets just be a little declarative (still functions don't worry!).
+
+
+build.boot
+[source,clojure]
+----
+(set-env!
+ :resource-paths #{"src"}                                // <1>
+ :dependencies '[[org.clojure/clojure "1.6.0"]
+                 [compojure "1.2.1"]
+                 [liberator "0.12.2"]
+                 [ring/ring-jetty-adapter "1.3.1"]
+                 [ring/ring-json "0.3.1"]
+                 [bouncer "0.3.1"]
+                 [io.aviso/pretty "0.1.14"]])
+
+(task-options!
+ pom {:project 'boot-Sample
+      :version "0.1.0"}
+ aot {:namespace '#{boot-sample.core}}                  // <2>
+ jar {:main 'boot_sample.core                           // <3>
+      :manifest {"Description" "Sample boot app"
+                 "Url" "https://github.com/rundis/boot-sample"}})
+
+
+(deftask build
+  "Build uberjar"
+  []
+  (comp (aot) (pom) (uber) (jar)))
+----
+
+<1> To bundle your sources in the output jar, you have to specify src as a resource-path. A small gotcha there.
+<2> We need to aot our core.clj namespace so that java -jar can invoke it's main method
+<3> We need to help java -jar with the location of our main class in the jar
+
+However you might remember from above that there is no main method in core.clj.
+So the last piece of the puzzle is to add one. It't not that hard.
+
+[source,clojure]
+----
+(ns boot-sample.core
+  (:require [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.json :refer [wrap-json-params]]
+            [compojure.core :refer [defroutes ANY GET]]
+            [liberator.core :refer [defresource resource]]
+            [ring.adapter.jetty :as jetty])                                // <1>
+  (:gen-class))                                                            // <2>
+
+
+;; ... the other stuff
+
+(defn -main []
+  (jetty/run-jetty app {:port 3360}))                                     // <3>
+
+----
+
+
+<1> Using the jetty ring adapter
+<2> The :gen-class directive generates the necessary stuff for our main method to be invokable from java
+during aot compilation
+<3> Fire away
+
+
+[NOTE]
+====
+At the time of writing there was a regression in boot that caused aot to fail.
+I needed to build boot from source, should be fixed in the next release though.
+[source,bash]
+----
+git clone git@github.com:boot-clj/boot.git
+cd boot/boot/core
+lein install
+----
+====
+
+
+
+Now all is set to try it out:
+[source,bash]
+----
+boot build
+java -jar target/boot-sample-0.1.0.jar
+----
+
+
+=== All is well then ?
+Unfortunately not quite. For uberjar projects it seems boot-clj at the time of writing has some serious
+performance challenges.
+
+.On my machine generating the uberjar takes:
+* Leiningen : 12 seconds
+* boot-clj  : 46 seconds !
+
+
+It's not like Leiningen is lightning fast in the first place. But for this scenario boot just doesn't cut it.
+I reported an https://github.com/boot-clj/boot/issues/94[issue] and got prompt responses from the developers
+which can only be a good sign.
+
+
+
+
+== Concluding remarks
+My initial question of whether or not I feel we could use boot for our current projects gets a thumbs down for now.
+
+I think boot-clj carries a lot of promise and have some really great ideas. It's going to be interesting to
+see if boot-clj becomes a viable alternative to leiningen. I suppose a porting and/or interop story with lein
+and lein plugins might be needed in addition to maturing both the model and obviously its performance characteristics.
+
+I'm certainly keen on trying it out more. I might try out the clojurescript support next and maybe churn out some custom tasks
+just for fun.
+

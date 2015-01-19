@@ -1,0 +1,13 @@
+= Magnus Rundberget
+Magnus Rundberget
+2015-01-19
+:jbake-type: page
+:jbake-status: published
+
+
+.Find me on:
+* GitHub:   https://github.com/rundis[rundis]
+* Twitter:  https://twitter.com/mrundberget[mrundberget]
+* LinkedIn: http://no.linkedin.com/in/mrundberget[mrundberget]
+* My Company: http://www.kodemaker.no[Kodemaker]
+
