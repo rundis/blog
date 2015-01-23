@@ -1,0 +1,15 @@
+= JavaScript testing with Light Table and Buster.JS
+Magnus Rundberget
+2014-04-21
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: lighttable, clojurescript, javascript, screencast
+:id: instabuster_part1
+
+
+Second part of the intro to the Light Table Buster plugin (https://github.com/busterjs/lt-instabuster)
+This time demonstrating some of the more advanced features.
+
+++++
+<iframe width="560" height="315" src="http://www.youtube.com/embed/jYDiAVbPL8I" frameborder="0" allowfullscreen></iframe>
+++++

@@ -1,0 +1,14 @@
+= Groovy Light Table Plugin
+Magnus Rundberget
+2014-05-19
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: lighttable, clojurescript, groovy, screencast
+:id: groovy_repl
+
+
+A short demonstration of the repl like capabilities of my Light Table Groovy plugin (https://github.com/rundis/LightTable-Groovy)
+
+++++
+<iframe width="560" height="315" src="http://www.youtube.com/embed/5ji8RR2A4gQ" frameborder="0" allowfullscreen></iframe>
+++++

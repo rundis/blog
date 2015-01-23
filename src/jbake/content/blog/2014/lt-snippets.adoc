@@ -1,0 +1,15 @@
+= Creating and using snippets in Light Table
+Magnus Rundberget
+2014-05-06
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: lighttable, plugin, clojure, clojurescript, screencast
+:id: lt_snippets
+
+
+
+A short introduction to my Light Table Snippets plugin (https://github.com/rundis/lt-snippets).
+
+++++
+<iframe width="560" height="315" src="http://www.youtube.com/embed/I6iuXOw3HDQ" frameborder="0" allowfullscreen></iframe>
+++++

@@ -3,7 +3,7 @@ Magnus Rundberget
 2015-01-19
 :jbake-type: post
 :jbake-status: published
-:jbake-tags: blog, asciidoc
+:jbake-tags: clojure, boot.clj
 :id: bootify_ring
 
 == A little background
