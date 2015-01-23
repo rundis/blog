@@ -6,14 +6,14 @@
     <atom:link href="http://rundis.github.io/blog//feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 23 Jan 2015 19:42:14 +0100</pubDate>
-    <lastBuildDate>Fri, 23 Jan 2015 19:42:14 +0100</lastBuildDate>
+    <pubDate>Fri, 23 Jan 2015 19:52:50 +0100</pubDate>
+    <lastBuildDate>Fri, 23 Jan 2015 19:52:50 +0100</lastBuildDate>
 
     <item>
       <title>Bootifying my ring app</title>
-      <link>http://rundis.github.io/blog//blog/2015/bootify-ring.html</link>
+      <link>http://rundis.github.io/blog//2015/bootify-ring.html</link>
       <pubDate>Mon, 19 Jan 2015 00:00:00 +0100</pubDate>
-      <guid isPermaLink="false">blog/2015/bootify-ring.html</guid>
+      <guid isPermaLink="false">2015/bootify-ring.html</guid>
       	<description>
 	&lt;div class=&quot;sect1&quot;&gt;
 &lt;h2 id=&quot;_a_little_background&quot;&gt;A little background&lt;/h2&gt;
@@ -347,9 +347,9 @@ just for fun.&lt;/p&gt;
     </item>
     <item>
       <title>Groovy Light Table Plugin</title>
-      <link>http://rundis.github.io/blog//blog/2014/groovy_repl.html</link>
+      <link>http://rundis.github.io/blog//2014/groovy_repl.html</link>
       <pubDate>Mon, 19 May 2014 00:00:00 +0200</pubDate>
-      <guid isPermaLink="false">blog/2014/groovy_repl.html</guid>
+      <guid isPermaLink="false">2014/groovy_repl.html</guid>
       	<description>
 	&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
@@ -363,9 +363,9 @@ just for fun.&lt;/p&gt;
     </item>
     <item>
       <title>Creating and using snippets in Light Table</title>
-      <link>http://rundis.github.io/blog//blog/2014/lt-snippets.html</link>
+      <link>http://rundis.github.io/blog//2014/lt-snippets.html</link>
       <pubDate>Tue, 6 May 2014 00:00:00 +0200</pubDate>
-      <guid isPermaLink="false">blog/2014/lt-snippets.html</guid>
+      <guid isPermaLink="false">2014/lt-snippets.html</guid>
       	<description>
 	&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
@@ -379,9 +379,9 @@ just for fun.&lt;/p&gt;
     </item>
     <item>
       <title>JavaScript testing with Light Table and Buster.JS</title>
-      <link>http://rundis.github.io/blog//blog/2014/instabuster_part2.html</link>
+      <link>http://rundis.github.io/blog//2014/instabuster_part2.html</link>
       <pubDate>Mon, 21 Apr 2014 00:00:00 +0200</pubDate>
-      <guid isPermaLink="false">blog/2014/instabuster_part2.html</guid>
+      <guid isPermaLink="false">2014/instabuster_part2.html</guid>
       	<description>
 	&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
@@ -396,9 +396,9 @@ This time demonstrating some of the more advanced features.&lt;/p&gt;
     </item>
     <item>
       <title>JavaScript testing with Light Table and Buster.JS</title>
-      <link>http://rundis.github.io/blog//blog/2014/instabuster_part1.html</link>
+      <link>http://rundis.github.io/blog//2014/instabuster_part1.html</link>
       <pubDate>Mon, 17 Mar 2014 00:00:00 +0100</pubDate>
-      <guid isPermaLink="false">blog/2014/instabuster_part1.html</guid>
+      <guid isPermaLink="false">2014/instabuster_part1.html</guid>
       	<description>
 	&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
