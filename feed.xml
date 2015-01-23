@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog//feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 19 Jan 2015 22:23:36 +0100</pubDate>
-    <lastBuildDate>Mon, 19 Jan 2015 22:23:36 +0100</lastBuildDate>
+    <pubDate>Fri, 23 Jan 2015 19:19:25 +0100</pubDate>
+    <lastBuildDate>Fri, 23 Jan 2015 19:19:25 +0100</lastBuildDate>
 
     <item>
       <title>Bootifying my ring app</title>
@@ -115,7 +115,7 @@ TBH I&amp;#8217;d love to see gradle get some serious clojure love, but it doesn
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
 &lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;lein ring uberjar
-jave -jar target/boot-sample-0.1.0-standalone.jar&lt;/code&gt;&lt;/pre&gt;
+java -jar target/boot-sample-0.1.0-standalone.jar&lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -341,6 +341,71 @@ and lein plugins might be needed in addition to maturing both the model and obvi
 &lt;p&gt;I&amp;#8217;m certainly keen on trying it out more. I might try out the clojurescript support next and maybe churn out some custom tasks
 just for fun.&lt;/p&gt;
 &lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
+    <item>
+      <title>Groovy Light Table Plugin</title>
+      <link>http://rundis.github.io/blog//blog/2014/groovy_repl.html</link>
+      <pubDate>Mon, 19 May 2014 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">blog/2014/groovy_repl.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A short demonstration of the repl like capabilities of my Light Table Groovy plugin (&lt;a href=&quot;https://github.com/rundis/LightTable-Groovy&quot;&gt;https://github.com/rundis/LightTable-Groovy&lt;/a&gt;)&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;http://www.youtube.com/embed/5ji8RR2A4gQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
+    <item>
+      <title>Creating and using snippets in Light Table</title>
+      <link>http://rundis.github.io/blog//blog/2014/lt-snippets.html</link>
+      <pubDate>Tue, 6 May 2014 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">blog/2014/lt-snippets.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A short introduction to my Light Table Snippets plugin (&lt;a href=&quot;https://github.com/rundis/lt-snippets&quot;&gt;https://github.com/rundis/lt-snippets&lt;/a&gt;).&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;http://www.youtube.com/embed/I6iuXOw3HDQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
+    <item>
+      <title>JavaScript testing with Light Table and Buster.JS</title>
+      <link>http://rundis.github.io/blog//blog/2014/instabuster_part2.html</link>
+      <pubDate>Mon, 21 Apr 2014 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">blog/2014/instabuster_part2.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Second part of the intro to the Light Table Buster plugin (&lt;a href=&quot;https://github.com/busterjs/lt-instabuster&quot;&gt;https://github.com/busterjs/lt-instabuster&lt;/a&gt;)
+This time demonstrating some of the more advanced features.&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;http://www.youtube.com/embed/jYDiAVbPL8I&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
+    <item>
+      <title>JavaScript testing with Light Table and Buster.JS</title>
+      <link>http://rundis.github.io/blog//blog/2014/instabuster_part1.html</link>
+      <pubDate>Mon, 17 Mar 2014 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">blog/2014/instabuster_part1.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Intro to the Light Table Buster plugin (&lt;a href=&quot;https://github.com/busterjs/lt-instabuster&quot;&gt;https://github.com/busterjs/lt-instabuster&lt;/a&gt;)&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;http://www.youtube.com/embed/WKHWazblpbc&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 	</description>
