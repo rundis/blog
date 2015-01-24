@@ -479,6 +479,631 @@ This time demonstrating some of the more advanced features.</p>
 <iframe width="560" height="315" src="http://www.youtube.com/embed/WKHWazblpbc" frameborder="0" allowfullscreen></iframe>
 </div>
 </div></p>
+  			<a href="/blog/2014/gr_lt_part2.html"><h1>A Groovy Light Table client - Step 2: Evaluating Code</h1></a>
+  			<p>23 February 2014</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/lighttable.html">lighttable</a>
+	      
+		      <a href="/blog/tags/groovy.html"> groovy</a>
+	      
+		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+	      </p>
+  			<p><div class="sect1">
+<h2 id="_background">Background</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This is the second post in my series "A Groovy Light Table client". A blog series about steps I take when trying to build a Groovy plugin for Light Table.</p>
+</div>
+<div class="paragraph">
+<p>In this post I will take you through some of the steps I went through to get Light Table to evaluate groovy (script) code and show results inline in the editor.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="lt_groovy_eval.png" alt="lt groovy eval">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_how_did_we_get_here">How did we get here ?</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_evaluate_contents_of_editor_cmd_ctrl_shift_enter">Evaluate contents of editor (cmd/ctrl + shift + enter)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-eval
+          :desc "Groovy: Eval current editor"
+          :triggers #{:eval}
+          :reaction (fn [editor]
+                      (object/raise groovy :eval! {:origin editor
+                                                   :info (assoc (@editor :info)
+                                                           :code (ed/-&gt;val editor)
+                                                           :meta {:start 0, :end (ed/last-line editor)})})))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This behavior triggers on ":eval", which is triggered to any editor (on cmd/ctrl + shift + enter in default key mapping). We just get hold of the text from the editor and gather some meta info  and trigger a ":eval!" behavior on the groovy "mother" object defined in the previous blog post.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_evaluate_current_line_selection">Evaluate current line/selection</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-eval.one
+          :desc "Groovy: Eval current selection"
+          :triggers #{:eval.one}
+          :reaction (fn [editor]
+                      (let [pos (ed/-&gt;cursor editor)
+                            info (conj (:info @editor)
+                                  (if (ed/selection? editor)
+                                    {:code (ed/selection editor) :meta {:start (-&gt; (ed/-&gt;cursor editor "start") :line)
+                                                                        :end (-&gt; (ed/-&gt;cursor editor "end") :line)}}
+                                    {:pos pos :code (ed/line editor (:line pos)) :meta {:start (:line pos) :end (:line pos)}}))]
+                        (object/raise groovy :eval! {:origin editor :info info}))))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The only difference here is that we gather the code for the current line or current selection. Then we trigger the same behavior as for evaluating the whole editor.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_our_groovy_eval">Our groovy Eval!</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::eval!
+          :triggers #{:eval!}
+          :reaction (fn [this event]
+                      (let [{:keys [info origin]} event
+                            client (-&gt; @origin :client :default)]
+                        (notifos/working "Evaluating groovy...")
+                        (clients/send (eval/get-client! {:command :editor.eval.groovy
+                                                         :origin origin
+                                                         :info info
+                                                         :create try-connect})
+                                      :editor.eval.groovy info
+                                      :only origin))))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This behavior is what actually sends off a eval request to the groovy client. Quite a lot happens under the hood (by help of inbuilt LightTable behaviors):</p>
+</div>
+<div class="paragraph">
+<p>It tries to find a client (connection) for the editor
+If no connection exists it will try to create a new one. On create it will invoke the try-connect function that we defined for the gui connect/connect bar behavior in the previous blog post
+Once connected it will jsonify our parameters and send them off to our groovy client</p>
+</div>
+<div class="listingblock">
+<div class="title">The JSON might look something like:</div>
+<div class="content">
+<pre class="prettyprint javascript language-javascript"><code>[89,
+"editor.eval.groovy",
+  {"line-ending":"\n",
+   "name":"sample.groovy",
+   "type-name":"Groovy",
+   "path":"/Users/mrundberget/Library/Application Support/LightTable/plugins/Groovy/sample.groovy",
+   "mime":"text/x-groovy",
+   "tags":["editor.groovy"],
+   "code":"println \"hello\"",
+   "meta":{"start":22,"end":22}}]</code></pre>
+</div>
+</div>
+<div class="ulist">
+<div class="title">Notes</div>
+<ul>
+<li>
+<p>The first param is the client id for the editor that triggered the behavior. This client Id doesn&#8217;t represent the same as a connection id (ref previous blog post). Many editors may share the same connection !</p>
+</li>
+<li>
+<p>The second param is the command (our groovy client will of course support many different commands, this is one of them)</p>
+</li>
+<li>
+<p>The third and last parameter is our info. The code is the essential bit, but some of the meta information, like line info comes in handy when handling the response later on</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_actual_groovy_evaluation">The actual groovy evaluation</h3>
+<div class="sect3">
+<h4 id="_command_dispatch">Command dispatch</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>ltClient.withStreams { input, output -&gt;
+  try {
+    input.eachLine { line -&gt;
+    def (currentClientId, command, data) = new JsonSlurper().parseText(line)
+    switch (command) {
+    case "client.close":
+      stop()
+      break
+    case "editor.eval.groovy":
+      evalGroovy(data, currentClientId)
+      break
+   default:
+     log "Invalid command: $command"
+  }
+  // ...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We parse any lines received from Light Table and based on the command received invokes the appropriate handler. In this case evalGroovy.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_eval_groovy">Eval groovy</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>private void evalGroovy(data, currentClientId) {
+  def evalResult = scriptExecutor.execute(data.code)
+
+  def resultParams = [meta: data.meta]
+  if (evalResult.out) {
+    resultParams &lt;&lt; [out: evalResult.out]
+  }
+  if(evalResult.exprValues) {
+    resultParams &lt;&lt; [result: convertToClientVals(evalResult.exprValues)]
+  }
+
+  if (!evalResult.err) {
+    data = [currentClientId?.toInteger(), "groovy.res", resultParams]
+  } else {
+    data = [currentClientId?.toInteger(), "groovy.err", [ex: evalResult.err] + resultParams]
+  }
+  sendData data
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first and most significant line is where we evaluate the groovy code received. This post would be too long if we went into all the details of what it does, but here&#8217;s a high-level summary:</p>
+</div>
+<div class="paragraph">
+<p>We basically create a GroovyShell and compile our code to a script. Normally that would just compile a Script class. However we  wish to collect a lot more information than you typically would get from default groovy script execution. So we do an AST transformation on the script class and add a custom abstract script class as a base class for the compiled script class.  This allows us to inject behavior and wrap statement execution (all compiled into the script for optimal performance).  That way we are able to collect information about values for most types of statements. We collect line number and value (each line could end up having many values :-) )
+We run the script (capturing system.out and system.err).</p>
+</div>
+<div class="ulist">
+<div class="title">The function returns:</div>
+<ul>
+<li>
+<p>Anything written to standard out (println etc)</p>
+</li>
+<li>
+<p>Errors if any and line number for error where possible</p>
+</li>
+<li>
+<p>A list for of maps with line number and value(s)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Most of the AST stuff is not something I&#8217;ve written. It&#8217;s been contributed by Jim White after I posted a question on the groovy-user mailing list. I asked for advice on which way to proceed and the response from the groovy community was awesome. Jim in particular was more than eager to contribute to the plugin. OpenSource rocks ! So when I say we, I sometimes mean we literally.</p>
+</div>
+<div class="paragraph">
+<p>Anyways, based on the results of the script execution we notify Light Table to trigger either a ":groovy.res" behavior or a "groovy.err" behavior.</p>
+</div>
+<div class="paragraph">
+<p>The json response for sendData for a successful execution might look something like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint javascript language-javascript"><code>[89,
+ "groovy.res",
+ {"meta":{"start":22,"end":23},"out":"hello\nmama\n","result":[{"line":1,"values":["null"]},{"line":2,"values":["null"]}]}]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_handling_the_evaluation_results_in_light_table">Handling the evaluation results in Light Table</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn notify-of-results [editor res]
+  (doseq [ln (:result res)]
+    (let [lineNo (+ (:line ln) (-&gt; res :meta :start) -1)]
+      (object/raise editor :editor.result (clojure.string/join " " (:values ln)) {:line lineNo :start-line lineNo}))))
+
+(behavior ::groovy-res
+          :triggers #{:groovy.res}
+          :reaction (fn [editor res]
+                      (notifos/done-working)
+                      (when-let [o (:out res)] (.log js/console o))
+                      (notify-of-results editor res)))
+
+(defn notify-of-error [editor res]
+  (let [lineNo (+ (-&gt; res :ex :line) (-&gt; res :meta :start) -1)]
+    (object/raise editor :editor.exception (:ex res) {:line lineNo :start-line lineNo'})))
+
+(behavior ::groovy-err
+          :triggers #{:groovy.err}
+          :reaction (fn [editor res]
+                      (object/raise editor :groovy.res res)
+                      (notify-of-error editor res)))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>These are the behavior definitions that handles either successful or evaluation of scripts with errors. Basically we:
+Print to the Light Table Console anything that was captured to system.out/system.err by our groovy evaluation
+Show inline results for each line, multiple results for a line are space separated. For showing inline results we are using a predefined Light Table behavior (:editor.result)
+If the behavior is to handle an error, we show evaluation results up until the script exception. In addition we display details (stack trace) for the exception at the line in the script it occurred</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wiring_it_all_up">Wiring it all up</h3>
+<div class="sect3">
+<h4 id="_groovy_behaviors">groovy.behaviors</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
+     :clients []
+     :editor.groovy [:lt.plugins.groovy/on-eval
+                     :lt.plugins.groovy/on-eval.one
+                     :lt.plugins.groovy/groovy-res
+                     :lt.plugins.groovy/groovy-err
+                     [:lt.object/add-tag :watchable]]
+     :files [(:lt.objs.files/file-types
+              [{:name "Groovy" :exts [:groovy] :mime "text/x-groovy" :tags [:editor.groovy]}])]
+     :groovy.lang [:lt.plugins.groovy/eval!
+                   :lt.plugins.groovy/connect]}}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The eval and results/err behaviors are defined for the editor tag. So they are only applicable for editors marked as groovy editors. Any editor open with a file name ending in .groovy will automatically be attached to a editor.groovy tag. (You can also set it manually cmd+space &#8594; "Editor: Set current editor syntax").
+The ":eval!" behavior is defined for the :groovy.lang tag. Its tied to our groovy mother object just like the connect behavior. These behaviors are totally groovy client specific, whilst the other behaviors are less so (although not exactly generic as they are now?)</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_wrap_up">Wrap up</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A little bit of plumbing was needed to get this set up. But the hard parts was really coming up with the groovy AST transformation stuff. I guess by now you might have started getting an inkling that Light Table is fairly composable ? It really is super flexible. You don&#8217;t like the behavior for handling inline results for the groovy plugin ? You could easily write your own and wire it up in your user.behaviors file in Light Table. It&#8217;s wicked cool, actually it really is your editor !</p>
+</div>
+<div class="paragraph">
+<p>Yesterday I released version 0.0.2 of the Groovy LightTable plugin. Its available through the Light Table plugin manager, or if you wish to play with the code or maybe feel like contributing feel free to fork the repo at : <a href="https://github.com/rundis/LightTable-Groovy">https://github.com/rundis/LightTable-Groovy</a>. Pull requests are welcome.</p>
+</div>
+<div class="paragraph">
+<p>So where to next ? I&#8217;d really like to try and create an InstaRepl editor for the plugin. A groovy script editor that evaluates code as you type. There&#8217;s gotta be one or two challenges related to that. A quick win might be to provide groovy api documentation from inside Light Table. I&#8217;ll let you know what happens in the next post.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Disclaimer: I might have misunderstood some nuances of Light Table, but hopefully I&#8217;m roughly on track. If you see anything glaringly wrong, do let me know.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div></p>
+  			<a href="/blog/2014/gr_lt_part1.html"><h1>A Groovy Light Table client - Step 1: Connecting the client</h1></a>
+  			<p>16 February 2014</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/lighttable.html">lighttable</a>
+	      
+		      <a href="/blog/tags/groovy.html"> groovy</a>
+	      
+		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+	      </p>
+  			<p><div class="sect1">
+<h2 id="_building_a_plugin_in_light_table">Building a plugin in Light Table</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This is the first post in (hopefully) a series of blog posts about the various steps I go through when trying to create a plugin for Light Table. I have decided to try to create a Groovy plugin. I chose Groovy to ensure there was at least one technology fairly familiar to me. I have just started using Light Table, I have no previous experience with ClojureScript and I have just recently started writing some Clojure beyond the basic tutorials.</p>
+</div>
+<div class="paragraph">
+<p>The short term goal is for the plugin to provide inline results and maybe an instarepl of some sort for groovy scripts.</p>
+</div>
+<div class="paragraph">
+<p><a href="https://github.com/rundis/LightTable-Groovy">LightTable-Groovy</a> is the name of my plugin project and you can find the latest source there. It might be a couple of steps ahead of the blog posts though !</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_documentation">Documentation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Light Table was made <a href="http://www.chris-granger.com/2014/01/07/light-table-is-open-source/">open source</a> in january and documentation for plugin developers is a little sparse.</p>
+</div>
+<div class="ulist">
+<div class="title">So to have something to go by I decided to use some of the other language plugins as inspiration:</div>
+<ul>
+<li>
+<p><a href="https://github.com/LightTable/Python">Python plugin</a> (comes bundled/under the light table umbrella)</p>
+</li>
+<li>
+<p><a href="https://github.com/existentialmutt/lt-ruby">Ruby Instarepl</a></p>
+</li>
+<li>
+<p><a href="https://github.com/jetaggart/light-haskell">Haskell plugin</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>I haven&#8217;t worked with any of the above mentioned languages, but they did provide enough inspiration to deduce how a Light Table client might interact.</p>
+</div>
+<div class="paragraph">
+<p>BTW. A quick starter just to get you up an running with a hello world plugin could be this screen cast by Mike Haney.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_connecting_a_client_process_overview">Connecting a client - Process overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before we dwelve into the code It&#8217;s a good idea to have a high level understanding of what we are trying to achieve !</p>
+</div>
+<div class="ulist">
+<div class="title">A couple of use cases that needs to be supported:</div>
+<ul>
+<li>
+<p>Evaluate current selection or current line of groovy code and present results (preferably inline)</p>
+</li>
+<li>
+<p>Evaluate contents of current editor and present results</p>
+</li>
+<li>
+<p>Provide as much info about the results of each statement as possible</p>
+</li>
+<li>
+<p>(Maybe need to evaluate line/statement by statement)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For a future instarepl, any change in the editor will trigger an evaluation
+It becomes evident that our plugin needs to provide some kind of process that reacts to events from light table.</p>
+</div>
+<div class="olist arabic">
+<div class="title">A default pattern for achieving this has been devised for Light Table and roughly equates to the following steps:</div>
+<ol class="arabic">
+<li>
+<p>A connect event is triggered from Light Table (you need to set up your plugin to trigger that event?). Typically the connect event can be invoked manually from the connect bar in light table, or it can be triggered implicetly when evaluating code.</p>
+</li>
+<li>
+<p>You fire of a process - Using inbuilt support from Light Table you start a process either a shell script or whatever really. I created a shell script that sets some environment stuff and then basically kicks off a groovy script. Light table provides a tcp/ip port and a unique client id which you need to forward to the process.</p>
+</li>
+<li>
+<p>Create a tcp client: In your process you create a tcp client using the given port</p>
+</li>
+<li>
+<p>Send ack message: Send a json message with client id and an event name (behavior) to Light Table (through the tcp connection!)</p>
+</li>
+<li>
+<p>Confirm handshake for process: In your process (i.e. not the tcp connection!) write "Connected" to standard out. ("Connected" is just what the other plugins use, you could use  anything you like as long as it matches the connect behaviors(handlers) you provide inside light table.)</p>
+</li>
+<li>
+<p>Listen for events: Now you are connected and given you have set up your behaviors in Light Table correctly, your new connection should be reported as connected and shown in the Light Table connect bar. Now you listen for events on your tcp client and provides appropriate responses back to Light Table accordingly. (Handling this is the subject of a future blog post)</p>
+</li>
+</ol>
+</div>
+<div class="sect2">
+<h3 id="_behaviors_for_connecting_from_groovy_cljs">Behaviors for connecting (from groovy.cljs):</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn run-groovy[{:keys [path name client] :as info}]
+  (let [obj (object/create ::connecting-notifier info)
+        client-id (clients/-&gt;id client)
+        project-dir (files/parent path)]
+    (object/merge! client {:port tcp/port
+                           :proc obj})
+    (notifos/working "Connecting..")
+    (proc/exec {:command binary-path
+                :args [tcp/port client-id project-dir]
+                :cwd plugin-dir
+                :env {"GROOVY_PATH" (files/join (files/parent path))}
+                :obj obj})))
+
+(defn check-groovy[obj]
+  (assoc obj :groovy (or (::groovy-exe @groovy)
+                         (.which shell "groovy"))))
+
+(defn check-server[obj]
+  (assoc obj :groovy-server (files/exists? server-path)))
+
+(defn handle-no-groovy [client]
+  (clients/rem! client)
+  (notifos/done-working)
+  (popup/popup! {:header "We couldn't find Groovy."
+                 :body "In order to evaluate in Groovy files, Groovy must be installed and on your system PATH."
+                 :buttons [{:label "Download Groovy"
+                            :action (fn []
+                                      (platform/open "http://gvmtool.net/"))}
+                           {:label "ok"}]}))
+
+(defn notify [obj]
+  (let [{:keys [groovy path groovy-server client]} obj]
+    (cond
+     (or (not groovy) (empty? groovy)) (do (handle-no-groovy client))
+     :else (run-groovy obj))
+    obj))
+
+(defn check-all [obj]
+  (-&gt; obj
+      (check-groovy)
+      (check-server)
+      (notify)))
+
+(defn try-connect [{:keys [info]}]
+  (.log js/console (str "try connect" info))
+  (let [path (:path info)
+        client (clients/client! :groovy.client)]
+    (check-all {:path path
+                :client client})
+    client))
+
+
+(object/object* ::groovy-lang
+                :tags #{:groovy.lang})
+
+
+(def groovy (object/create ::groovy-lang))
+
+(scl/add-connector {:name "Groovy"
+                    :desc "Select a directory to serve as the root of your groovy project... then again it might not be relevant..."
+                    :connect (fn []
+                               (dialogs/dir groovy :connect))})
+(behavior ::connect
+                  :triggers #{:connect}
+                  :reaction (fn [this path]
+                              (try-connect {:info {:path path}})))
+</code></pre>
+</div>
+</div>
+<div class="ulist">
+<div class="title">Notes:</div>
+<ul>
+<li>
+<p>scl/add-connector: This statement adds a connect dialog to our groovy plugin. You select a root directory and upon selection the ::connect behavior is triggered</p>
+</li>
+<li>
+<p>::connect basically responds with invoking a method for connecting. This does some sanity checks and if all goes well ends up invoking  run-groovy.</p>
+</li>
+<li>
+<p>run-groovy : Fires up our groovy (server) process</p>
+</li>
+<li>
+<p>def groovy   is basically the "mother" object of our plugin. It helps us scope behaviors and commands</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_server_part_ltserver_groovy">The server part (LTServer.groovy)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>import groovy.json.*
+
+params = [
+  ltPort:   args[0].toInteger(),
+  clientId: args[1].toInteger() // light table generated id for the client (connection)
+]
+
+logFile = new File("server.log")
+
+def log(msg) {
+  logFile &lt;&lt; "${new Date().format('dd.MM.yyyy mm:hh:sss')} - $msg\n"
+}
+
+client = null
+try {
+  client = new Socket("127.0.0.1", params.ltPort)
+} catch (Exception e) {
+  log "Could not connect to port: ${params.ltPort}"
+  throw e
+}
+
+def sendData(data) {
+  client &lt;&lt; new JsonBuilder(data).toString() + "\n"
+}
+// ack to Light Table
+sendData (
+  [
+    name: "Groovy",
+    "client-id": params.clientId,
+    dir: new File("").absolutePath,
+    commands: ["editor.eval.groovy"],
+    type: "groovy"
+  ]
+)
+println "Connected" // tells lighttable we're good
+
+client.withStreams {input, output -&gt;
+  while(true) {
+  // insert code to listen for events from light table and respond to those (eval code etc)
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_notification_of_successful_connection">Notification of successful connection</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-out
+          :triggers #{:proc.out}
+          :reaction (fn [this data]
+                      (let [out (.toString data)]
+                        (object/update! this [:buffer] str out)
+                        (if (&gt; (.indexOf out "Connected") -1)
+                          (do
+                            (notifos/done-working)
+                            (object/merge! this {:connected true}))
+                          (object/update! this [:buffer] str data)))))
+
+(behavior ::on-error
+          :triggers #{:proc.error}
+          :reaction (fn [this data]
+                      (let [out (.toString data)]
+                        (when-not (&gt; (.indexOf (:buffer @this) "Connected") -1)
+                          (object/update! this [:buffer] str data)
+                          ))
+                      ))
+
+(behavior ::on-exit
+          :triggers #{:proc.exit}
+          :reaction (fn [this data]
+                      ;(object/update! this [:buffer] str data)
+                      (when-not (:connected @this)
+                        (notifos/done-working)
+                        (popup/popup! {:header "We couldn't connect."
+                                       :body [:span "Looks like there was an issue trying to connect
+                                              to the project. Here's what we got:" [:pre (:buffer @this)]]
+                                       :buttons [{:label "close"}]})
+                        (clients/rem! (:client @this)))
+                      (proc/kill-all (:procs @this))
+                      (object/destroy! this)
+                      ))
+
+(object/object* ::connecting-notifier
+                :triggers []
+                :behaviors [::on-exit ::on-error ::on-out]
+                :init (fn [this client]
+                        (object/merge! this {:client client :buffer ""})
+                        nil))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above behaviors basically handles signaling success, error or connection exits for our groovy client. As you can see in ::on-out this is where we check standard out from the process for the string "Connected", to signal success.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wiring_up_behaviors_behaviors_groovy">Wiring up behaviors (behaviors.groovy)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
+     :clients []
+     :editor.groovy []
+     :files [(:lt.objs.files/file-types
+              [{:name "Groovy" :exts [:groovy] :mime "text/x-groovy" :tags [:editor.groovy]}])]
+     :groovy.lang [:lt.plugins.groovy/connect]}}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The important part in terms on the connection is the wiring of the connect behavior to ":groovy.lang". This is needed for groovy to appear as a connection item in the light table connect bar.</p>
+</div>
+<div class="paragraph">
+<p>"codemirror/groovy.js" deserves a special mention. This is what provides syntax highlighting for our groovy files (defined in the :files vector). The syntax highlighting is provided by the groovy mode module from CodeMirror.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_wrapping_up">Wrapping up</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>So what have we achieved. Well we now have a connection to Light Table from an external process that can listen and respond to events from Light Table. For the purposes of this blog post series, its a Groovy client that hopefully pretty soon will be able to evaluate groovy scripts and respond with evaluation results. We didn&#8217;t pay much attention to it, but we also got syntax highlighting of our Groovy files complements of CodeMirror.</p>
+</div>
+<div class="paragraph">
+<p>It took a while to grok how the connection part worked. Once I did understand roughly what was needed I was a bit annoyed with myself for messing about so much. I&#8217;m hoping this post might help others to avoid some of the mistakes I stumbled into.</p>
+</div>
+</div>
+</div></p>
   			<a href="/blog/2013/buster-plugin.html"><h1>Javascript testing in your JVM projects using Gradle and BusterJS</h1></a>
   			<p>19 August 2013</p>
         <p><em>Tags: </em>

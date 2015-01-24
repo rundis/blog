@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>A Groovy Light Table client - Step 1: Connecting the client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="..//blog/css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="..//blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="..//blog/about.html">About</a></li>
+            <li><a href="../feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>A Groovy Light Table client - Step 1: Connecting the client</h1>
+	</div>
+
+	<p><em>16 February 2014</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/lighttable.html">lighttable</a>
+  </em>
+    <a href="/blog/tags/groovy.html"> groovy</a>
+  </em>
+    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+  </p>
+
+	<p><div class="sect1">
+<h2 id="_building_a_plugin_in_light_table">Building a plugin in Light Table</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This is the first post in (hopefully) a series of blog posts about the various steps I go through when trying to create a plugin for Light Table. I have decided to try to create a Groovy plugin. I chose Groovy to ensure there was at least one technology fairly familiar to me. I have just started using Light Table, I have no previous experience with ClojureScript and I have just recently started writing some Clojure beyond the basic tutorials.</p>
+</div>
+<div class="paragraph">
+<p>The short term goal is for the plugin to provide inline results and maybe an instarepl of some sort for groovy scripts.</p>
+</div>
+<div class="paragraph">
+<p><a href="https://github.com/rundis/LightTable-Groovy">LightTable-Groovy</a> is the name of my plugin project and you can find the latest source there. It might be a couple of steps ahead of the blog posts though !</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_documentation">Documentation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Light Table was made <a href="http://www.chris-granger.com/2014/01/07/light-table-is-open-source/">open source</a> in january and documentation for plugin developers is a little sparse.</p>
+</div>
+<div class="ulist">
+<div class="title">So to have something to go by I decided to use some of the other language plugins as inspiration:</div>
+<ul>
+<li>
+<p><a href="https://github.com/LightTable/Python">Python plugin</a> (comes bundled/under the light table umbrella)</p>
+</li>
+<li>
+<p><a href="https://github.com/existentialmutt/lt-ruby">Ruby Instarepl</a></p>
+</li>
+<li>
+<p><a href="https://github.com/jetaggart/light-haskell">Haskell plugin</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>I haven&#8217;t worked with any of the above mentioned languages, but they did provide enough inspiration to deduce how a Light Table client might interact.</p>
+</div>
+<div class="paragraph">
+<p>BTW. A quick starter just to get you up an running with a hello world plugin could be this screen cast by Mike Haney.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_connecting_a_client_process_overview">Connecting a client - Process overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before we dwelve into the code It&#8217;s a good idea to have a high level understanding of what we are trying to achieve !</p>
+</div>
+<div class="ulist">
+<div class="title">A couple of use cases that needs to be supported:</div>
+<ul>
+<li>
+<p>Evaluate current selection or current line of groovy code and present results (preferably inline)</p>
+</li>
+<li>
+<p>Evaluate contents of current editor and present results</p>
+</li>
+<li>
+<p>Provide as much info about the results of each statement as possible</p>
+</li>
+<li>
+<p>(Maybe need to evaluate line/statement by statement)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For a future instarepl, any change in the editor will trigger an evaluation
+It becomes evident that our plugin needs to provide some kind of process that reacts to events from light table.</p>
+</div>
+<div class="olist arabic">
+<div class="title">A default pattern for achieving this has been devised for Light Table and roughly equates to the following steps:</div>
+<ol class="arabic">
+<li>
+<p>A connect event is triggered from Light Table (you need to set up your plugin to trigger that event?). Typically the connect event can be invoked manually from the connect bar in light table, or it can be triggered implicetly when evaluating code.</p>
+</li>
+<li>
+<p>You fire of a process - Using inbuilt support from Light Table you start a process either a shell script or whatever really. I created a shell script that sets some environment stuff and then basically kicks off a groovy script. Light table provides a tcp/ip port and a unique client id which you need to forward to the process.</p>
+</li>
+<li>
+<p>Create a tcp client: In your process you create a tcp client using the given port</p>
+</li>
+<li>
+<p>Send ack message: Send a json message with client id and an event name (behavior) to Light Table (through the tcp connection!)</p>
+</li>
+<li>
+<p>Confirm handshake for process: In your process (i.e. not the tcp connection!) write "Connected" to standard out. ("Connected" is just what the other plugins use, you could use  anything you like as long as it matches the connect behaviors(handlers) you provide inside light table.)</p>
+</li>
+<li>
+<p>Listen for events: Now you are connected and given you have set up your behaviors in Light Table correctly, your new connection should be reported as connected and shown in the Light Table connect bar. Now you listen for events on your tcp client and provides appropriate responses back to Light Table accordingly. (Handling this is the subject of a future blog post)</p>
+</li>
+</ol>
+</div>
+<div class="sect2">
+<h3 id="_behaviors_for_connecting_from_groovy_cljs">Behaviors for connecting (from groovy.cljs):</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn run-groovy[{:keys [path name client] :as info}]
+  (let [obj (object/create ::connecting-notifier info)
+        client-id (clients/-&gt;id client)
+        project-dir (files/parent path)]
+    (object/merge! client {:port tcp/port
+                           :proc obj})
+    (notifos/working "Connecting..")
+    (proc/exec {:command binary-path
+                :args [tcp/port client-id project-dir]
+                :cwd plugin-dir
+                :env {"GROOVY_PATH" (files/join (files/parent path))}
+                :obj obj})))
+
+(defn check-groovy[obj]
+  (assoc obj :groovy (or (::groovy-exe @groovy)
+                         (.which shell "groovy"))))
+
+(defn check-server[obj]
+  (assoc obj :groovy-server (files/exists? server-path)))
+
+(defn handle-no-groovy [client]
+  (clients/rem! client)
+  (notifos/done-working)
+  (popup/popup! {:header "We couldn't find Groovy."
+                 :body "In order to evaluate in Groovy files, Groovy must be installed and on your system PATH."
+                 :buttons [{:label "Download Groovy"
+                            :action (fn []
+                                      (platform/open "http://gvmtool.net/"))}
+                           {:label "ok"}]}))
+
+(defn notify [obj]
+  (let [{:keys [groovy path groovy-server client]} obj]
+    (cond
+     (or (not groovy) (empty? groovy)) (do (handle-no-groovy client))
+     :else (run-groovy obj))
+    obj))
+
+(defn check-all [obj]
+  (-&gt; obj
+      (check-groovy)
+      (check-server)
+      (notify)))
+
+(defn try-connect [{:keys [info]}]
+  (.log js/console (str "try connect" info))
+  (let [path (:path info)
+        client (clients/client! :groovy.client)]
+    (check-all {:path path
+                :client client})
+    client))
+
+
+(object/object* ::groovy-lang
+                :tags #{:groovy.lang})
+
+
+(def groovy (object/create ::groovy-lang))
+
+(scl/add-connector {:name "Groovy"
+                    :desc "Select a directory to serve as the root of your groovy project... then again it might not be relevant..."
+                    :connect (fn []
+                               (dialogs/dir groovy :connect))})
+(behavior ::connect
+                  :triggers #{:connect}
+                  :reaction (fn [this path]
+                              (try-connect {:info {:path path}})))
+</code></pre>
+</div>
+</div>
+<div class="ulist">
+<div class="title">Notes:</div>
+<ul>
+<li>
+<p>scl/add-connector: This statement adds a connect dialog to our groovy plugin. You select a root directory and upon selection the ::connect behavior is triggered</p>
+</li>
+<li>
+<p>::connect basically responds with invoking a method for connecting. This does some sanity checks and if all goes well ends up invoking  run-groovy.</p>
+</li>
+<li>
+<p>run-groovy : Fires up our groovy (server) process</p>
+</li>
+<li>
+<p>def groovy   is basically the "mother" object of our plugin. It helps us scope behaviors and commands</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_server_part_ltserver_groovy">The server part (LTServer.groovy)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>import groovy.json.*
+
+params = [
+  ltPort:   args[0].toInteger(),
+  clientId: args[1].toInteger() // light table generated id for the client (connection)
+]
+
+logFile = new File("server.log")
+
+def log(msg) {
+  logFile &lt;&lt; "${new Date().format('dd.MM.yyyy mm:hh:sss')} - $msg\n"
+}
+
+client = null
+try {
+  client = new Socket("127.0.0.1", params.ltPort)
+} catch (Exception e) {
+  log "Could not connect to port: ${params.ltPort}"
+  throw e
+}
+
+def sendData(data) {
+  client &lt;&lt; new JsonBuilder(data).toString() + "\n"
+}
+// ack to Light Table
+sendData (
+  [
+    name: "Groovy",
+    "client-id": params.clientId,
+    dir: new File("").absolutePath,
+    commands: ["editor.eval.groovy"],
+    type: "groovy"
+  ]
+)
+println "Connected" // tells lighttable we're good
+
+client.withStreams {input, output -&gt;
+  while(true) {
+  // insert code to listen for events from light table and respond to those (eval code etc)
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_notification_of_successful_connection">Notification of successful connection</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-out
+          :triggers #{:proc.out}
+          :reaction (fn [this data]
+                      (let [out (.toString data)]
+                        (object/update! this [:buffer] str out)
+                        (if (&gt; (.indexOf out "Connected") -1)
+                          (do
+                            (notifos/done-working)
+                            (object/merge! this {:connected true}))
+                          (object/update! this [:buffer] str data)))))
+
+(behavior ::on-error
+          :triggers #{:proc.error}
+          :reaction (fn [this data]
+                      (let [out (.toString data)]
+                        (when-not (&gt; (.indexOf (:buffer @this) "Connected") -1)
+                          (object/update! this [:buffer] str data)
+                          ))
+                      ))
+
+(behavior ::on-exit
+          :triggers #{:proc.exit}
+          :reaction (fn [this data]
+                      ;(object/update! this [:buffer] str data)
+                      (when-not (:connected @this)
+                        (notifos/done-working)
+                        (popup/popup! {:header "We couldn't connect."
+                                       :body [:span "Looks like there was an issue trying to connect
+                                              to the project. Here's what we got:" [:pre (:buffer @this)]]
+                                       :buttons [{:label "close"}]})
+                        (clients/rem! (:client @this)))
+                      (proc/kill-all (:procs @this))
+                      (object/destroy! this)
+                      ))
+
+(object/object* ::connecting-notifier
+                :triggers []
+                :behaviors [::on-exit ::on-error ::on-out]
+                :init (fn [this client]
+                        (object/merge! this {:client client :buffer ""})
+                        nil))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above behaviors basically handles signaling success, error or connection exits for our groovy client. As you can see in ::on-out this is where we check standard out from the process for the string "Connected", to signal success.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wiring_up_behaviors_behaviors_groovy">Wiring up behaviors (behaviors.groovy)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
+     :clients []
+     :editor.groovy []
+     :files [(:lt.objs.files/file-types
+              [{:name "Groovy" :exts [:groovy] :mime "text/x-groovy" :tags [:editor.groovy]}])]
+     :groovy.lang [:lt.plugins.groovy/connect]}}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The important part in terms on the connection is the wiring of the connect behavior to ":groovy.lang". This is needed for groovy to appear as a connection item in the light table connect bar.</p>
+</div>
+<div class="paragraph">
+<p>"codemirror/groovy.js" deserves a special mention. This is what provides syntax highlighting for our groovy files (defined in the :files vector). The syntax highlighting is provided by the groovy mode module from CodeMirror.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_wrapping_up">Wrapping up</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>So what have we achieved. Well we now have a connection to Light Table from an external process that can listen and respond to events from Light Table. For the purposes of this blog post series, its a Groovy client that hopefully pretty soon will be able to evaluate groovy scripts and respond with evaluation results. We didn&#8217;t pay much attention to it, but we also got syntax highlighting of our Groovy files complements of CodeMirror.</p>
+</div>
+<div class="paragraph">
+<p>It took a while to grok how the connection part worked. Once I did understand roughly what was needed I was a bit annoyed with myself for messing about so much. I&#8217;m hoping this post might help others to avoid some of the mistakes I stumbled into.</p>
+</div>
+</div>
+</div></p>
+
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'gr_lt_part1';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+    
+  </body>
+</html>

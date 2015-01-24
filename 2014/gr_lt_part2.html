@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>A Groovy Light Table client - Step 2: Evaluating Code</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="..//blog/css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="..//blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="..//blog/about.html">About</a></li>
+            <li><a href="../feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>A Groovy Light Table client - Step 2: Evaluating Code</h1>
+	</div>
+
+	<p><em>23 February 2014</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/lighttable.html">lighttable</a>
+  </em>
+    <a href="/blog/tags/groovy.html"> groovy</a>
+  </em>
+    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+  </p>
+
+	<p><div class="sect1">
+<h2 id="_background">Background</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This is the second post in my series "A Groovy Light Table client". A blog series about steps I take when trying to build a Groovy plugin for Light Table.</p>
+</div>
+<div class="paragraph">
+<p>In this post I will take you through some of the steps I went through to get Light Table to evaluate groovy (script) code and show results inline in the editor.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="lt_groovy_eval.png" alt="lt groovy eval">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_how_did_we_get_here">How did we get here ?</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_evaluate_contents_of_editor_cmd_ctrl_shift_enter">Evaluate contents of editor (cmd/ctrl + shift + enter)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-eval
+          :desc "Groovy: Eval current editor"
+          :triggers #{:eval}
+          :reaction (fn [editor]
+                      (object/raise groovy :eval! {:origin editor
+                                                   :info (assoc (@editor :info)
+                                                           :code (ed/-&gt;val editor)
+                                                           :meta {:start 0, :end (ed/last-line editor)})})))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This behavior triggers on ":eval", which is triggered to any editor (on cmd/ctrl + shift + enter in default key mapping). We just get hold of the text from the editor and gather some meta info  and trigger a ":eval!" behavior on the groovy "mother" object defined in the previous blog post.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_evaluate_current_line_selection">Evaluate current line/selection</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-eval.one
+          :desc "Groovy: Eval current selection"
+          :triggers #{:eval.one}
+          :reaction (fn [editor]
+                      (let [pos (ed/-&gt;cursor editor)
+                            info (conj (:info @editor)
+                                  (if (ed/selection? editor)
+                                    {:code (ed/selection editor) :meta {:start (-&gt; (ed/-&gt;cursor editor "start") :line)
+                                                                        :end (-&gt; (ed/-&gt;cursor editor "end") :line)}}
+                                    {:pos pos :code (ed/line editor (:line pos)) :meta {:start (:line pos) :end (:line pos)}}))]
+                        (object/raise groovy :eval! {:origin editor :info info}))))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The only difference here is that we gather the code for the current line or current selection. Then we trigger the same behavior as for evaluating the whole editor.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_our_groovy_eval">Our groovy Eval!</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::eval!
+          :triggers #{:eval!}
+          :reaction (fn [this event]
+                      (let [{:keys [info origin]} event
+                            client (-&gt; @origin :client :default)]
+                        (notifos/working "Evaluating groovy...")
+                        (clients/send (eval/get-client! {:command :editor.eval.groovy
+                                                         :origin origin
+                                                         :info info
+                                                         :create try-connect})
+                                      :editor.eval.groovy info
+                                      :only origin))))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This behavior is what actually sends off a eval request to the groovy client. Quite a lot happens under the hood (by help of inbuilt LightTable behaviors):</p>
+</div>
+<div class="paragraph">
+<p>It tries to find a client (connection) for the editor
+If no connection exists it will try to create a new one. On create it will invoke the try-connect function that we defined for the gui connect/connect bar behavior in the previous blog post
+Once connected it will jsonify our parameters and send them off to our groovy client</p>
+</div>
+<div class="listingblock">
+<div class="title">The JSON might look something like:</div>
+<div class="content">
+<pre class="prettyprint javascript language-javascript"><code>[89,
+"editor.eval.groovy",
+  {"line-ending":"\n",
+   "name":"sample.groovy",
+   "type-name":"Groovy",
+   "path":"/Users/mrundberget/Library/Application Support/LightTable/plugins/Groovy/sample.groovy",
+   "mime":"text/x-groovy",
+   "tags":["editor.groovy"],
+   "code":"println \"hello\"",
+   "meta":{"start":22,"end":22}}]</code></pre>
+</div>
+</div>
+<div class="ulist">
+<div class="title">Notes</div>
+<ul>
+<li>
+<p>The first param is the client id for the editor that triggered the behavior. This client Id doesn&#8217;t represent the same as a connection id (ref previous blog post). Many editors may share the same connection !</p>
+</li>
+<li>
+<p>The second param is the command (our groovy client will of course support many different commands, this is one of them)</p>
+</li>
+<li>
+<p>The third and last parameter is our info. The code is the essential bit, but some of the meta information, like line info comes in handy when handling the response later on</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_actual_groovy_evaluation">The actual groovy evaluation</h3>
+<div class="sect3">
+<h4 id="_command_dispatch">Command dispatch</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>ltClient.withStreams { input, output -&gt;
+  try {
+    input.eachLine { line -&gt;
+    def (currentClientId, command, data) = new JsonSlurper().parseText(line)
+    switch (command) {
+    case "client.close":
+      stop()
+      break
+    case "editor.eval.groovy":
+      evalGroovy(data, currentClientId)
+      break
+   default:
+     log "Invalid command: $command"
+  }
+  // ...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We parse any lines received from Light Table and based on the command received invokes the appropriate handler. In this case evalGroovy.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_eval_groovy">Eval groovy</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>private void evalGroovy(data, currentClientId) {
+  def evalResult = scriptExecutor.execute(data.code)
+
+  def resultParams = [meta: data.meta]
+  if (evalResult.out) {
+    resultParams &lt;&lt; [out: evalResult.out]
+  }
+  if(evalResult.exprValues) {
+    resultParams &lt;&lt; [result: convertToClientVals(evalResult.exprValues)]
+  }
+
+  if (!evalResult.err) {
+    data = [currentClientId?.toInteger(), "groovy.res", resultParams]
+  } else {
+    data = [currentClientId?.toInteger(), "groovy.err", [ex: evalResult.err] + resultParams]
+  }
+  sendData data
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first and most significant line is where we evaluate the groovy code received. This post would be too long if we went into all the details of what it does, but here&#8217;s a high-level summary:</p>
+</div>
+<div class="paragraph">
+<p>We basically create a GroovyShell and compile our code to a script. Normally that would just compile a Script class. However we  wish to collect a lot more information than you typically would get from default groovy script execution. So we do an AST transformation on the script class and add a custom abstract script class as a base class for the compiled script class.  This allows us to inject behavior and wrap statement execution (all compiled into the script for optimal performance).  That way we are able to collect information about values for most types of statements. We collect line number and value (each line could end up having many values :-) )
+We run the script (capturing system.out and system.err).</p>
+</div>
+<div class="ulist">
+<div class="title">The function returns:</div>
+<ul>
+<li>
+<p>Anything written to standard out (println etc)</p>
+</li>
+<li>
+<p>Errors if any and line number for error where possible</p>
+</li>
+<li>
+<p>A list for of maps with line number and value(s)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Most of the AST stuff is not something I&#8217;ve written. It&#8217;s been contributed by Jim White after I posted a question on the groovy-user mailing list. I asked for advice on which way to proceed and the response from the groovy community was awesome. Jim in particular was more than eager to contribute to the plugin. OpenSource rocks ! So when I say we, I sometimes mean we literally.</p>
+</div>
+<div class="paragraph">
+<p>Anyways, based on the results of the script execution we notify Light Table to trigger either a ":groovy.res" behavior or a "groovy.err" behavior.</p>
+</div>
+<div class="paragraph">
+<p>The json response for sendData for a successful execution might look something like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint javascript language-javascript"><code>[89,
+ "groovy.res",
+ {"meta":{"start":22,"end":23},"out":"hello\nmama\n","result":[{"line":1,"values":["null"]},{"line":2,"values":["null"]}]}]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_handling_the_evaluation_results_in_light_table">Handling the evaluation results in Light Table</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn notify-of-results [editor res]
+  (doseq [ln (:result res)]
+    (let [lineNo (+ (:line ln) (-&gt; res :meta :start) -1)]
+      (object/raise editor :editor.result (clojure.string/join " " (:values ln)) {:line lineNo :start-line lineNo}))))
+
+(behavior ::groovy-res
+          :triggers #{:groovy.res}
+          :reaction (fn [editor res]
+                      (notifos/done-working)
+                      (when-let [o (:out res)] (.log js/console o))
+                      (notify-of-results editor res)))
+
+(defn notify-of-error [editor res]
+  (let [lineNo (+ (-&gt; res :ex :line) (-&gt; res :meta :start) -1)]
+    (object/raise editor :editor.exception (:ex res) {:line lineNo :start-line lineNo'})))
+
+(behavior ::groovy-err
+          :triggers #{:groovy.err}
+          :reaction (fn [editor res]
+                      (object/raise editor :groovy.res res)
+                      (notify-of-error editor res)))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>These are the behavior definitions that handles either successful or evaluation of scripts with errors. Basically we:
+Print to the Light Table Console anything that was captured to system.out/system.err by our groovy evaluation
+Show inline results for each line, multiple results for a line are space separated. For showing inline results we are using a predefined Light Table behavior (:editor.result)
+If the behavior is to handle an error, we show evaluation results up until the script exception. In addition we display details (stack trace) for the exception at the line in the script it occurred</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wiring_it_all_up">Wiring it all up</h3>
+<div class="sect3">
+<h4 id="_groovy_behaviors">groovy.behaviors</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
+     :clients []
+     :editor.groovy [:lt.plugins.groovy/on-eval
+                     :lt.plugins.groovy/on-eval.one
+                     :lt.plugins.groovy/groovy-res
+                     :lt.plugins.groovy/groovy-err
+                     [:lt.object/add-tag :watchable]]
+     :files [(:lt.objs.files/file-types
+              [{:name "Groovy" :exts [:groovy] :mime "text/x-groovy" :tags [:editor.groovy]}])]
+     :groovy.lang [:lt.plugins.groovy/eval!
+                   :lt.plugins.groovy/connect]}}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The eval and results/err behaviors are defined for the editor tag. So they are only applicable for editors marked as groovy editors. Any editor open with a file name ending in .groovy will automatically be attached to a editor.groovy tag. (You can also set it manually cmd+space &#8594; "Editor: Set current editor syntax").
+The ":eval!" behavior is defined for the :groovy.lang tag. Its tied to our groovy mother object just like the connect behavior. These behaviors are totally groovy client specific, whilst the other behaviors are less so (although not exactly generic as they are now?)</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_wrap_up">Wrap up</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A little bit of plumbing was needed to get this set up. But the hard parts was really coming up with the groovy AST transformation stuff. I guess by now you might have started getting an inkling that Light Table is fairly composable ? It really is super flexible. You don&#8217;t like the behavior for handling inline results for the groovy plugin ? You could easily write your own and wire it up in your user.behaviors file in Light Table. It&#8217;s wicked cool, actually it really is your editor !</p>
+</div>
+<div class="paragraph">
+<p>Yesterday I released version 0.0.2 of the Groovy LightTable plugin. Its available through the Light Table plugin manager, or if you wish to play with the code or maybe feel like contributing feel free to fork the repo at : <a href="https://github.com/rundis/LightTable-Groovy">https://github.com/rundis/LightTable-Groovy</a>. Pull requests are welcome.</p>
+</div>
+<div class="paragraph">
+<p>So where to next ? I&#8217;d really like to try and create an InstaRepl editor for the plugin. A groovy script editor that evaluates code as you type. There&#8217;s gotta be one or two challenges related to that. A quick win might be to provide groovy api documentation from inside Light Table. I&#8217;ll let you know what happens in the next post.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Disclaimer: I might have misunderstood some nuances of Light Table, but hopefully I&#8217;m roughly on track. If you see anything glaringly wrong, do let me know.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div></p>
+
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'gr_lt_part2';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+    
+  </body>
+</html>
