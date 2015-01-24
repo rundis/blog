@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>A Groovy Light Table client - Step 4: Exploring new avenues with Gradle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="..//blog/css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/blog/about.html">About</a></li>
+            <li><a href="/blog/feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>A Groovy Light Table client - Step 4: Exploring new avenues with Gradle</h1>
+	</div>
+
+	<p><em>26 May 2014</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/lighttable.html">lighttable</a>
+  </em>
+    <a href="/blog/tags/groovy.html"> groovy</a>
+  </em>
+    <a href="/blog/tags/gradle.html"> gradle</a>
+  </em>
+    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+  </p>
+
+	<p><div class="sect1">
+<h2 id="_background">Background</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This is the fourth post in my series "A Groovy Light Table client". A blog series about steps I take when trying to build a Groovy plugin for Light Table.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_initial_ponderings">Initial ponderings</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Gradle ships with a Tooling API that makes it fairly easily to integrate with your Gradle projects. Initially I thought that Gradle integration should be a separate plugin that other jvm language plugins could depend on, starting with the Groovy plugin. However after much deliberation I decided to start out with bundling the gradle integration with the Groovy plugin. There is certainly a degree of selecting the easy option to that decision. However I still consider the integration exploratory and I&#8217;m not sure how it will pan out. I&#8217;ve settled for a strategy of keeping it logically fairly separate, with a mind to separating gradle specifics out to its own plugin when things become clearer.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_classpath_integration_for_groovy_repl">Classpath Integration for Groovy "REPL"</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In part 3 I talked about some REPL like features where variables that result in bindings are stored in a editor session and used as input to the next evaluation. Since then I&#8217;ve also added the feature of caching method definitions (albeit as closures so I&#8217;m sure there are gotchas to that approach as well).</p>
+</div>
+<div class="paragraph">
+<p>Anyways wouldn&#8217;t it be nice If I could also explore my project classes and my projects third party library dependencies in a REPL like fashion ? Hence the idea of providing a Gradle integration. With the Tooling API I should be able to retrieve a class path. So this is where i started.
+Before anyone potentially asking; I will not bother with maven or ant at any point in time, I&#8217;ll leave that to someone else.</p>
+</div>
+<div class="sect2">
+<h3 id="_retrieving_the_class_path_as_a_list_from_a_gradle_project">Retrieving the class path as a list from a Gradle project</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>// Step 1: Connecting to project
+def con = GradleConnector.newConnector()
+  .forProjectDirectory(projectDir)
+  .connect()
+
+// Step 2: Get hold of a project model, for now a IdeaModel provides what we need
+def ideaProject = con.model(IdeaProject)
+  .addProgressListener(listener)
+  .get()
+
+// Step 3: Get list of dependencies
+def deps = ideaProject.children
+  .dependencies
+  .flatten()
+  .findAll { it.scope.scope == "COMPILE" }
+  .collect {
+    [
+      name   : it.gradleModuleVersion?.name,
+      group  : it.gradleModuleVersion?.group,
+      version: it.gradleModuleVersion?.version,
+      file   : it.file?.path,
+      source : it.source?.path,
+      javadoc: it.javadoc?.path
+    ]
+  }
+
+def classpathList = deps.file + [new File(projectDir, "build/classes/main").path]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above code is actually wrapped in a class. Connection and model instances are cached for performance reasons.
+We connect to our gradle project. If the project ships with a gradle wrapper (which it should IMO), the gradle connector will use that version (download the distribution even if need be). Otherwise it will use the gradle version of the tooling-api. At the time of writing that&#8217;s 1.12
+The tooling api doesn&#8217;t really expose as much information by default as you might wish. However it ships with an IdeaModel and an EclipseModel that provides what we need for the purposes of creating a class path. As an Idea user the IdeaModel seemed the right choice ! There is also added a progress listener, which is a callback from the api reporting progress. The progress listener returns each progress event as a string to Light Table so that we can display progress information
+We basically navigate the model and extract information about dependencies and put it in a list of maps for ease of jsonifying (useful later !). The location of our projects custom compiled classes are added manually to the class path list (ideally should have been retrieved from the model as well&#8230;)
+Adding the class path list to our groovy shell before code invocation</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>private GroovyShell createShell(Map params) {
+def transform = new ScriptTransform()
+def conf = new CompilerConfiguration()
+  conf.addCompilationCustomizers(new ASTTransformationCustomizer(transform))
+  conf.addCompilationCustomizers(ic)
+
+  if(params.classPathList) {
+    conf.setClasspathList(params.classPathList)
+  }
+
+  new GroovyShell(conf)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Its basically just a matter of adding the class path list to the CompilerConfiguration we initialise our GroovyShell with. Sweet !
+Voila your groovy scripts can invoke any class in your project?s class path.</p>
+</div>
+<div class="paragraph">
+<p>This addition basically resulted in version 0.0.4</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reporting_progress">Reporting progress</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_groovy">Groovy</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>class ProgressReporter implements LTProgressReporter {
+    final LTConnection ltCon
+
+    ProgressReporter(LTConnection ltCon) { this.ltCon = ltCon }
+
+    @Override
+    void statusChanged(ProgressEvent event) {
+        if (event.description?.trim()) {
+            reportProgress(event.description)
+        }
+    }
+
+    void reportProgress(String message) {
+        ltCon.sendData([null, "gradle.progress",[msg: message]])
+    }
+}</code></pre>
+</div>
+</div>
+<div class="ulist">
+<div class="title">Notes</div>
+<ul>
+<li>
+<p>statusChanges is called by gradle (LTProgressReporter extends the Gradle ProgressListener interface)</p>
+</li>
+<li>
+<p>reportProgress sends the progress information to Light Table</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_light_table">Light Table</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-gradle-progress
+  :desc "Reporting of progress from gradle related tasks"
+  :triggers #{:gradle.progress}
+  :reaction (fn [this info]
+              (notifos/msg* (str "Gradle progress: " (:msg info)) {:timeout 5000})))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The progress behaviour just prints a message to the Light Table status bar.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_executing_gradle_tasks">Executing Gradle Tasks</h3>
+<div class="paragraph">
+<p>There are two parts to this puzzle. One is to retrieve information about what tasks are actually available for the given project. The other is to actually invoke the task (tasks in the future).
+Listing tasks Groovy/Server</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code> // Step 1: Retrieve generic Gradle model
+def gradleProject = con.model(GradleProject)
+  .addProgressListener(listener)
+  .get()
+
+// Step 2: Get list of available tasks
+gradleProject.tasks.collect{
+  [
+    name: it.name,
+    displayName: it.displayName,
+    description: it.description,
+    path: it.path
+  ]
+}
+
+// Step 3: Send task list to client (omitted, you get the general idea by now !)</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_listing_tasks_in_light_table">Listing tasks in Light Table</h3>
+<div class="paragraph">
+<p>The list of tasks is actually retrieved by the Light Table plugin once you select to connect to a gradle project. Furthermore the list is cached in an atom.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-gradle-projectinfo
+  :desc "Gradle project model information"
+  :triggers #{:gradle.projectinfo}
+  :reaction (fn [this info]
+              (object/merge! groovy {::gradle-project-info info})
+              (object/assoc-in! cmd/manager [:commands :gradle.task.select :options] (add-selector))))
+</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the groovy server has finished retrieving the tasks (and other project info) the above behaviour is triggered in Light Table:</p>
+</div>
+<div class="paragraph">
+<p>We store the project info in our Groovy object (an atom)
+We also update the command for selecting tasks with the new list of tasks. See the section below for details.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::set-selected
+  :triggers #{:select}
+  :reaction (fn [this v]
+              (scmd/exec-active! v)))
+
+(defn selector [opts]
+  (doto (scmd/filter-list opts)
+    (object/add-behavior! ::set-selected)))
+
+(defn get-tasks []
+  (-&gt;@groovy ::gradle-project-info :tasks))
+
+(defn add-selector []
+  (selector {:items (get-tasks)
+             :key :name
+             :transform #(str "&lt;p&gt;" (:name %4) "&lt;/p&gt;"
+                              "&lt;p class='binding'&gt;" (:description %4) "&lt;/p&gt;")}))
+
+(cmd/command {:command :gradle.task.select
+              :desc "Groovy: Select Gradle task"
+              :options (add-selector)
+              :exec (fn [item]
+                      (object/raise groovy :gradle.execute item))})
+</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above code adds a sub panel to the default sidebar command panel. When you select the command :gradle.task.select it will show a child panel listing the tasks from the get-tasks function.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2014/lt_gr_tasks.png" alt="lt gr tasks">
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>;; Behavior to actually trigger execution of a selected task from the list above
+(behavior ::on-gradle-execute
+  :desc "Gradle execute task(s)"
+  :triggers #{:gradle.execute}
+  :reaction (fn [this task]
+              (clients/send
+                (clients/by-name "Groovy")
+                :gradle.execute
+                {:tasks [(:name task)]})))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once you have selected a task the above behaviour is triggered. We get hold of an editor agnostic groovy client and send an execute task message with a list of task (currently always just one). The data we send will be extended in the future to support multiple tasks and build arguments.</p>
+</div>
+<div class="paragraph">
+<p>Server side Task execution</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>// Generic execute task function
+def execute(Map params, Closure onComplete) {
+    def resultHandler = [
+        onComplete: {Object result -&gt;
+            onComplete status: "OK"
+        },
+        onFailure: {GradleConnectionException failure -&gt;
+            onComplete status: "ERROR", error: failure
+        }
+    ] as ResultHandler
+
+
+    con.newBuild()
+    .addProgressListener(listener)
+    .forTasks(params.tasks as String[])
+    .run(resultHandler)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here we use the asynch features of the Gradle Tooling API. Executing a task may actually take a while so it certainly makes sense. Callers of the execute method will receive a callback (onComplete) once task execution is completed successfully (of failed).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>projectConnection.execute(params) {Map result -&gt;
+    ltConnection.sendData([
+        null,
+        result.status == "ERROR" ? "gradle.execute.err" : "gradle.execute.success",
+        result
+    ])
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We invoke the execute method with a closure argument and return the results (success/failure) back to Light Table.</p>
+</div>
+<div class="paragraph">
+<p>This brings us pretty much up to version 0.0.5</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Well we covered a lot of ground here. We can now call any class that&#8217;s in your Gradle project&#8217;s class path from a groovy editor in Light Table. We&#8217;ve also started on providing Gradle features that are language agnostic. Starting with support for listing and executing tasks in your gradle project.
+We&#8217;ve added decent progress reporting and performance seems to be pretty good too. Looks like we have something we can build further upon !</p>
+</div>
+<div class="paragraph">
+<p>I have lots of ideas; Infinitesting,  single test with inline results, compile single file, grails integration ? etc etc. I also really want to show project dependencies in a graph. However before I can do any of those things I need to extend the tooling api with custom models &#8230; and/or maybe I should see if I can contribute to the gradle project in extending the tooling-api with a richer generic project model.</p>
+</div>
+<div class="paragraph">
+<p>We&#8217;ll have to wait and see. Next week I&#8217;m off to gr8conf.eu in Copenhagen. Really looking forward to meeting up with all the great Groovy dudes/dudettes.  And who knows maybe the hackergarten evening will result in something new and exciting !</p>
+</div>
+</div>
+</div></p>
+
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'gr_lt_part4';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+    
+  </body>
+</html>

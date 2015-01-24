@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>A Groovy Light Table client - Step 3: Running out of quick wins</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="..//blog/css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/blog/about.html">About</a></li>
+            <li><a href="/blog/feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>A Groovy Light Table client - Step 3: Running out of quick wins</h1>
+	</div>
+
+	<p><em>12 May 2014</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/lighttable.html">lighttable</a>
+  </em>
+    <a href="/blog/tags/groovy.html"> groovy</a>
+  </em>
+    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+  </p>
+
+	<p><div class="sect1">
+<h2 id="_background">Background</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This is the third post in my series "A Groovy Light Table client". A blog series about steps I take when trying to build a Groovy plugin for Light Table.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_running_out_of_quick_wins">Running out of quick wins</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>After 0.0.2 of the plugin was released I was pretty happy. I had something that I could actually use as an alternative Groovy Console. However I was keen to keep up the flow so I figured I would try to implement an autocomplete feature. The task proved rather daunting. Not so much from the Light Table side of things, but rather from the Groovy side. First I tried to see if I could reuse anything from GroovySh, but that didn&#8217;t look to promising. After that I tried to get my head around whether I could somehow reuse something from IntelliJ or Eclipse. I failed to see the light so I gave up that endeavour. Secondly I tried to see if there was an easy way to provide an inline documentation feature. Sadly I couldn&#8217;t find much reusable and something with a small foot print here either. Someone should make a REST based doc search feature for Groovy Docs one day !</p>
+</div>
+<div class="paragraph">
+<p>I turned my attention to a couple of other plugins that I thought would be useful for Light Table. I created a Buster.JS plugin <a href="https://github.com/busterjs/lt-instabuster">InstaBuster</a> for easily running JavaScript tests. I also created a snippets/code templates plugin <a href="https://github.com/rundis/lt-snippets">lt-snippets</a> and some snippet collections, among them a small collection of <a href="https://github.com/rundis/lt-groovy-snippets">groovy snippets</a>.</p>
+</div>
+<div class="paragraph">
+<p>There is just no way I could ever compete with the mainstream IDE&#8217;s, but then again that was never really the original intention. But even with limited capacity it should still be possible to provide useful groovy support and maybe even something fairly unique within the super hackable framework of Light Table.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_a_small_step_towards_a_groovy_repl">A (small) step towards a Groovy REPL</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>After working with Light Table and the Clojure/ClojureScript REPL I have grown very fond of that exploratory nature of working. Is there anything I could do with the plugin to give a more REPL like feel ? Well a small but helpful step would be to be able to remember what I previously have evaluated &#8230;</p>
+</div>
+<div class="sect2">
+<h3 id="_groovy_bindings">Groovy Bindings</h3>
+<div class="paragraph">
+<p>A simple but still useful mechanism would be to cache bindings from script execution between evals.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>// from the evalGroovy method
+def evalResult = scriptExecutor.execute(data.code, clientSessions.get(currentClientId))
+clientSessions.put(currentClientId, evalResult.bindings)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Each editor in Light Table gets it&#8217;s own unique Id. So I just created a simple cache "ClientSessions" that hold a map of binding variables, mapped my that Id. When executing a script the current binding variables are applied to the script and after the script has executed the resulting binding variables are added/replaced in the cache. Dead simple really.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_clearing_bindings_light_table">Clearing bindings - Light Table</h3>
+<div class="paragraph">
+<p>I figured it would be handy to be able to clear any stored bindings. So a new command and behaviour was created in Light Table</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>;; Behavior for clearing bindings
+(behavior ::on-clear-bindings
+          :desc "Clear cached bindings for this editor"
+          :triggers #{:on.clear.bindings}
+          :reaction (fn [editor]
+                      (let [info (:info @editor)
+                            cl (eval/get-client! {:command :editor.clear.groovy
+                                                    :origin editor
+                                                    :info info
+                                                    :create try-connect})]
+                          (clients/send cl
+                                        :editor.clear.groovy info
+                                        :only editor))))
+
+;; Command that allows a new keyboard bindable action for invoking the behaviour above
+(cmd/command {:command :clear-bindings
+              :desc "Groovy: Clear bindings for current editor"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (object/raise ed :on.clear.bindings)))})</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The command retrieves the currently active editor and triggers the behaviour. The behaviour retrieves a client connection (or creates one if one shouldn&#8217;t exist) and calls the server (groovy).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>// Wiring up the behaviour in groovy.behaviors
+:editor.groovy [:lt.plugins.groovy/on-eval
+                     :lt.plugins.groovy/on-eval.one
+                     :lt.plugins.groovy/on-clear-bindings
+                     :lt.plugins.groovy/groovy-res
+                     :lt.plugins.groovy/groovy-err
+                     [:lt.object/add-tag :watchable]]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The final piece of the puzzle from the Light Table side is to attach the behavior to the :editor.groovy tag. This enables the behavior to be available from any editor that is tagged with this tag.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_clearing_bindings_groovy">Clearing bindings - Groovy</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>// The command dispatch got a new command
+case "editor.clear.groovy":
+   clientSessions.clear(currentClientId)
+   break;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The code above will just nuke any stored binding variables.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusions">Conclusions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A tiny step that allows you to eval groovy expressions step by step. Anything that results in a binding is stored between evals. Obviously it&#8217;s a bit limited in that you&#8217;ll run into the familiar trap of trying to use def and be surprised(/annoyed) that it won&#8217;t remember that or if you define a class it won&#8217;t remember that either. It&#8217;s probably possible to cater for some of these traps, but maybe not within the realms of a quick win.</p>
+</div>
+<div class="paragraph">
+<p>Anyways the end result is Version 0.0.3 !</p>
+</div>
+<div class="paragraph">
+<p>Next steps</p>
+</div>
+<div class="paragraph">
+<p>Firstly there is a Screencast brewing. After that I think a Light Table Gradle plugin is coming before the Groovy plugin gets any further updates. A pluggable Gradle plugin would enable the Groovy plugin to quite easily get the class path for you project. This would allow you to  explore your projects code in a REPL (-like) way. Exploratory testing FTW !</p>
+</div>
+</div>
+</div></p>
+
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'gr_lt_part3';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+    
+  </body>
+</html>

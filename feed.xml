@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog//feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sat, 24 Jan 2015 18:14:28 +0100</pubDate>
-    <lastBuildDate>Sat, 24 Jan 2015 18:14:28 +0100</lastBuildDate>
+    <pubDate>Sat, 24 Jan 2015 23:31:46 +0100</pubDate>
+    <lastBuildDate>Sat, 24 Jan 2015 23:31:46 +0100</lastBuildDate>
 
     <item>
       <title>Bootifying my ring app</title>
@@ -346,6 +346,611 @@ just for fun.&lt;/p&gt;
 	</description>
     </item>
     <item>
+      <title>A Groovy Light Table client - Step 5: Gradle dependencies in Light Table with dagre-D3</title>
+      <link>http://rundis.github.io/blog//2014/gr_lt_part5.html</link>
+      <pubDate>Wed, 18 Jun 2014 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">2014/gr_lt_part5.html</guid>
+      	<description>
+	&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_background&quot;&gt;Background&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This is the fifth post in my series &quot;A Groovy Light Table client&quot;. A blog series about steps I take when trying to build a Groovy plugin for Light Table.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_tapping_more_into_the_potential_of_light_table&quot;&gt;Tapping more into the Potential of Light Table&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So far the Groovy Light Table plugin hasn&amp;#8217;t really showcased the real power of the Light Table Editor. What feature could showcase more of Light Table and at the same time prove useful in many scenarios ? For most projects I have worked on, the number of dependencies and their relationships have usually been non trivial. A couple of years back I wrote a post about showing gradle dependencies as a graphwiz png. Wouldn&amp;#8217;t it be cool if I could show my gradle dependencies  inline in Light Table ? It would be even cooler if the graph was interactive and provided more/different value than the default dependency reporting you got from Gradle itself&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_dagre_d3&quot;&gt;dagre-D3&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So what library should I choose for laying out my planned dependency diagram ? My first instinct was something related to D3. However laying out a dot-graph sensibly on my own didn&amp;#8217;t seem like a challenge I was quite up to. Luckily I found dagre-D3 and it looked to be just the thing I needed.  Of course I would have loved to have found something more clojurish and ideally something that supported an immediate mode ui (akin to Facebook React, but for graphing).  Maybe I didn&amp;#8217;t look long or well enough but I couldn&amp;#8217;t find anything obvious so I settled for &lt;a href=&quot;https://github.com/cpettitt/dagre-d3&quot;&gt;dagre-D3&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_gradle_dependencies&quot;&gt;Gradle dependencies&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The second challenge I faced before even getting started was: How would I go about retrieving rich dependency information for my gradle projects using the tooling-api ? The information about dependencies default provided through the tooling api is fairly limited and wouldn&amp;#8217;t have produced a very informative graph at all. Luckily I found through dialog with the Gradle guys that it should be possible to achieve what I wanted through a custom gradle model.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_it_s_all_about_the_data&quot;&gt;It&amp;#8217;s all about the data&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;When I initially started developing the custom gradle model for retrieving dependency information I designed a data structure that resembled the dependency modelling in Gradle. However after prototyping with dagre and later trying to display multi project dependency graphs I decided to change the design. I ended up with a data structure more similar to that of a graph with nodes and edges.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_custom_gradle_model&quot;&gt;Custom Gradle Model&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To create a Custom Gradle Model you need to create a Gradle Plugin. My plugin got the very informative name &quot;Generic Gradle Model&quot; (naming is hard!).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;class GenericGradleModelPlugin implements Plugin {
+    final ToolingModelBuilderRegistry registry;
+
+    @Inject
+    public GenericGradleModelPlugin(ToolingModelBuilderRegistry registry) {
+        this.registry = registry;
+    }
+
+    @Override
+    void apply(Project project) {
+        registry.register(new CustomToolingModelBuilder())
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The important bit above is registering my custom tooling builder to make it available to the tooling api !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;private static class CustomToolingModelBuilder implements ToolingModelBuilder {
+
+// .. other private methods left out for brevity
+
+Map confDiGraph(Configuration conf) {
+  def nodeTree = conf.allDependencies
+    .findAll {it instanceof ProjectDependency}
+    .collect {getProjectDepInfo(it as ProjectDependency)} +
+    conf.resolvedConfiguration
+        .firstLevelModuleDependencies
+        .collect { getDependencyInfo(it) }
+
+    def nodes = nodeTree.collect {collectNodeEntry(it)}.flatten().unique {nodeId(it)}
+    def edges = nodeTree.collect {
+      collectEdge(conf.name, it)
+    }.flatten().unique()
+
+    [nodes: nodes, edges: edges]
+  }
+
+  Map projectDeps(Project project) {
+    [
+      name: project.name,
+      group: project.group,
+      version: project.version,
+      configurations: project.configurations.collectEntries{Configuration conf -&amp;gt;
+          [conf.name, confDiGraph(conf)]
+      }
+    ]
+  }
+
+  public boolean canBuild(String modelName) {
+    modelName.equals(GenericModel.class.getName())
+  }
+
+  public Object buildAll(String modelName, Project project) {
+    new DefaultGenericModel(
+      rootDependencies: projectDeps(project),
+      subprojectDependencies: project.subprojects.collect {projectDeps(it)}
+  }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The custom tooling model builder harvests information about all dependencies for all defined configurations in the project. If the project is a multi-project It will collect the same information for each subproject in addition to collect information about interdependencies between the sub projects.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_applying_the_plugin_to_gradle_projects_we_connect_to&quot;&gt;Applying the plugin to gradle projects we connect to&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Before we can retrieve our custom gradle model, we need to apply the plugin to the project in question. I could ask the users to do it themselves, but that wouldn&amp;#8217;t be particularly user friendly.
+Luckily Gradle provides init scripts that you can apply to projects and the tooling api supports doing so. Init scripts allows you to do&amp;#8230; well &amp;#8230; init stuff for your projects. Applying a plugin from the outside falls into that category.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;initscript {
+  repositories {
+    maven { url &apos;http://dl.bintray.com/rundis/maven&apos; }
+  }
+  dependencies { classpath &quot;no.rundis.gradle:generic-gradle-model:0.0.2&quot; }
+}
+
+allprojects {
+  apply plugin: org.gradle.tooling.model.generic.GenericGradleModelPlugin
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_retrieving_the_model&quot;&gt;Retrieving the model&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;def genericModel = con.action(new GetGenericModelAction())
+                            .withArguments(&quot;--init-script&quot;, new File(&quot;lib/lt-project-init.gradle&quot;).absolutePath)
+                            .addProgressListener(listener)
+                            .run()
+
+private static class GetGenericModelAction implements Serializable, BuildAction {
+  @Override
+  GenericModel execute(BuildController controller) {
+    controller.getModel(GenericModel)
+  }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To retrieve the model we use a custom build action and applies the plugin implementing the custom model using the --init-script command line argument for gradle.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Voila we have the data we need and we return the dependency info (async) after you have connected to a gradle project.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_show_me_a_graph&quot;&gt;Show me a graph&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The dependency graph and associated logic was separated out to a separate namespace (graph.cljs).
+We&amp;#8217;ll quickly run through some of the highlights of the LightTable clojurescript parts for displaying the dependency graph.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_graph_object&quot;&gt;Graph object&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defui dependency-graph-ui [this]
+  [:div.graph
+   [:div.dependency-graph
+    [:svg:svg {:width &quot;650&quot; :height &quot;680&quot;}
+     [:svg:g {:transform &quot;translate(20,20)&quot;}]]]])
+
+(object/object* ::dependency-graph
+                :tags [:graph.dependency]
+                :name &quot;Dependency graph&quot;
+                :init (fn [this]
+                        (load/js (files/join plugin-dir &quot;js/d3.v3.min.js&quot;) :sync)
+                        (load/js (files/join plugin-dir &quot;js/dagre-d3.js&quot;) :sync)
+                        (let [content (dependency-graph-ui this)]
+                          content)))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The first step was to create and object that represents the view (and is able to hold the dependency data). The init method is responsible for loading the required graphing libs and then it creates the initial placeholder markup for the graph.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_some_behaviours&quot;&gt;Some behaviours&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(behavior ::on-dependencies-loaded
+          :desc &quot;Gradle dependencies loaded for selected project&quot;
+          :triggers #{:graph.set.dependencies}
+          :reaction (fn [this rootDeps subDeps]
+                      (object/merge! this {:rootDeps rootDeps
+                                           :subDeps subDeps})))
+
+
+(behavior ::on-show-dependencies
+          :desc &quot;Show dependency graph&quot;
+          :triggers #{:graph.show.dependencies}
+          :reaction (fn [this root-deps]
+                      (tabs/add-or-focus! dependency-graph)
+                      (default-display this)))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The first behavior is triggered when the groovy backend has finished retrieving the project info, and more specifically the dependencies. If the project is a single project only the rootDeps will contain data.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The second behavior is triggered (by a command) when the user wishes to view the dependency graph for a connected gradle project.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_render_multiproject_graph_hightlighs&quot;&gt;Render Multiproject graph Hightlighs&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For multi projects the plugin renders an overview graph where you can see the interdependencies between you sub projects.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn create-multiproject-graph [this]
+  (let [g (new dagreD3/Digraph)]
+    (doseq [x (:nodes (multi-proj-deps this))]
+      (.addNode g (dep-id x) #js {:label (str &quot;&amp;lt;div class=&apos;graph-label clickable&apos; data-proj-name=&apos;&quot;
+                                              (:name x) &quot;&apos; title=&apos;&quot;
+                                              (dep-id x) &quot;&apos;&amp;gt;&quot;
+                                              (:name x) &quot;&amp;lt;br/&amp;gt;&quot;
+                                              (:version x)
+                                              &quot;&amp;lt;/div&amp;gt;&quot;)}))
+    (doseq [x (:edges (multi-proj-deps this))]
+      (.addEdge g nil (:a x) (:b x) #js {:label &quot;&quot;}))
+    g))
+
+(defn render-multi-deps [this]
+  (let [renderer (new dagreD3/Renderer)
+        g (dom/$ :g (:content @this))
+        svg (dom/$ :svg (:content @this))
+        layout (.run renderer (create-multiproject-graph this) (d3-sel g))
+        dim (dimensions this)]
+    (unbind-select-project this)
+    (bind-select-project this)
+    (.attr (d3-sel svg) &quot;width&quot; (+ (:w dim) 20))
+    (.attr (d3-sel svg) &quot;height&quot; (+ (:h dim) 20))))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The first function shows how we use dagre-D3 to create a logical dot graph representation. We basically add nodes and edges (dep&amp;#8594;dep). Most of the code is related to what&amp;#8217;s rendered inside each node.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The second function shows how we actually layout and display the graph.  In addition we bind click handlers to our custom divs inside the nodes. The click handlers allows for drill down into a detailed graph about each dependency configuration.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_end_results&quot;&gt;End results&lt;/h3&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2014/ratpack_multi.png&quot; alt=&quot;ratpack multi&quot;&gt;
+&lt;/div&gt;
+&lt;div class=&quot;title&quot;&gt;Figure 1. Multiproject sample : Ratpack&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2014/ratpack_reactor.png&quot; alt=&quot;ratpack reactor&quot;&gt;
+&lt;/div&gt;
+&lt;div class=&quot;title&quot;&gt;Figure 2. Project configuration dependencies&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I think we achieved some pretty cool things. Maybe not a feature that you need everyday, but its certainly useful to get an overview of your project dependencies. For troubleshooting transitive dependency issues and resolution conflicts etc you might need more details though.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We have certainly showcased that you can do some really cool things with Light Table that you probably wouldn&amp;#8217;t typically do (easily) with a lot of other editors and IDE&amp;#8217;s. We have also dug deeper into the gradle tooling api. The gradle tooling api when maturing even more will provide some really cool new options for  JVM IDE integrations. A smart move by gradleware that opens up for integrations from a range of editors, IDE&amp;#8217;s and specialised tools and applications.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The end result of the dependency graph integration became the largest chunk of the 0.0.6 release.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
+    <item>
+      <title>A Groovy Light Table client - Step 4: Exploring new avenues with Gradle</title>
+      <link>http://rundis.github.io/blog//2014/gr_lt_part4.html</link>
+      <pubDate>Mon, 26 May 2014 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">2014/gr_lt_part4.html</guid>
+      	<description>
+	&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_background&quot;&gt;Background&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This is the fourth post in my series &quot;A Groovy Light Table client&quot;. A blog series about steps I take when trying to build a Groovy plugin for Light Table.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_initial_ponderings&quot;&gt;Initial ponderings&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Gradle ships with a Tooling API that makes it fairly easily to integrate with your Gradle projects. Initially I thought that Gradle integration should be a separate plugin that other jvm language plugins could depend on, starting with the Groovy plugin. However after much deliberation I decided to start out with bundling the gradle integration with the Groovy plugin. There is certainly a degree of selecting the easy option to that decision. However I still consider the integration exploratory and I&amp;#8217;m not sure how it will pan out. I&amp;#8217;ve settled for a strategy of keeping it logically fairly separate, with a mind to separating gradle specifics out to its own plugin when things become clearer.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_classpath_integration_for_groovy_repl&quot;&gt;Classpath Integration for Groovy &quot;REPL&quot;&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In part 3 I talked about some REPL like features where variables that result in bindings are stored in a editor session and used as input to the next evaluation. Since then I&amp;#8217;ve also added the feature of caching method definitions (albeit as closures so I&amp;#8217;m sure there are gotchas to that approach as well).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Anyways wouldn&amp;#8217;t it be nice If I could also explore my project classes and my projects third party library dependencies in a REPL like fashion ? Hence the idea of providing a Gradle integration. With the Tooling API I should be able to retrieve a class path. So this is where i started.
+Before anyone potentially asking; I will not bother with maven or ant at any point in time, I&amp;#8217;ll leave that to someone else.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_retrieving_the_class_path_as_a_list_from_a_gradle_project&quot;&gt;Retrieving the class path as a list from a Gradle project&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;// Step 1: Connecting to project
+def con = GradleConnector.newConnector()
+  .forProjectDirectory(projectDir)
+  .connect()
+
+// Step 2: Get hold of a project model, for now a IdeaModel provides what we need
+def ideaProject = con.model(IdeaProject)
+  .addProgressListener(listener)
+  .get()
+
+// Step 3: Get list of dependencies
+def deps = ideaProject.children
+  .dependencies
+  .flatten()
+  .findAll { it.scope.scope == &quot;COMPILE&quot; }
+  .collect {
+    [
+      name   : it.gradleModuleVersion?.name,
+      group  : it.gradleModuleVersion?.group,
+      version: it.gradleModuleVersion?.version,
+      file   : it.file?.path,
+      source : it.source?.path,
+      javadoc: it.javadoc?.path
+    ]
+  }
+
+def classpathList = deps.file + [new File(projectDir, &quot;build/classes/main&quot;).path]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The above code is actually wrapped in a class. Connection and model instances are cached for performance reasons.
+We connect to our gradle project. If the project ships with a gradle wrapper (which it should IMO), the gradle connector will use that version (download the distribution even if need be). Otherwise it will use the gradle version of the tooling-api. At the time of writing that&amp;#8217;s 1.12
+The tooling api doesn&amp;#8217;t really expose as much information by default as you might wish. However it ships with an IdeaModel and an EclipseModel that provides what we need for the purposes of creating a class path. As an Idea user the IdeaModel seemed the right choice ! There is also added a progress listener, which is a callback from the api reporting progress. The progress listener returns each progress event as a string to Light Table so that we can display progress information
+We basically navigate the model and extract information about dependencies and put it in a list of maps for ease of jsonifying (useful later !). The location of our projects custom compiled classes are added manually to the class path list (ideally should have been retrieved from the model as well&amp;#8230;)
+Adding the class path list to our groovy shell before code invocation&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;private GroovyShell createShell(Map params) {
+def transform = new ScriptTransform()
+def conf = new CompilerConfiguration()
+  conf.addCompilationCustomizers(new ASTTransformationCustomizer(transform))
+  conf.addCompilationCustomizers(ic)
+
+  if(params.classPathList) {
+    conf.setClasspathList(params.classPathList)
+  }
+
+  new GroovyShell(conf)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Its basically just a matter of adding the class path list to the CompilerConfiguration we initialise our GroovyShell with. Sweet !
+Voila your groovy scripts can invoke any class in your project?s class path.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This addition basically resulted in version 0.0.4&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_reporting_progress&quot;&gt;Reporting progress&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_groovy&quot;&gt;Groovy&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;class ProgressReporter implements LTProgressReporter {
+    final LTConnection ltCon
+
+    ProgressReporter(LTConnection ltCon) { this.ltCon = ltCon }
+
+    @Override
+    void statusChanged(ProgressEvent event) {
+        if (event.description?.trim()) {
+            reportProgress(event.description)
+        }
+    }
+
+    void reportProgress(String message) {
+        ltCon.sendData([null, &quot;gradle.progress&quot;,[msg: message]])
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Notes&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;statusChanges is called by gradle (LTProgressReporter extends the Gradle ProgressListener interface)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;reportProgress sends the progress information to Light Table&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_light_table&quot;&gt;Light Table&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(behavior ::on-gradle-progress
+  :desc &quot;Reporting of progress from gradle related tasks&quot;
+  :triggers #{:gradle.progress}
+  :reaction (fn [this info]
+              (notifos/msg* (str &quot;Gradle progress: &quot; (:msg info)) {:timeout 5000})))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The progress behaviour just prints a message to the Light Table status bar.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_executing_gradle_tasks&quot;&gt;Executing Gradle Tasks&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There are two parts to this puzzle. One is to retrieve information about what tasks are actually available for the given project. The other is to actually invoke the task (tasks in the future).
+Listing tasks Groovy/Server&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt; // Step 1: Retrieve generic Gradle model
+def gradleProject = con.model(GradleProject)
+  .addProgressListener(listener)
+  .get()
+
+// Step 2: Get list of available tasks
+gradleProject.tasks.collect{
+  [
+    name: it.name,
+    displayName: it.displayName,
+    description: it.description,
+    path: it.path
+  ]
+}
+
+// Step 3: Send task list to client (omitted, you get the general idea by now !)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_listing_tasks_in_light_table&quot;&gt;Listing tasks in Light Table&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The list of tasks is actually retrieved by the Light Table plugin once you select to connect to a gradle project. Furthermore the list is cached in an atom.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(behavior ::on-gradle-projectinfo
+  :desc &quot;Gradle project model information&quot;
+  :triggers #{:gradle.projectinfo}
+  :reaction (fn [this info]
+              (object/merge! groovy {::gradle-project-info info})
+              (object/assoc-in! cmd/manager [:commands :gradle.task.select :options] (add-selector))))
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;When the groovy server has finished retrieving the tasks (and other project info) the above behaviour is triggered in Light Table:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We store the project info in our Groovy object (an atom)
+We also update the command for selecting tasks with the new list of tasks. See the section below for details.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(behavior ::set-selected
+  :triggers #{:select}
+  :reaction (fn [this v]
+              (scmd/exec-active! v)))
+
+(defn selector [opts]
+  (doto (scmd/filter-list opts)
+    (object/add-behavior! ::set-selected)))
+
+(defn get-tasks []
+  (-&amp;gt;@groovy ::gradle-project-info :tasks))
+
+(defn add-selector []
+  (selector {:items (get-tasks)
+             :key :name
+             :transform #(str &quot;&amp;lt;p&amp;gt;&quot; (:name %4) &quot;&amp;lt;/p&amp;gt;&quot;
+                              &quot;&amp;lt;p class=&apos;binding&apos;&amp;gt;&quot; (:description %4) &quot;&amp;lt;/p&amp;gt;&quot;)}))
+
+(cmd/command {:command :gradle.task.select
+              :desc &quot;Groovy: Select Gradle task&quot;
+              :options (add-selector)
+              :exec (fn [item]
+                      (object/raise groovy :gradle.execute item))})
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The above code adds a sub panel to the default sidebar command panel. When you select the command :gradle.task.select it will show a child panel listing the tasks from the get-tasks function.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2014/lt_gr_tasks.png&quot; alt=&quot;lt gr tasks&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;;; Behavior to actually trigger execution of a selected task from the list above
+(behavior ::on-gradle-execute
+  :desc &quot;Gradle execute task(s)&quot;
+  :triggers #{:gradle.execute}
+  :reaction (fn [this task]
+              (clients/send
+                (clients/by-name &quot;Groovy&quot;)
+                :gradle.execute
+                {:tasks [(:name task)]})))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Once you have selected a task the above behaviour is triggered. We get hold of an editor agnostic groovy client and send an execute task message with a list of task (currently always just one). The data we send will be extended in the future to support multiple tasks and build arguments.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Server side Task execution&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;// Generic execute task function
+def execute(Map params, Closure onComplete) {
+    def resultHandler = [
+        onComplete: {Object result -&amp;gt;
+            onComplete status: &quot;OK&quot;
+        },
+        onFailure: {GradleConnectionException failure -&amp;gt;
+            onComplete status: &quot;ERROR&quot;, error: failure
+        }
+    ] as ResultHandler
+
+
+    con.newBuild()
+    .addProgressListener(listener)
+    .forTasks(params.tasks as String[])
+    .run(resultHandler)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Here we use the asynch features of the Gradle Tooling API. Executing a task may actually take a while so it certainly makes sense. Callers of the execute method will receive a callback (onComplete) once task execution is completed successfully (of failed).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;projectConnection.execute(params) {Map result -&amp;gt;
+    ltConnection.sendData([
+        null,
+        result.status == &quot;ERROR&quot; ? &quot;gradle.execute.err&quot; : &quot;gradle.execute.success&quot;,
+        result
+    ])
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We invoke the execute method with a closure argument and return the results (success/failure) back to Light Table.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This brings us pretty much up to version 0.0.5&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Well we covered a lot of ground here. We can now call any class that&amp;#8217;s in your Gradle project&amp;#8217;s class path from a groovy editor in Light Table. We&amp;#8217;ve also started on providing Gradle features that are language agnostic. Starting with support for listing and executing tasks in your gradle project.
+We&amp;#8217;ve added decent progress reporting and performance seems to be pretty good too. Looks like we have something we can build further upon !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I have lots of ideas; Infinitesting,  single test with inline results, compile single file, grails integration ? etc etc. I also really want to show project dependencies in a graph. However before I can do any of those things I need to extend the tooling api with custom models &amp;#8230; and/or maybe I should see if I can contribute to the gradle project in extending the tooling-api with a richer generic project model.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We&amp;#8217;ll have to wait and see. Next week I&amp;#8217;m off to gr8conf.eu in Copenhagen. Really looking forward to meeting up with all the great Groovy dudes/dudettes.  And who knows maybe the hackergarten evening will result in something new and exciting !&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
+    <item>
       <title>Groovy Light Table Plugin</title>
       <link>http://rundis.github.io/blog//2014/groovy_repl.html</link>
       <pubDate>Mon, 19 May 2014 00:00:00 +0200</pubDate>
@@ -357,6 +962,138 @@ just for fun.&lt;/p&gt;
 &lt;p&gt;A short demonstration of the repl like capabilities of my Light Table Groovy plugin (&lt;a href=&quot;https://github.com/rundis/LightTable-Groovy&quot;&gt;https://github.com/rundis/LightTable-Groovy&lt;/a&gt;)&lt;/p&gt;
 &lt;/div&gt;
 &lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;http://www.youtube.com/embed/5ji8RR2A4gQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
+    <item>
+      <title>A Groovy Light Table client - Step 3: Running out of quick wins</title>
+      <link>http://rundis.github.io/blog//2014/gr_lt_part3.html</link>
+      <pubDate>Mon, 12 May 2014 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">2014/gr_lt_part3.html</guid>
+      	<description>
+	&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_background&quot;&gt;Background&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This is the third post in my series &quot;A Groovy Light Table client&quot;. A blog series about steps I take when trying to build a Groovy plugin for Light Table.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_running_out_of_quick_wins&quot;&gt;Running out of quick wins&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;After 0.0.2 of the plugin was released I was pretty happy. I had something that I could actually use as an alternative Groovy Console. However I was keen to keep up the flow so I figured I would try to implement an autocomplete feature. The task proved rather daunting. Not so much from the Light Table side of things, but rather from the Groovy side. First I tried to see if I could reuse anything from GroovySh, but that didn&amp;#8217;t look to promising. After that I tried to get my head around whether I could somehow reuse something from IntelliJ or Eclipse. I failed to see the light so I gave up that endeavour. Secondly I tried to see if there was an easy way to provide an inline documentation feature. Sadly I couldn&amp;#8217;t find much reusable and something with a small foot print here either. Someone should make a REST based doc search feature for Groovy Docs one day !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I turned my attention to a couple of other plugins that I thought would be useful for Light Table. I created a Buster.JS plugin &lt;a href=&quot;https://github.com/busterjs/lt-instabuster&quot;&gt;InstaBuster&lt;/a&gt; for easily running JavaScript tests. I also created a snippets/code templates plugin &lt;a href=&quot;https://github.com/rundis/lt-snippets&quot;&gt;lt-snippets&lt;/a&gt; and some snippet collections, among them a small collection of &lt;a href=&quot;https://github.com/rundis/lt-groovy-snippets&quot;&gt;groovy snippets&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There is just no way I could ever compete with the mainstream IDE&amp;#8217;s, but then again that was never really the original intention. But even with limited capacity it should still be possible to provide useful groovy support and maybe even something fairly unique within the super hackable framework of Light Table.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_a_small_step_towards_a_groovy_repl&quot;&gt;A (small) step towards a Groovy REPL&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;After working with Light Table and the Clojure/ClojureScript REPL I have grown very fond of that exploratory nature of working. Is there anything I could do with the plugin to give a more REPL like feel ? Well a small but helpful step would be to be able to remember what I previously have evaluated &amp;#8230;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_groovy_bindings&quot;&gt;Groovy Bindings&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A simple but still useful mechanism would be to cache bindings from script execution between evals.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;// from the evalGroovy method
+def evalResult = scriptExecutor.execute(data.code, clientSessions.get(currentClientId))
+clientSessions.put(currentClientId, evalResult.bindings)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Each editor in Light Table gets it&amp;#8217;s own unique Id. So I just created a simple cache &quot;ClientSessions&quot; that hold a map of binding variables, mapped my that Id. When executing a script the current binding variables are applied to the script and after the script has executed the resulting binding variables are added/replaced in the cache. Dead simple really.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_clearing_bindings_light_table&quot;&gt;Clearing bindings - Light Table&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I figured it would be handy to be able to clear any stored bindings. So a new command and behaviour was created in Light Table&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;;; Behavior for clearing bindings
+(behavior ::on-clear-bindings
+          :desc &quot;Clear cached bindings for this editor&quot;
+          :triggers #{:on.clear.bindings}
+          :reaction (fn [editor]
+                      (let [info (:info @editor)
+                            cl (eval/get-client! {:command :editor.clear.groovy
+                                                    :origin editor
+                                                    :info info
+                                                    :create try-connect})]
+                          (clients/send cl
+                                        :editor.clear.groovy info
+                                        :only editor))))
+
+;; Command that allows a new keyboard bindable action for invoking the behaviour above
+(cmd/command {:command :clear-bindings
+              :desc &quot;Groovy: Clear bindings for current editor&quot;
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (object/raise ed :on.clear.bindings)))})&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The command retrieves the currently active editor and triggers the behaviour. The behaviour retrieves a client connection (or creates one if one shouldn&amp;#8217;t exist) and calls the server (groovy).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;// Wiring up the behaviour in groovy.behaviors
+:editor.groovy [:lt.plugins.groovy/on-eval
+                     :lt.plugins.groovy/on-eval.one
+                     :lt.plugins.groovy/on-clear-bindings
+                     :lt.plugins.groovy/groovy-res
+                     :lt.plugins.groovy/groovy-err
+                     [:lt.object/add-tag :watchable]]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The final piece of the puzzle from the Light Table side is to attach the behavior to the :editor.groovy tag. This enables the behavior to be available from any editor that is tagged with this tag.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_clearing_bindings_groovy&quot;&gt;Clearing bindings - Groovy&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;// The command dispatch got a new command
+case &quot;editor.clear.groovy&quot;:
+   clientSessions.clear(currentClientId)
+   break;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The code above will just nuke any stored binding variables.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_conclusions&quot;&gt;Conclusions&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A tiny step that allows you to eval groovy expressions step by step. Anything that results in a binding is stored between evals. Obviously it&amp;#8217;s a bit limited in that you&amp;#8217;ll run into the familiar trap of trying to use def and be surprised(/annoyed) that it won&amp;#8217;t remember that or if you define a class it won&amp;#8217;t remember that either. It&amp;#8217;s probably possible to cater for some of these traps, but maybe not within the realms of a quick win.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Anyways the end result is Version 0.0.3 !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Next steps&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Firstly there is a Screencast brewing. After that I think a Light Table Gradle plugin is coming before the Groovy plugin gets any further updates. A pluggable Gradle plugin would enable the Groovy plugin to quite easily get the class path for you project. This would allow you to  explore your projects code in a REPL (-like) way. Exploratory testing FTW !&lt;/p&gt;
+&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 	</description>

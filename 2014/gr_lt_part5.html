@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>A Groovy Light Table client - Step 5: Gradle dependencies in Light Table with dagre-D3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="..//blog/css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/blog/about.html">About</a></li>
+            <li><a href="/blog/feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>A Groovy Light Table client - Step 5: Gradle dependencies in Light Table with dagre-D3</h1>
+	</div>
+
+	<p><em>18 June 2014</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/lighttable.html">lighttable</a>
+  </em>
+    <a href="/blog/tags/groovy.html"> groovy</a>
+  </em>
+    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+  </em>
+    <a href="/blog/tags/gradle.html">gradle</a>
+  </p>
+
+	<p><div class="sect1">
+<h2 id="_background">Background</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This is the fifth post in my series "A Groovy Light Table client". A blog series about steps I take when trying to build a Groovy plugin for Light Table.</p>
+</div>
+<div class="sect2">
+<h3 id="_tapping_more_into_the_potential_of_light_table">Tapping more into the Potential of Light Table</h3>
+<div class="paragraph">
+<p>So far the Groovy Light Table plugin hasn&#8217;t really showcased the real power of the Light Table Editor. What feature could showcase more of Light Table and at the same time prove useful in many scenarios ? For most projects I have worked on, the number of dependencies and their relationships have usually been non trivial. A couple of years back I wrote a post about showing gradle dependencies as a graphwiz png. Wouldn&#8217;t it be cool if I could show my gradle dependencies  inline in Light Table ? It would be even cooler if the graph was interactive and provided more/different value than the default dependency reporting you got from Gradle itself</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dagre_d3">dagre-D3</h3>
+<div class="paragraph">
+<p>So what library should I choose for laying out my planned dependency diagram ? My first instinct was something related to D3. However laying out a dot-graph sensibly on my own didn&#8217;t seem like a challenge I was quite up to. Luckily I found dagre-D3 and it looked to be just the thing I needed.  Of course I would have loved to have found something more clojurish and ideally something that supported an immediate mode ui (akin to Facebook React, but for graphing).  Maybe I didn&#8217;t look long or well enough but I couldn&#8217;t find anything obvious so I settled for <a href="https://github.com/cpettitt/dagre-d3">dagre-D3</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_gradle_dependencies">Gradle dependencies</h3>
+<div class="paragraph">
+<p>The second challenge I faced before even getting started was: How would I go about retrieving rich dependency information for my gradle projects using the tooling-api ? The information about dependencies default provided through the tooling api is fairly limited and wouldn&#8217;t have produced a very informative graph at all. Luckily I found through dialog with the Gradle guys that it should be possible to achieve what I wanted through a custom gradle model.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_it_s_all_about_the_data">It&#8217;s all about the data</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When I initially started developing the custom gradle model for retrieving dependency information I designed a data structure that resembled the dependency modelling in Gradle. However after prototyping with dagre and later trying to display multi project dependency graphs I decided to change the design. I ended up with a data structure more similar to that of a graph with nodes and edges.</p>
+</div>
+<div class="sect2">
+<h3 id="_custom_gradle_model">Custom Gradle Model</h3>
+<div class="paragraph">
+<p>To create a Custom Gradle Model you need to create a Gradle Plugin. My plugin got the very informative name "Generic Gradle Model" (naming is hard!).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>class GenericGradleModelPlugin implements Plugin {
+    final ToolingModelBuilderRegistry registry;
+
+    @Inject
+    public GenericGradleModelPlugin(ToolingModelBuilderRegistry registry) {
+        this.registry = registry;
+    }
+
+    @Override
+    void apply(Project project) {
+        registry.register(new CustomToolingModelBuilder())
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The important bit above is registering my custom tooling builder to make it available to the tooling api !</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>private static class CustomToolingModelBuilder implements ToolingModelBuilder {
+
+// .. other private methods left out for brevity
+
+Map confDiGraph(Configuration conf) {
+  def nodeTree = conf.allDependencies
+    .findAll {it instanceof ProjectDependency}
+    .collect {getProjectDepInfo(it as ProjectDependency)} +
+    conf.resolvedConfiguration
+        .firstLevelModuleDependencies
+        .collect { getDependencyInfo(it) }
+
+    def nodes = nodeTree.collect {collectNodeEntry(it)}.flatten().unique {nodeId(it)}
+    def edges = nodeTree.collect {
+      collectEdge(conf.name, it)
+    }.flatten().unique()
+
+    [nodes: nodes, edges: edges]
+  }
+
+  Map projectDeps(Project project) {
+    [
+      name: project.name,
+      group: project.group,
+      version: project.version,
+      configurations: project.configurations.collectEntries{Configuration conf -&gt;
+          [conf.name, confDiGraph(conf)]
+      }
+    ]
+  }
+
+  public boolean canBuild(String modelName) {
+    modelName.equals(GenericModel.class.getName())
+  }
+
+  public Object buildAll(String modelName, Project project) {
+    new DefaultGenericModel(
+      rootDependencies: projectDeps(project),
+      subprojectDependencies: project.subprojects.collect {projectDeps(it)}
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The custom tooling model builder harvests information about all dependencies for all defined configurations in the project. If the project is a multi-project It will collect the same information for each subproject in addition to collect information about interdependencies between the sub projects.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_applying_the_plugin_to_gradle_projects_we_connect_to">Applying the plugin to gradle projects we connect to</h3>
+<div class="paragraph">
+<p>Before we can retrieve our custom gradle model, we need to apply the plugin to the project in question. I could ask the users to do it themselves, but that wouldn&#8217;t be particularly user friendly.
+Luckily Gradle provides init scripts that you can apply to projects and the tooling api supports doing so. Init scripts allows you to do&#8230; well &#8230; init stuff for your projects. Applying a plugin from the outside falls into that category.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>initscript {
+  repositories {
+    maven { url 'http://dl.bintray.com/rundis/maven' }
+  }
+  dependencies { classpath "no.rundis.gradle:generic-gradle-model:0.0.2" }
+}
+
+allprojects {
+  apply plugin: org.gradle.tooling.model.generic.GenericGradleModelPlugin
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_retrieving_the_model">Retrieving the model</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>def genericModel = con.action(new GetGenericModelAction())
+                            .withArguments("--init-script", new File("lib/lt-project-init.gradle").absolutePath)
+                            .addProgressListener(listener)
+                            .run()
+
+private static class GetGenericModelAction implements Serializable, BuildAction {
+  @Override
+  GenericModel execute(BuildController controller) {
+    controller.getModel(GenericModel)
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To retrieve the model we use a custom build action and applies the plugin implementing the custom model using the --init-script command line argument for gradle.</p>
+</div>
+<div class="paragraph">
+<p>Voila we have the data we need and we return the dependency info (async) after you have connected to a gradle project.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_show_me_a_graph">Show me a graph</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The dependency graph and associated logic was separated out to a separate namespace (graph.cljs).
+We&#8217;ll quickly run through some of the highlights of the LightTable clojurescript parts for displaying the dependency graph.</p>
+</div>
+<div class="sect2">
+<h3 id="_graph_object">Graph object</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defui dependency-graph-ui [this]
+  [:div.graph
+   [:div.dependency-graph
+    [:svg:svg {:width "650" :height "680"}
+     [:svg:g {:transform "translate(20,20)"}]]]])
+
+(object/object* ::dependency-graph
+                :tags [:graph.dependency]
+                :name "Dependency graph"
+                :init (fn [this]
+                        (load/js (files/join plugin-dir "js/d3.v3.min.js") :sync)
+                        (load/js (files/join plugin-dir "js/dagre-d3.js") :sync)
+                        (let [content (dependency-graph-ui this)]
+                          content)))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first step was to create and object that represents the view (and is able to hold the dependency data). The init method is responsible for loading the required graphing libs and then it creates the initial placeholder markup for the graph.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_some_behaviours">Some behaviours</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-dependencies-loaded
+          :desc "Gradle dependencies loaded for selected project"
+          :triggers #{:graph.set.dependencies}
+          :reaction (fn [this rootDeps subDeps]
+                      (object/merge! this {:rootDeps rootDeps
+                                           :subDeps subDeps})))
+
+
+(behavior ::on-show-dependencies
+          :desc "Show dependency graph"
+          :triggers #{:graph.show.dependencies}
+          :reaction (fn [this root-deps]
+                      (tabs/add-or-focus! dependency-graph)
+                      (default-display this)))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first behavior is triggered when the groovy backend has finished retrieving the project info, and more specifically the dependencies. If the project is a single project only the rootDeps will contain data.</p>
+</div>
+<div class="paragraph">
+<p>The second behavior is triggered (by a command) when the user wishes to view the dependency graph for a connected gradle project.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_render_multiproject_graph_hightlighs">Render Multiproject graph Hightlighs</h3>
+<div class="paragraph">
+<p>For multi projects the plugin renders an overview graph where you can see the interdependencies between you sub projects.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn create-multiproject-graph [this]
+  (let [g (new dagreD3/Digraph)]
+    (doseq [x (:nodes (multi-proj-deps this))]
+      (.addNode g (dep-id x) #js {:label (str "&lt;div class='graph-label clickable' data-proj-name='"
+                                              (:name x) "' title='"
+                                              (dep-id x) "'&gt;"
+                                              (:name x) "&lt;br/&gt;"
+                                              (:version x)
+                                              "&lt;/div&gt;")}))
+    (doseq [x (:edges (multi-proj-deps this))]
+      (.addEdge g nil (:a x) (:b x) #js {:label ""}))
+    g))
+
+(defn render-multi-deps [this]
+  (let [renderer (new dagreD3/Renderer)
+        g (dom/$ :g (:content @this))
+        svg (dom/$ :svg (:content @this))
+        layout (.run renderer (create-multiproject-graph this) (d3-sel g))
+        dim (dimensions this)]
+    (unbind-select-project this)
+    (bind-select-project this)
+    (.attr (d3-sel svg) "width" (+ (:w dim) 20))
+    (.attr (d3-sel svg) "height" (+ (:h dim) 20))))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first function shows how we use dagre-D3 to create a logical dot graph representation. We basically add nodes and edges (dep&#8594;dep). Most of the code is related to what&#8217;s rendered inside each node.</p>
+</div>
+<div class="paragraph">
+<p>The second function shows how we actually layout and display the graph.  In addition we bind click handlers to our custom divs inside the nodes. The click handlers allows for drill down into a detailed graph about each dependency configuration.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_end_results">End results</h3>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2014/ratpack_multi.png" alt="ratpack multi">
+</div>
+<div class="title">Figure 1. Multiproject sample : Ratpack</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2014/ratpack_reactor.png" alt="ratpack reactor">
+</div>
+<div class="title">Figure 2. Project configuration dependencies</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I think we achieved some pretty cool things. Maybe not a feature that you need everyday, but its certainly useful to get an overview of your project dependencies. For troubleshooting transitive dependency issues and resolution conflicts etc you might need more details though.</p>
+</div>
+<div class="paragraph">
+<p>We have certainly showcased that you can do some really cool things with Light Table that you probably wouldn&#8217;t typically do (easily) with a lot of other editors and IDE&#8217;s. We have also dug deeper into the gradle tooling api. The gradle tooling api when maturing even more will provide some really cool new options for  JVM IDE integrations. A smart move by gradleware that opens up for integrations from a range of editors, IDE&#8217;s and specialised tools and applications.</p>
+</div>
+<div class="paragraph">
+<p>The end result of the dependency graph integration became the largest chunk of the 0.0.6 release.</p>
+</div>
+</div>
+</div></p>
+
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'gr_lt_part5';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+    
+  </body>
+</html>
