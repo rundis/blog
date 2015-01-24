@@ -65,6 +65,126 @@
 	<div class="page-header">
 		<h1>Blog</h1>
 	</div>
+  			<a href="/blog/2015/gr_lt_status_jan2015.html"><h1>A Groovy Light Table client - I&#8217;m not dead (yet)</h1></a>
+  			<p>25 January 2015</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/lighttable.html">lighttable</a>
+	      
+		      <a href="/blog/tags/groovy.html"> groovy</a>
+	      
+		      <a href="/blog/tags/gradle.html"> gradle</a>
+	      
+		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+	      </p>
+  			<p><div class="sect1">
+<h2 id="_background">Background</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In 2014 I blogged about the process of evolving a groovy(/gradle) plugin for Light Table from scratch.</p>
+</div>
+<div class="ulist">
+<div class="title">Posts so far:</div>
+<ul>
+<li>
+<p><a href="/blog/2014/gr_lt_part1.html">A Groovy Light Table client - Step 1: Connecting the client</a></p>
+</li>
+<li>
+<p><a href="/blog/2014/gr_lt_part2.html">A Groovy Light Table client - Step 2: Evaluating Code</a></p>
+</li>
+<li>
+<p><a href="/blog/2014/gr_lt_part3.html">A Groovy Light Table client - Step 3: Running out of quick wins</a></p>
+</li>
+<li>
+<p><a href="/blog/2014/gr_lt_part4.html">A Groovy Light Table client - Step 4: Exploring new avenues with Gradle</a></p>
+</li>
+<li>
+<p><a href="/blog/2014/gr_lt_part5.html">A Groovy Light Table client - Step 5: Gradle dependencies in Light Table with dagre-D3</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>I even did a <a href="/blog/2014/groovy_repl.html">screen cast</a> showing off some of the features so far.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_so_what_happened">So what happened ?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>After the summer holidays my Open Source mojo was drained, I needed a break and I went into uphill cycling mode.</p>
+</div>
+<div class="sect2">
+<h3 id="_light_table_doubts">Light Table doubts</h3>
+<div class="paragraph">
+<p>First of all. I haven&#8217;t given up on Light Table I somehow even feel strongly obliged to hang in there longer
+than most people given that I&#8217;ve contributed. I still use Light Table, actually more than ever because I&#8217;m currently
+hacking on a clojure/clojurescript project.</p>
+</div>
+<div class="paragraph">
+<p>In October the founder of Light Table annouced Eve and released this <a href="http://www.chris-granger.com/2014/10/01/beyond-light-table/">blog post</a>
+Obviously there was initial fears that this would be the end of Light Table. However 3 of the most active contributors
+to Light Table stepped up. There was a lot of visible activity initially (proper spring cleaning of the issues log).
+However visible activity from Light Table has been in steady decline and the last release was 21. november of last year.</p>
+</div>
+<div class="paragraph">
+<p>I believe they are working on moving from node-webkit to atom shell, the layout system is being revised. There is also a hack night planned
+in a few days time.</p>
+</div>
+<div class="paragraph">
+<p>I guess I just wished someone stepped up and outlined a clear road-map for Light Table and that
+a steady stream of releases towards a version 1.0 started coming out :)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_possibilites_for_further_developments">Possibilites for further developments</h3>
+<div class="paragraph">
+<p>Great things are happening with gradle I believe in terms of performance and also in terms of whats possible
+to achieve with the Tooling API. This opens up a whole range of oportunities to provide IDE support for languages that gradle supports.</p>
+</div>
+<div class="paragraph">
+<p>The groovy and gradle parts of the currenty groovy plugin should probably be split with a generic gradle
+plugin and specific language plugins (scala, java&#8230;) depending on that.</p>
+</div>
+<div class="ulist">
+<div class="title">How about things like ?:</div>
+<ul>
+<li>
+<p>Continuous unit testing - utilizing gradle builds incremental nature and the coming watcher tasks.
+Couple that with showing results inline in Light Table</p>
+</li>
+<li>
+<p>Compilation - Same story here, show compilation errors inline</p>
+</li>
+<li>
+<p>run webapp - Run apropriate gradle task to start your webapp and fire up a browser window inline in lighttable
+, maybe even hook it up with a browser debug/repl connection</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_help_needed">Help needed</h3>
+<div class="paragraph">
+<p>I&#8217;d love to hear if anyone has actually used the plugin and if so which parts of it.</p>
+</div>
+<div class="paragraph">
+<p>I&#8217;m currently fully engaged in a clojure/clojurescript project, which takes all of my day time and quite a few evenings.
+It puts me in a better shape to contribute to Light Table, but currently leaves me little time to do so.</p>
+</div>
+<div class="olist arabic">
+<div class="title">That might change though, but I guess I need 2 things to happen before I pick up work on this plugin:</div>
+<ol class="arabic">
+<li>
+<p>Some visible progress from Light Table to show that it&#8217;s intending to survive</p>
+</li>
+<li>
+<p>Hopefully someone feels inspired to help contribute progressing the plugin (pull requests are welcome)</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div></p>
   			<a href="/blog/2015/bootify-ring.html"><h1>Bootifying my ring app</h1></a>
   			<p>19 January 2015</p>
         <p><em>Tags: </em>
