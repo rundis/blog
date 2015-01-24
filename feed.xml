@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog//feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sat, 24 Jan 2015 17:52:54 +0100</pubDate>
-    <lastBuildDate>Sat, 24 Jan 2015 17:52:54 +0100</lastBuildDate>
+    <pubDate>Sat, 24 Jan 2015 18:04:33 +0100</pubDate>
+    <lastBuildDate>Sat, 24 Jan 2015 18:04:33 +0100</lastBuildDate>
 
     <item>
       <title>Bootifying my ring app</title>
@@ -427,7 +427,7 @@ This time demonstrating some of the more advanced features.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;img src=&quot;lt_groovy_eval.png&quot; alt=&quot;lt groovy eval&quot;&gt;
+&lt;img src=&quot;/blog/2014/lt_groovy_eval.png&quot; alt=&quot;lt groovy eval&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
