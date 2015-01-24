@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog//feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 23 Jan 2015 19:58:17 +0100</pubDate>
-    <lastBuildDate>Fri, 23 Jan 2015 19:58:17 +0100</lastBuildDate>
+    <pubDate>Sat, 24 Jan 2015 16:08:50 +0100</pubDate>
+    <lastBuildDate>Sat, 24 Jan 2015 16:08:50 +0100</lastBuildDate>
 
     <item>
       <title>Bootifying my ring app</title>
@@ -406,6 +406,255 @@ This time demonstrating some of the more advanced features.&lt;/p&gt;
 &lt;p&gt;Intro to the Light Table Buster plugin (&lt;a href=&quot;https://github.com/busterjs/lt-instabuster&quot;&gt;https://github.com/busterjs/lt-instabuster&lt;/a&gt;)&lt;/p&gt;
 &lt;/div&gt;
 &lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;http://www.youtube.com/embed/WKHWazblpbc&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
+    <item>
+      <title>Javascript testing in your JVM projects using Gradle and BusterJS</title>
+      <link>http://rundis.github.io/blog//2013/buster-plugin.html</link>
+      <pubDate>Mon, 19 Aug 2013 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">2013/buster-plugin.html</guid>
+      	<description>
+	&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;When I first started looking at testing in javascript land a while back I quickly felt lost in space.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Filled with questions like;&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;which framework(s) to choose ?&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;how do I get framework x to work from my IDE ?&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;more importantly how to I manage to include the javascript tests in my CI builds ?&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;how can I avoid repetitive setup pain across projects ?&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;why is it such a hassle getting started ?&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I can&amp;#8217;t say I have answered any of the questions above fully, but I have taken some strides in the right direction.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_buster_js&quot;&gt;Buster.JS&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;http://docs.busterjs.org/en/latest/&quot;&gt;Buster&lt;/a&gt; is a flexible and modularized framework for writing and running your JavaScript tests.
+There are others out there, but from what I could gather and based on advice from my frontend wizard colleagues I decided to give it a good go. It&amp;#8217;s still in beta, but from my experiences so far its more than mature enough for proper use in projects.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_a_few_important_aspects_about_buster_js&quot;&gt;A few important aspects about Buster.JS:&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Tests are run in real browsers (phantomjs for headless). No emulation bull
+You can run tests in multiple browsers in parallell
+Its really really fast
+Write tests in the fashion that suits you (xUnit or spec)
+Nice assertion library and integrated with Sinon.JS (powerful stubbing and spying)
+&amp;#8230; and lots more&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_gradle_buster_plugin&quot;&gt;Gradle buster plugin&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For my jvm project builds I use Gradle. Maven and Ant projects that spend time with me a few weeks tend to find themselves converted. So I set out to create a buster plugin for gradle, aptly named gradle-buster-plugin. Still early days, but already it has started to prove quite valuable.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;The plugin has two high-level goals;&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Allow you to easily run javascripts as part of your CI builds&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Provide you with a smooth development experience by adding value on top of whats already present in Buster.JS.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The homepage for the pluging is here: &lt;a href=&quot;https://github.com/rundis/gradle-buster-plugin&quot;&gt;https://github.com/rundis/gradle-buster-plugin&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_what_do_i_have_to_do_aka_getting_started&quot;&gt;What do I have to do ? (aka getting started)&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_installing_preconditions&quot;&gt;Installing preconditions&lt;/h3&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Install node.js/npm - Mac: $ brew install node&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Install Buster.JS  - $ npm install buster -g&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Install Phantom.JS  - Mac: $ brew install phantomjs&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_set_up_the_buster_plugin_in_your_gradle_config&quot;&gt;Set up the buster plugin in your gradle config&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint groovy language-groovy&quot;&gt;&lt;code&gt;buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath  &apos;org.gradle.buster:gradle-buster-plugin:0.2.4.1&apos;
+    }
+}
+
+apply plugin: &apos;war&apos; // just assuming you have a war project
+apply plugin: &apos;buster&apos;
+
+build.dependsOn busterTest // hook up javascript task in the build&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_set_up_a_buster_js_configuration_file&quot;&gt;Set up a buster.js configuration file&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;var config = module.exports;
+
+config[&quot;Sample JSTests&quot;] = {
+    environment: &quot;browser&quot;,
+
+    libs: [&quot;src/main/webaapp/js/libs/jquery-1.10.2.js&quot;],
+    sources: [&quot;src/main/web-app/js/app/**/*.js&quot;],
+    tests: [&quot;src/test/js/**/*-test.js&quot;]
+};&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_sample_unit&quot;&gt;Sample unit&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So you could create a file like src/main/webapp/js/app/dummy-service.js&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;var myapp = this.myapp || {};
+myapp.services = app.services || {};
+(function () {
+    myapp.services.DummyService = function (my) {
+        my.listTodos = function(success, error) {
+            $.get(&apos;/todos/list&apos;)
+               .done(function(data) {
+                  success(data);
+               })
+               .fail(function(jqXHR, textStatus, errorThrown) {
+                  error(&quot;Error getting todos&quot;)
+               });
+        };
+        return my;
+    }(myapp.services.DummyService || {});
+}());&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_sample_unit_test&quot;&gt;Sample unit test&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Create a corresponding unit test in src/test/js/app/dummy-service-test.js&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;(function () {
+    buster.testCase(&quot;DummyService&quot;, {
+        setUp: function() {
+            this.service = myapp.services.DummyService;
+            this.server = sinon.fakeServer.create();
+            this.success = this.spy();
+            this.error = this.spy();
+        },
+        tearDown: function () {
+            this.server.restore();
+        },
+        &quot;should successfully list todos&quot;: function () {
+            this.service.listTodos(this.success, this.error);
+            this.server.requests[0].respond(
+                200,
+                { &quot;Content-Type&quot;: &quot;application/json&quot; },
+                JSON.stringify([{ id: 1, text: &quot;Provide examples&quot;, done: true }])
+            );
+
+            assert.calledOnce(this.success);
+        },
+        &quot;should invoke error callback on errors&quot;: function () {
+            this.service.listTodos(this.success, this.error);
+            this.server.requests[0].respond(
+                500,
+                { &quot;Content-Type&quot;: &quot;application/json&quot; },
+                JSON.stringify([{ id: 1, text: &quot;dummy&quot;, done: true }])
+            );
+
+            assert.calledOnce(this.error);
+        }
+    });
+}());&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_running_the_tests_locally&quot;&gt;Running the tests locally&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;$ gradle busterTest&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Test results are found in : build/busterTest-results/bustertests.xml&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Autotesting
+When doing your tdd cycles its quite useful to use the autotest feature (kinda like infinitest).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;$ gradle busterAutoTest&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Will leave the server running and listen for file changes in the patterns specified by the buster.js file above. So if I change the test or unit above a test run will automatically be fired off and results reported to the console. Its pretty fast so you should be able to keep a good flow going !
+Just do Ctrl + C to kill the autotesting.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Multiple browsers
+Its quite easy to set up just see the readme for the plugin&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;CI Server
+Obviously you will need to set up the preconditions. If you&amp;#8217;re server isn&amp;#8217;t headless you have the option of testing with a few proper browsers(firefox and chrome on linux, safari if your server is mac&amp;#8230; which I doubt).&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Its certainly not perfect, but with the above you have a pretty good start. Once you get over the hurdle of setting up the preconditions it really is quite pleasant to work with. You should be amazed by the performance of the tests runs if you are from a jvm background.
+What about IDE integration ? With the autotest feature I can&amp;#8217;t say I have missed it much. I have my IDE and a visible console available and get instant feedback on saves in my IDE.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Smooth !&lt;/p&gt;
+&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 	</description>

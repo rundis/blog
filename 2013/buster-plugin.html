@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Javascript testing in your JVM projects using Gradle and BusterJS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="..//blog/css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="..//blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="..//blog/about.html">About</a></li>
+            <li><a href="../feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>Javascript testing in your JVM projects using Gradle and BusterJS</h1>
+	</div>
+
+	<p><em>19 August 2013</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/gradle.html">gradle</a>
+  </em>
+    <a href="/blog/tags/groovy.html"> groovy</a>
+  </em>
+    <a href="/blog/tags/javascript.html"> javascript</a>
+  </em>
+    <a href="/blog/tags/buster.html"> buster</a>
+  </em>
+    <a href="/blog/tags/screencast.html"> screencast</a>
+  </p>
+
+	<p><div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When I first started looking at testing in javascript land a while back I quickly felt lost in space.</p>
+</div>
+<div class="ulist">
+<div class="title">Filled with questions like;</div>
+<ul>
+<li>
+<p>which framework(s) to choose ?</p>
+</li>
+<li>
+<p>how do I get framework x to work from my IDE ?</p>
+</li>
+<li>
+<p>more importantly how to I manage to include the javascript tests in my CI builds ?</p>
+</li>
+<li>
+<p>how can I avoid repetitive setup pain across projects ?</p>
+</li>
+<li>
+<p>why is it such a hassle getting started ?</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>I can&#8217;t say I have answered any of the questions above fully, but I have taken some strides in the right direction.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_buster_js">Buster.JS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="http://docs.busterjs.org/en/latest/">Buster</a> is a flexible and modularized framework for writing and running your JavaScript tests.
+There are others out there, but from what I could gather and based on advice from my frontend wizard colleagues I decided to give it a good go. It&#8217;s still in beta, but from my experiences so far its more than mature enough for proper use in projects.</p>
+</div>
+<div class="sect2">
+<h3 id="_a_few_important_aspects_about_buster_js">A few important aspects about Buster.JS:</h3>
+<div class="paragraph">
+<p>Tests are run in real browsers (phantomjs for headless). No emulation bull
+You can run tests in multiple browsers in parallell
+Its really really fast
+Write tests in the fashion that suits you (xUnit or spec)
+Nice assertion library and integrated with Sinon.JS (powerful stubbing and spying)
+&#8230; and lots more</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_gradle_buster_plugin">Gradle buster plugin</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For my jvm project builds I use Gradle. Maven and Ant projects that spend time with me a few weeks tend to find themselves converted. So I set out to create a buster plugin for gradle, aptly named gradle-buster-plugin. Still early days, but already it has started to prove quite valuable.</p>
+</div>
+<div class="ulist">
+<div class="title">The plugin has two high-level goals;</div>
+<ul>
+<li>
+<p>Allow you to easily run javascripts as part of your CI builds</p>
+</li>
+<li>
+<p>Provide you with a smooth development experience by adding value on top of whats already present in Buster.JS.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The homepage for the pluging is here: <a href="https://github.com/rundis/gradle-buster-plugin">https://github.com/rundis/gradle-buster-plugin</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_do_i_have_to_do_aka_getting_started">What do I have to do ? (aka getting started)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_installing_preconditions">Installing preconditions</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Install node.js/npm - Mac: $ brew install node</p>
+</li>
+<li>
+<p>Install Buster.JS  - $ npm install buster -g</p>
+</li>
+<li>
+<p>Install Phantom.JS  - Mac: $ brew install phantomjs</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_set_up_the_buster_plugin_in_your_gradle_config">Set up the buster plugin in your gradle config</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint groovy language-groovy"><code>buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath  'org.gradle.buster:gradle-buster-plugin:0.2.4.1'
+    }
+}
+
+apply plugin: 'war' // just assuming you have a war project
+apply plugin: 'buster'
+
+build.dependsOn busterTest // hook up javascript task in the build</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_set_up_a_buster_js_configuration_file">Set up a buster.js configuration file</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint javascript language-javascript"><code>var config = module.exports;
+
+config["Sample JSTests"] = {
+    environment: "browser",
+
+    libs: ["src/main/webaapp/js/libs/jquery-1.10.2.js"],
+    sources: ["src/main/web-app/js/app/**/*.js"],
+    tests: ["src/test/js/**/*-test.js"]
+};</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sample_unit">Sample unit</h3>
+<div class="paragraph">
+<p>So you could create a file like src/main/webapp/js/app/dummy-service.js</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint javascript language-javascript"><code>var myapp = this.myapp || {};
+myapp.services = app.services || {};
+(function () {
+    myapp.services.DummyService = function (my) {
+        my.listTodos = function(success, error) {
+            $.get('/todos/list')
+               .done(function(data) {
+                  success(data);
+               })
+               .fail(function(jqXHR, textStatus, errorThrown) {
+                  error("Error getting todos")
+               });
+        };
+        return my;
+    }(myapp.services.DummyService || {});
+}());</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sample_unit_test">Sample unit test</h3>
+<div class="paragraph">
+<p>Create a corresponding unit test in src/test/js/app/dummy-service-test.js</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint javascript language-javascript"><code>(function () {
+    buster.testCase("DummyService", {
+        setUp: function() {
+            this.service = myapp.services.DummyService;
+            this.server = sinon.fakeServer.create();
+            this.success = this.spy();
+            this.error = this.spy();
+        },
+        tearDown: function () {
+            this.server.restore();
+        },
+        "should successfully list todos": function () {
+            this.service.listTodos(this.success, this.error);
+            this.server.requests[0].respond(
+                200,
+                { "Content-Type": "application/json" },
+                JSON.stringify([{ id: 1, text: "Provide examples", done: true }])
+            );
+
+            assert.calledOnce(this.success);
+        },
+        "should invoke error callback on errors": function () {
+            this.service.listTodos(this.success, this.error);
+            this.server.requests[0].respond(
+                500,
+                { "Content-Type": "application/json" },
+                JSON.stringify([{ id: 1, text: "dummy", done: true }])
+            );
+
+            assert.calledOnce(this.error);
+        }
+    });
+}());</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_running_the_tests_locally">Running the tests locally</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint bash language-bash"><code>$ gradle busterTest</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Test results are found in : build/busterTest-results/bustertests.xml</p>
+</div>
+<div class="paragraph">
+<p>Autotesting
+When doing your tdd cycles its quite useful to use the autotest feature (kinda like infinitest).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint bash language-bash"><code>$ gradle busterAutoTest</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Will leave the server running and listen for file changes in the patterns specified by the buster.js file above. So if I change the test or unit above a test run will automatically be fired off and results reported to the console. Its pretty fast so you should be able to keep a good flow going !
+Just do Ctrl + C to kill the autotesting.</p>
+</div>
+<div class="paragraph">
+<p>Multiple browsers
+Its quite easy to set up just see the readme for the plugin</p>
+</div>
+<div class="paragraph">
+<p>CI Server
+Obviously you will need to set up the preconditions. If you&#8217;re server isn&#8217;t headless you have the option of testing with a few proper browsers(firefox and chrome on linux, safari if your server is mac&#8230; which I doubt).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Its certainly not perfect, but with the above you have a pretty good start. Once you get over the hurdle of setting up the preconditions it really is quite pleasant to work with. You should be amazed by the performance of the tests runs if you are from a jvm background.
+What about IDE integration ? With the autotest feature I can&#8217;t say I have missed it much. I have my IDE and a visible console available and get instant feedback on saves in my IDE.</p>
+</div>
+<div class="paragraph">
+<p>Smooth !</p>
+</div>
+</div>
+</div></p>
+
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'buster_plugin';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+    
+  </body>
+</html>
