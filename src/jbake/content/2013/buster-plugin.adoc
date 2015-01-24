@@ -1,0 +1,176 @@
+= Javascript testing in your JVM projects using Gradle and BusterJS
+Magnus Rundberget
+2013-08-19
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: gradle, groovy, javascript, buster, screencast
+:id: buster_plugin
+
+
+== Introduction
+When I first started looking at testing in javascript land a while back I quickly felt lost in space.
+
+.Filled with questions like;
+* which framework(s) to choose ?
+* how do I get framework x to work from my IDE ?
+* more importantly how to I manage to include the javascript tests in my CI builds ?
+* how can I avoid repetitive setup pain across projects ?
+* why is it such a hassle getting started ?
+
+I can't say I have answered any of the questions above fully, but I have taken some strides in the right direction.
+
+== Buster.JS
+http://docs.busterjs.org/en/latest/[Buster] is a flexible and modularized framework for writing and running your JavaScript tests.
+There are others out there, but from what I could gather and based on advice from my frontend wizard colleagues I decided to give it a good go. It's still in beta, but from my experiences so far its more than mature enough for proper use in projects.
+
+=== A few important aspects about Buster.JS:
+Tests are run in real browsers (phantomjs for headless). No emulation bull
+You can run tests in multiple browsers in parallell
+Its really really fast
+Write tests in the fashion that suits you (xUnit or spec)
+Nice assertion library and integrated with Sinon.JS (powerful stubbing and spying)
+... and lots more
+
+== Gradle buster plugin
+For my jvm project builds I use Gradle. Maven and Ant projects that spend time with me a few weeks tend to find themselves converted. So I set out to create a buster plugin for gradle, aptly named gradle-buster-plugin. Still early days, but already it has started to prove quite valuable.
+
+.The plugin has two high-level goals;
+* Allow you to easily run javascripts as part of your CI builds
+* Provide you with a smooth development experience by adding value on top of whats already present in Buster.JS.
+
+The homepage for the pluging is here: https://github.com/rundis/gradle-buster-plugin
+
+== What do I have to do ? (aka getting started)
+=== Installing preconditions
+* Install node.js/npm - Mac: $ brew install node
+* Install Buster.JS  - $ npm install buster -g
+* Install Phantom.JS  - Mac: $ brew install phantomjs
+
+=== Set up the buster plugin in your gradle config
+[source,groovy]
+----
+buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath  'org.gradle.buster:gradle-buster-plugin:0.2.4.1'
+    }
+}
+
+apply plugin: 'war' // just assuming you have a war project
+apply plugin: 'buster'
+
+build.dependsOn busterTest // hook up javascript task in the build
+----
+
+
+=== Set up a buster.js configuration file
+[source,javascript]
+----
+var config = module.exports;
+
+config["Sample JSTests"] = {
+    environment: "browser",
+
+    libs: ["src/main/webaapp/js/libs/jquery-1.10.2.js"],
+    sources: ["src/main/web-app/js/app/**/*.js"],
+    tests: ["src/test/js/**/*-test.js"]
+};
+----
+
+=== Sample unit
+
+So you could create a file like src/main/webapp/js/app/dummy-service.js
+[source,javascript]
+----
+var myapp = this.myapp || {};
+myapp.services = app.services || {};
+(function () {
+    myapp.services.DummyService = function (my) {
+        my.listTodos = function(success, error) {
+            $.get('/todos/list')
+               .done(function(data) {
+                  success(data);
+               })
+               .fail(function(jqXHR, textStatus, errorThrown) {
+                  error("Error getting todos")
+               });
+        };
+        return my;
+    }(myapp.services.DummyService || {});
+}());
+----
+
+=== Sample unit test
+Create a corresponding unit test in src/test/js/app/dummy-service-test.js
+[source,javascript]
+----
+(function () {
+    buster.testCase("DummyService", {
+        setUp: function() {
+            this.service = myapp.services.DummyService;
+            this.server = sinon.fakeServer.create();
+            this.success = this.spy();
+            this.error = this.spy();
+        },
+        tearDown: function () {
+            this.server.restore();
+        },
+        "should successfully list todos": function () {
+            this.service.listTodos(this.success, this.error);
+            this.server.requests[0].respond(
+                200,
+                { "Content-Type": "application/json" },
+                JSON.stringify([{ id: 1, text: "Provide examples", done: true }])
+            );
+
+            assert.calledOnce(this.success);
+        },
+        "should invoke error callback on errors": function () {
+            this.service.listTodos(this.success, this.error);
+            this.server.requests[0].respond(
+                500,
+                { "Content-Type": "application/json" },
+                JSON.stringify([{ id: 1, text: "dummy", done: true }])
+            );
+
+            assert.calledOnce(this.error);
+        }
+    });
+}());
+----
+
+
+
+=== Running the tests locally
+[source,bash]
+----
+$ gradle busterTest
+----
+
+Test results are found in : build/busterTest-results/bustertests.xml
+
+
+Autotesting
+When doing your tdd cycles its quite useful to use the autotest feature (kinda like infinitest).
+[source,bash]
+----
+$ gradle busterAutoTest
+----
+
+
+Will leave the server running and listen for file changes in the patterns specified by the buster.js file above. So if I change the test or unit above a test run will automatically be fired off and results reported to the console. Its pretty fast so you should be able to keep a good flow going !
+Just do Ctrl + C to kill the autotesting.
+
+Multiple browsers
+Its quite easy to set up just see the readme for the plugin
+
+
+CI Server
+Obviously you will need to set up the preconditions. If you're server isn't headless you have the option of testing with a few proper browsers(firefox and chrome on linux, safari if your server is mac... which I doubt).
+
+
+== Conclusion
+Its certainly not perfect, but with the above you have a pretty good start. Once you get over the hurdle of setting up the preconditions it really is quite pleasant to work with. You should be amazed by the performance of the tests runs if you are from a jvm background.
+What about IDE integration ? With the autotest feature I can't say I have missed it much. I have my IDE and a visible console available and get instant feedback on saves in my IDE.
+
+Smooth !
