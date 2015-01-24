@@ -1,0 +1,248 @@
+= A Groovy Light Table client - Step 5: Gradle dependencies in Light Table with dagre-D3
+Magnus Rundberget
+2014-06-18
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: lighttable, groovy, clojurescript,gradle
+:imagesdir: /blog/2014/
+:id: gr_lt_part5
+
+== Background
+
+This is the fifth post in my series "A Groovy Light Table client". A blog series about steps I take when trying to build a Groovy plugin for Light Table.
+
+=== Tapping more into the Potential of Light Table
+
+So far the Groovy Light Table plugin hasn't really showcased the real power of the Light Table Editor. What feature could showcase more of Light Table and at the same time prove useful in many scenarios ? For most projects I have worked on, the number of dependencies and their relationships have usually been non trivial. A couple of years back I wrote a post about showing gradle dependencies as a graphwiz png. Wouldn't it be cool if I could show my gradle dependencies  inline in Light Table ? It would be even cooler if the graph was interactive and provided more/different value than the default dependency reporting you got from Gradle itself
+
+=== dagre-D3
+
+So what library should I choose for laying out my planned dependency diagram ? My first instinct was something related to D3. However laying out a dot-graph sensibly on my own didn't seem like a challenge I was quite up to. Luckily I found dagre-D3 and it looked to be just the thing I needed.  Of course I would have loved to have found something more clojurish and ideally something that supported an immediate mode ui (akin to Facebook React, but for graphing).  Maybe I didn't look long or well enough but I couldn't find anything obvious so I settled for https://github.com/cpettitt/dagre-d3[dagre-D3].
+
+===  Gradle dependencies
+
+The second challenge I faced before even getting started was: How would I go about retrieving rich dependency information for my gradle projects using the tooling-api ? The information about dependencies default provided through the tooling api is fairly limited and wouldn't have produced a very informative graph at all. Luckily I found through dialog with the Gradle guys that it should be possible to achieve what I wanted through a custom gradle model.
+
+== It's all about the data
+
+When I initially started developing the custom gradle model for retrieving dependency information I designed a data structure that resembled the dependency modelling in Gradle. However after prototyping with dagre and later trying to display multi project dependency graphs I decided to change the design. I ended up with a data structure more similar to that of a graph with nodes and edges.
+
+=== Custom Gradle Model
+
+To create a Custom Gradle Model you need to create a Gradle Plugin. My plugin got the very informative name "Generic Gradle Model" (naming is hard!).
+
+[source,groovy]
+----
+class GenericGradleModelPlugin implements Plugin {
+    final ToolingModelBuilderRegistry registry;
+
+    @Inject
+    public GenericGradleModelPlugin(ToolingModelBuilderRegistry registry) {
+        this.registry = registry;
+    }
+
+    @Override
+    void apply(Project project) {
+        registry.register(new CustomToolingModelBuilder())
+    }
+}
+----
+
+The important bit above is registering my custom tooling builder to make it available to the tooling api !
+
+[source,groovy]
+----
+private static class CustomToolingModelBuilder implements ToolingModelBuilder {
+
+// .. other private methods left out for brevity
+
+Map confDiGraph(Configuration conf) {
+  def nodeTree = conf.allDependencies
+    .findAll {it instanceof ProjectDependency}
+    .collect {getProjectDepInfo(it as ProjectDependency)} +
+    conf.resolvedConfiguration
+        .firstLevelModuleDependencies
+        .collect { getDependencyInfo(it) }
+
+    def nodes = nodeTree.collect {collectNodeEntry(it)}.flatten().unique {nodeId(it)}
+    def edges = nodeTree.collect {
+      collectEdge(conf.name, it)
+    }.flatten().unique()
+
+    [nodes: nodes, edges: edges]
+  }
+
+  Map projectDeps(Project project) {
+    [
+      name: project.name,
+      group: project.group,
+      version: project.version,
+      configurations: project.configurations.collectEntries{Configuration conf ->
+          [conf.name, confDiGraph(conf)]
+      }
+    ]
+  }
+
+  public boolean canBuild(String modelName) {
+    modelName.equals(GenericModel.class.getName())
+  }
+
+  public Object buildAll(String modelName, Project project) {
+    new DefaultGenericModel(
+      rootDependencies: projectDeps(project),
+      subprojectDependencies: project.subprojects.collect {projectDeps(it)}
+  }
+}
+----
+
+The custom tooling model builder harvests information about all dependencies for all defined configurations in the project. If the project is a multi-project It will collect the same information for each subproject in addition to collect information about interdependencies between the sub projects.
+
+
+=== Applying the plugin to gradle projects we connect to
+
+Before we can retrieve our custom gradle model, we need to apply the plugin to the project in question. I could ask the users to do it themselves, but that wouldn't be particularly user friendly.
+Luckily Gradle provides init scripts that you can apply to projects and the tooling api supports doing so. Init scripts allows you to do... well ... init stuff for your projects. Applying a plugin from the outside falls into that category.
+
+[source,groovy]
+----
+initscript {
+  repositories {
+    maven { url 'http://dl.bintray.com/rundis/maven' }
+  }
+  dependencies { classpath "no.rundis.gradle:generic-gradle-model:0.0.2" }
+}
+
+allprojects {
+  apply plugin: org.gradle.tooling.model.generic.GenericGradleModelPlugin
+}
+----
+
+
+=== Retrieving the model
+[source,groovy]
+----
+def genericModel = con.action(new GetGenericModelAction())
+                            .withArguments("--init-script", new File("lib/lt-project-init.gradle").absolutePath)
+                            .addProgressListener(listener)
+                            .run()
+
+private static class GetGenericModelAction implements Serializable, BuildAction {
+  @Override
+  GenericModel execute(BuildController controller) {
+    controller.getModel(GenericModel)
+  }
+}
+----
+
+
+To retrieve the model we use a custom build action and applies the plugin implementing the custom model using the --init-script command line argument for gradle.
+
+Voila we have the data we need and we return the dependency info (async) after you have connected to a gradle project.
+
+
+== Show me a graph
+
+The dependency graph and associated logic was separated out to a separate namespace (graph.cljs).
+We'll quickly run through some of the highlights of the LightTable clojurescript parts for displaying the dependency graph.
+
+
+=== Graph object
+[source,clojure]
+----
+(defui dependency-graph-ui [this]
+  [:div.graph
+   [:div.dependency-graph
+    [:svg:svg {:width "650" :height "680"}
+     [:svg:g {:transform "translate(20,20)"}]]]])
+
+(object/object* ::dependency-graph
+                :tags [:graph.dependency]
+                :name "Dependency graph"
+                :init (fn [this]
+                        (load/js (files/join plugin-dir "js/d3.v3.min.js") :sync)
+                        (load/js (files/join plugin-dir "js/dagre-d3.js") :sync)
+                        (let [content (dependency-graph-ui this)]
+                          content)))
+----
+
+The first step was to create and object that represents the view (and is able to hold the dependency data). The init method is responsible for loading the required graphing libs and then it creates the initial placeholder markup for the graph.
+
+
+=== Some behaviours
+
+[source,clojure]
+----
+(behavior ::on-dependencies-loaded
+          :desc "Gradle dependencies loaded for selected project"
+          :triggers #{:graph.set.dependencies}
+          :reaction (fn [this rootDeps subDeps]
+                      (object/merge! this {:rootDeps rootDeps
+                                           :subDeps subDeps})))
+
+
+(behavior ::on-show-dependencies
+          :desc "Show dependency graph"
+          :triggers #{:graph.show.dependencies}
+          :reaction (fn [this root-deps]
+                      (tabs/add-or-focus! dependency-graph)
+                      (default-display this)))
+----
+
+The first behavior is triggered when the groovy backend has finished retrieving the project info, and more specifically the dependencies. If the project is a single project only the rootDeps will contain data.
+
+The second behavior is triggered (by a command) when the user wishes to view the dependency graph for a connected gradle project.
+
+=== Render Multiproject graph Hightlighs
+
+For multi projects the plugin renders an overview graph where you can see the interdependencies between you sub projects.
+
+[source,clojure]
+----
+(defn create-multiproject-graph [this]
+  (let [g (new dagreD3/Digraph)]
+    (doseq [x (:nodes (multi-proj-deps this))]
+      (.addNode g (dep-id x) #js {:label (str "<div class='graph-label clickable' data-proj-name='"
+                                              (:name x) "' title='"
+                                              (dep-id x) "'>"
+                                              (:name x) "<br/>"
+                                              (:version x)
+                                              "</div>")}))
+    (doseq [x (:edges (multi-proj-deps this))]
+      (.addEdge g nil (:a x) (:b x) #js {:label ""}))
+    g))
+
+(defn render-multi-deps [this]
+  (let [renderer (new dagreD3/Renderer)
+        g (dom/$ :g (:content @this))
+        svg (dom/$ :svg (:content @this))
+        layout (.run renderer (create-multiproject-graph this) (d3-sel g))
+        dim (dimensions this)]
+    (unbind-select-project this)
+    (bind-select-project this)
+    (.attr (d3-sel svg) "width" (+ (:w dim) 20))
+    (.attr (d3-sel svg) "height" (+ (:h dim) 20))))
+----
+
+The first function shows how we use dagre-D3 to create a logical dot graph representation. We basically add nodes and edges (dep->dep). Most of the code is related to what's rendered inside each node.
+
+The second function shows how we actually layout and display the graph.  In addition we bind click handlers to our custom divs inside the nodes. The click handlers allows for drill down into a detailed graph about each dependency configuration.
+
+
+=== End results
+
+.Multiproject sample : Ratpack
+image::ratpack_multi.png[]
+
+
+.Project configuration dependencies
+image::ratpack_reactor.png[]
+
+
+
+== Conclusion
+
+I think we achieved some pretty cool things. Maybe not a feature that you need everyday, but its certainly useful to get an overview of your project dependencies. For troubleshooting transitive dependency issues and resolution conflicts etc you might need more details though.
+
+We have certainly showcased that you can do some really cool things with Light Table that you probably wouldn't typically do (easily) with a lot of other editors and IDE's. We have also dug deeper into the gradle tooling api. The gradle tooling api when maturing even more will provide some really cool new options for  JVM IDE integrations. A smart move by gradleware that opens up for integrations from a range of editors, IDE's and specialised tools and applications.
+
+The end result of the dependency graph integration became the largest chunk of the 0.0.6 release.

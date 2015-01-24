@@ -1,0 +1,98 @@
+= A Groovy Light Table client - Step 3: Running out of quick wins
+Magnus Rundberget
+2014-05-12
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: lighttable, groovy, clojurescript
+:id: gr_lt_part3
+
+
+== Background
+
+This is the third post in my series "A Groovy Light Table client". A blog series about steps I take when trying to build a Groovy plugin for Light Table.
+
+== Running out of quick wins
+
+After 0.0.2 of the plugin was released I was pretty happy. I had something that I could actually use as an alternative Groovy Console. However I was keen to keep up the flow so I figured I would try to implement an autocomplete feature. The task proved rather daunting. Not so much from the Light Table side of things, but rather from the Groovy side. First I tried to see if I could reuse anything from GroovySh, but that didn't look to promising. After that I tried to get my head around whether I could somehow reuse something from IntelliJ or Eclipse. I failed to see the light so I gave up that endeavour. Secondly I tried to see if there was an easy way to provide an inline documentation feature. Sadly I couldn't find much reusable and something with a small foot print here either. Someone should make a REST based doc search feature for Groovy Docs one day !
+
+I turned my attention to a couple of other plugins that I thought would be useful for Light Table. I created a Buster.JS plugin https://github.com/busterjs/lt-instabuster[InstaBuster] for easily running JavaScript tests. I also created a snippets/code templates plugin https://github.com/rundis/lt-snippets[lt-snippets] and some snippet collections, among them a small collection of https://github.com/rundis/lt-groovy-snippets[groovy snippets].
+
+There is just no way I could ever compete with the mainstream IDE's, but then again that was never really the original intention. But even with limited capacity it should still be possible to provide useful groovy support and maybe even something fairly unique within the super hackable framework of Light Table.
+
+== A (small) step towards a Groovy REPL
+
+After working with Light Table and the Clojure/ClojureScript REPL I have grown very fond of that exploratory nature of working. Is there anything I could do with the plugin to give a more REPL like feel ? Well a small but helpful step would be to be able to remember what I previously have evaluated ...
+
+=== Groovy Bindings
+
+A simple but still useful mechanism would be to cache bindings from script execution between evals.
+[source,groovy]
+----
+// from the evalGroovy method
+def evalResult = scriptExecutor.execute(data.code, clientSessions.get(currentClientId))
+clientSessions.put(currentClientId, evalResult.bindings)
+----
+
+Each editor in Light Table gets it's own unique Id. So I just created a simple cache "ClientSessions" that hold a map of binding variables, mapped my that Id. When executing a script the current binding variables are applied to the script and after the script has executed the resulting binding variables are added/replaced in the cache. Dead simple really.
+
+=== Clearing bindings - Light Table
+
+I figured it would be handy to be able to clear any stored bindings. So a new command and behaviour was created in Light Table
+
+[source,clojure]
+----
+;; Behavior for clearing bindings
+(behavior ::on-clear-bindings
+          :desc "Clear cached bindings for this editor"
+          :triggers #{:on.clear.bindings}
+          :reaction (fn [editor]
+                      (let [info (:info @editor)
+                            cl (eval/get-client! {:command :editor.clear.groovy
+                                                    :origin editor
+                                                    :info info
+                                                    :create try-connect})]
+                          (clients/send cl
+                                        :editor.clear.groovy info
+                                        :only editor))))
+
+;; Command that allows a new keyboard bindable action for invoking the behaviour above
+(cmd/command {:command :clear-bindings
+              :desc "Groovy: Clear bindings for current editor"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (object/raise ed :on.clear.bindings)))})
+----
+
+The command retrieves the currently active editor and triggers the behaviour. The behaviour retrieves a client connection (or creates one if one shouldn't exist) and calls the server (groovy).
+[source,clojure]
+----
+// Wiring up the behaviour in groovy.behaviors
+:editor.groovy [:lt.plugins.groovy/on-eval
+                     :lt.plugins.groovy/on-eval.one
+                     :lt.plugins.groovy/on-clear-bindings
+                     :lt.plugins.groovy/groovy-res
+                     :lt.plugins.groovy/groovy-err
+                     [:lt.object/add-tag :watchable]]
+----
+
+The final piece of the puzzle from the Light Table side is to attach the behavior to the :editor.groovy tag. This enables the behavior to be available from any editor that is tagged with this tag.
+
+=== Clearing bindings - Groovy
+[source,groovy]
+----
+// The command dispatch got a new command
+case "editor.clear.groovy":
+   clientSessions.clear(currentClientId)
+   break;
+----
+The code above will just nuke any stored binding variables.
+
+== Conclusions
+
+A tiny step that allows you to eval groovy expressions step by step. Anything that results in a binding is stored between evals. Obviously it's a bit limited in that you'll run into the familiar trap of trying to use def and be surprised(/annoyed) that it won't remember that or if you define a class it won't remember that either. It's probably possible to cater for some of these traps, but maybe not within the realms of a quick win.
+
+Anyways the end result is Version 0.0.3 !
+
+Next steps
+
+Firstly there is a Screencast brewing. After that I think a Light Table Gradle plugin is coming before the Groovy plugin gets any further updates. A pluggable Gradle plugin would enable the Groovy plugin to quite easily get the class path for you project. This would allow you to  explore your projects code in a REPL (-like) way. Exploratory testing FTW !
