@@ -18,3 +18,8 @@ task publish(type: GradleBuild) {
     buildFile = 'publish.gradle'
     tasks = ['publishGhPages']
 }
+
+task dev_web (type: Sync) {
+  from jbake.output
+  into 'web/blog'
+}

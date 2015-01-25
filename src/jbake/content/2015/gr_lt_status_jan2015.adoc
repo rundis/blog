@@ -1,4 +1,4 @@
-= A Groovy Light Table client - I'm not dead (yet)
+= A Groovy Light Table client - Not dead (yet)
 Magnus Rundberget
 2015-01-25
 :jbake-type: post
