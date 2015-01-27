@@ -6,9 +6,375 @@
     <atom:link href="http://rundis.github.io/blog//feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sun, 25 Jan 2015 15:41:11 +0100</pubDate>
-    <lastBuildDate>Sun, 25 Jan 2015 15:41:11 +0100</lastBuildDate>
+    <pubDate>Tue, 27 Jan 2015 01:17:58 +0100</pubDate>
+    <lastBuildDate>Tue, 27 Jan 2015 01:17:58 +0100</lastBuildDate>
 
+    <item>
+      <title>Securing Clojure Microservices using buddy - Part 1: Creating Auth Tokens</title>
+      <link>http://rundis.github.io/blog//2015/buddy_auth_part1.html</link>
+      <pubDate>Tue, 27 Jan 2015 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2015/buddy_auth_part1.html</guid>
+      	<description>
+	&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_disclaimer&quot;&gt;Disclaimer&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;admonitionblock warning&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-warning&quot; title=&quot;Warning&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There is much more to securing web apps and microservices than just authentication and authorization.
+This blog series will almoust exclusively focus on those two aspects.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Lets say you have decided to go down the microservices path with Clojure. How would
+you go about implementing authentication and authorization for your various apps and services ?&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In this blog series I&amp;#8217;ll take you through my stumblings through how you might address
+some of the concerns. At this point I have no idea how it might turn out, but I&amp;#8217;m pretty
+sure I&amp;#8217;ll learn quite a bit along the way.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_sample_architecture&quot;&gt;Sample architecture&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To illustrate various aspects I&amp;#8217;ll be using the following sample high-level architecture
+as a starting point. It&amp;#8217;s just an sketch,  so don&amp;#8217;t get too hung up on the dependency arrows, that might change.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2015/auth_fun.png&quot; alt=&quot;auth fun&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;You&amp;#8217;ll find the evolving code examples at &lt;a href=&quot;https://github.com/rundis/acme-buddy&quot;&gt;https://github.com/rundis/acme-buddy&lt;/a&gt;. A tag will be created
+for each blog posting.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_initial_selection_of_technologies&quot;&gt;Initial selection of technologies&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The most known and used library in clojure for securing your ring webapps is &lt;a href=&quot;https://github.com/cemerick/friend&quot;&gt;friend&lt;/a&gt;.
+To my knowledge it&amp;#8217;s a great library, and you should seriously consider using it for your apps as well.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A little while back I did a small spike on using friend and &lt;a href=&quot;http://clojure-liberator.github.io/liberator/&quot;&gt;liberator&lt;/a&gt;. Liberator
+is a super library for rest enabling your applications/services. I came across the blog post &lt;a href=&quot;http://sritchie.github.io/2014/01/17/api-authentication-with-liberator-and-friend/&quot;&gt;API Authentication with Liberator and Friend&lt;/a&gt;.
+I tried to implement something similar but couldn&amp;#8217;t quite get it working and I have to admit I had problems grocking what
+was actually going on.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So for this blog series I decided to start off with something less opinionated. Hopefully that will enable me to understand
+more about the concerns involved. In &lt;a href=&quot;https://github.com/funcool/buddy&quot;&gt;buddy&lt;/a&gt; I found an a la carte menu of building blocks
+that looked very promising as a starting point.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_token_based_authentication&quot;&gt;Token based authentication&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The goal for this first post is to create a service that allows a caller to authenticate a user by credentials
+and receive an authentication token upon successful authentication. That token can then be used by services and apps
+to authenticate and authorize requests for the duration of defined lifespan for the token. The service
+will be implemented in the acme-auth service app.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;a href=&quot;http://stackoverflow.com/questions/1592534/what-is-token-based-authentication&quot;&gt;What is token based authentication ?&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_database&quot;&gt;Database&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For this sample app we&amp;#8217;ll use a plain old boring rdbms. The schema will be as follows.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2015/acme_user_db.png&quot; alt=&quot;acme user db&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_password_hashing&quot;&gt;Password hashing&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We need to store our passwords securely hashed in the user table. Buddy provides &lt;a href=&quot;https://github.com/funcool/buddy-hashers&quot;&gt;buddy-hashers&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Adding a user&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(ns acme-auth.service
+  (:require [buddy.hashers :as hs]
+            [acme-auth.store :as store]))
+
+(defn add-user! [ds user]
+  (store/add-user! ds (update-in user [:password] #(hs/encrypt %))))
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;hs/encrypt - Hashes the password using bcrypt+sha512 (default, others available)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Authenticating a user&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn auth-user [ds credentials]
+  (let [user (store/find-user ds (:username credentials))
+        unauthed [false {:message &quot;Invalid username or password&quot;}]]
+    (if user
+      (if (hs/check (:password credentials) (:password user))            &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+        [true {:user (dissoc user :password)}]                           &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+        unauthed)
+      unauthed)))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Verify provided plain text password credential against the hashed password in the db&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;You probably don&amp;#8217;t want to ship the password in the token !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Bcrypt is intentionally relatively slow. It&amp;#8217;s a measure to help prevent brute force attacks.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_creating_a_signed_token&quot;&gt;Creating a signed token&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;With the user store in place we can turn our attention to creating our (signed) token. Buddy provides us with &lt;a href=&quot;https://github.com/funcool/buddy-sign&quot;&gt;buddy-sign&lt;/a&gt;.
+We could have opted for a &lt;a href=&quot;http://en.wikipedia.org/wiki/Hash-based_message_authentication_code&quot;&gt;HMAC&lt;/a&gt; based algorithm,
+but we&amp;#8217;ll take it up one notch and use an algorithm that requires a public/private key-pair.
+Not only that, but we&amp;#8217;ll serialize our token content in a json format following the &lt;a href=&quot;https://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41&quot;&gt;jws&lt;/a&gt;
+draft spec.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/rundis/acme-buddy/tree/master/acme-auth&quot;&gt;acme-auth&lt;/a&gt; will own the private key and use that for signing
+whilst the other apps will have the public key for unsigning the token.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_creating_a_key_pair&quot;&gt;Creating a key-pair&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;You&amp;#8217;ll be asked to enter a passphrase in both steps below. Keep it safe !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;openssl genrsa -aes128 -out auth_privkey.pem 2048&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;You should probably use something stronger than -aes128. You&amp;#8217;ll need to fiddle with your JVM, but might be worth it
+unless it&amp;#8217;s important for you that your government agencies have access to decrypting your token signatures.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_signing&quot;&gt;Signing&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(ns acme-auth.service
+  (:require [buddy.sign.generic :as sign]
+            [buddy.sign.jws :as jws]
+            [buddy.core.keys :as ks]
+            [clj-time.core :as t]
+            [clojure.java.io :as io]))
+
+
+(defn- pkey [auth-conf]                                             &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  (ks/private-key
+   (io/resource (:privkey auth-conf))
+   (:passphrase auth-conf)))
+
+(defn create-auth-token [ds auth-conf credentials]
+  (let [[ok? res] (auth-user ds credentials)
+        exp (-&amp;gt; (t/plus (t/now) (t/days 1)) (jws/to-timestamp))]   &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    (if ok?
+      [true {:token (jws/sign res                                  &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+                              (pkey auth-conf)
+                              {:alg :rs256 :exp exp})}]
+      [false res])))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Helper function to read the private key we generated above&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Sets a timestamp for when the token expires&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Creates a signed token&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;The token consists of 3 parts concatenated using &quot;.&quot;&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Base64 encoded string with header data (algorithm and other optional headers you might have set)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Base64 encoded json string with your message (claims in jws speak). Expiry ie. :exp is also a claim btw.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Base64 encoded MAC (Message Authentication Code) signature for our message (header + claims)&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;With that knowledge in mind, you see why it might be a good idea to leave the password out of the token (even though it would have been the hashed pwd we&amp;#8217;re talking about).&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_exposing_our_service&quot;&gt;Exposing our service&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;handler&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn create-auth-token [req]
+  (let [[ok? res] (service/create-auth-token (:datasource req)
+                                           (:auth-conf req)
+                                           (:params req))]
+    (if ok?
+      {:status 201 :body res}
+      {:status 401 :body res})))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Ring / Compojure wrap-up&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;
+(defroutes app-routes
+  (POST &quot;/create-auth-token&quot; [] handlers/create-auth-token))
+
+
+(defn wrap-datasource [handler]
+  (fn [req]
+      (handler (assoc req :datasource (get-ds)))))
+
+(defn wrap-config [handler]
+  (fn [req]
+    (handler (assoc req :auth-conf {:privkey &quot;auth_privkey.pem&quot;
+                                    :passphrase &quot;secret-key&quot;}))))
+
+(def app
+  (-&amp;gt; app-routes
+      wrap-datasource
+      wrap-config
+      wrap-keyword-params
+      wrap-json-params
+      wrap-json-response))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_invoking&quot;&gt;Invoking&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint bash language-bash&quot;&gt;&lt;code&gt;curl -i -X POST -d &apos;{&quot;username&quot;: &quot;test&quot;, &quot;password&quot;:&quot;secret&quot;}&apos; -H &quot;Content-type: application/json&quot; http://localhost:6001/create-auth-token&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Would yield something like:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;{&quot;token&quot;:&quot;eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6MTEsImFwcGxpY2F0aW9uLWlkIjoxMH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyMjMxNDk3MH0.bKB3fh2CcPWqP85CK18U_IITxkRce8Xuj8fZGvhqjAaq1dWeiDMKOAGfSlg6GGJi-CrRepMaLOEfAVN23R7yoYb543wgm1Tv_pOYuNQ02tYRQMRJXSxVKS1m9zMEWlszLVet8Q3kfrLBaOxjdvjSp8exjsPeOcfCaqdcXPn9mwWSz0X8k1iaLbnY2fRL0mWbbG8rz4bSUSE0KX0xnKH3LqrtJcZE3BDHSr7tVqaxcHaFt4ivRpk3EYBzMtwRSCQ4jwAMibsh1XhvJMo4QeDwil-et70qJMV5XCJOsAr3SF4FVlNeUsNx2Aj1lORGIN7c8xKq-MDaTaGYV2O7L_0mGA&quot;}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Unsigning the token is quite similar to the signing. However when unsigning you must have the
+public key we generated earlier.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For the token above, the claims part of the message would look like this:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;{&quot;user&quot;:{&quot;user-roles&quot;:[{&quot;role-id&quot;:10,&quot;application-id&quot;:10},
+                       {&quot;role-id&quot;:11,&quot;application-id&quot;:10}],
+         &quot;username&quot;:&quot;test&quot;,
+         &quot;id&quot;:1},
+ &quot;exp&quot;:1422314970}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We have created a small clojure app with a user database and a rest service that authenticates a
+user and returns a signed token with information about the user and his/her role+app/service authorizations.
+We&amp;#8217;ve briefly covered password hashing and message signing using buddy.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The auth-token service will serve as a building block for the next step. How do we make use of token
+for authentication and authorization purposes in the acme-webstore ? That&amp;#8217;s the topic of my next blog
+post in this series. Stay tuned !&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>A Groovy Light Table client - Not dead (yet)</title>
       <link>http://rundis.github.io/blog//2015/gr_lt_status_jan2015.html</link>

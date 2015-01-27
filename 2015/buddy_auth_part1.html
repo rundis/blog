@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Securing Clojure Microservices using buddy - Part 1: Creating Auth Tokens</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/blog/css/prettify.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/blog/about.html">About</a></li>
+            <li><a href="/blog/feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>Securing Clojure Microservices using buddy - Part 1: Creating Auth Tokens</h1>
+	</div>
+
+	<p><em>27 January 2015</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/clojure.html">clojure</a>
+  </em>
+    <a href="/blog/tags/buddy.html"> buddy</a>
+  </em>
+    <a href="/blog/tags/security.html"> security</a>
+  </p>
+
+	<p><div class="sect1">
+<h2 id="_disclaimer">Disclaimer</h2>
+<div class="sectionbody">
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>There is much more to securing web apps and microservices than just authentication and authorization.
+This blog series will almoust exclusively focus on those two aspects.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Lets say you have decided to go down the microservices path with Clojure. How would
+you go about implementing authentication and authorization for your various apps and services ?</p>
+</div>
+<div class="paragraph">
+<p>In this blog series I&#8217;ll take you through my stumblings through how you might address
+some of the concerns. At this point I have no idea how it might turn out, but I&#8217;m pretty
+sure I&#8217;ll learn quite a bit along the way.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sample_architecture">Sample architecture</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To illustrate various aspects I&#8217;ll be using the following sample high-level architecture
+as a starting point. It&#8217;s just an sketch,  so don&#8217;t get too hung up on the dependency arrows, that might change.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2015/auth_fun.png" alt="auth fun">
+</div>
+</div>
+<div class="paragraph">
+<p>You&#8217;ll find the evolving code examples at <a href="https://github.com/rundis/acme-buddy">https://github.com/rundis/acme-buddy</a>. A tag will be created
+for each blog posting.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_initial_selection_of_technologies">Initial selection of technologies</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The most known and used library in clojure for securing your ring webapps is <a href="https://github.com/cemerick/friend">friend</a>.
+To my knowledge it&#8217;s a great library, and you should seriously consider using it for your apps as well.</p>
+</div>
+<div class="paragraph">
+<p>A little while back I did a small spike on using friend and <a href="http://clojure-liberator.github.io/liberator/">liberator</a>. Liberator
+is a super library for rest enabling your applications/services. I came across the blog post <a href="http://sritchie.github.io/2014/01/17/api-authentication-with-liberator-and-friend/">API Authentication with Liberator and Friend</a>.
+I tried to implement something similar but couldn&#8217;t quite get it working and I have to admit I had problems grocking what
+was actually going on.</p>
+</div>
+<div class="paragraph">
+<p>So for this blog series I decided to start off with something less opinionated. Hopefully that will enable me to understand
+more about the concerns involved. In <a href="https://github.com/funcool/buddy">buddy</a> I found an a la carte menu of building blocks
+that looked very promising as a starting point.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_token_based_authentication">Token based authentication</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The goal for this first post is to create a service that allows a caller to authenticate a user by credentials
+and receive an authentication token upon successful authentication. That token can then be used by services and apps
+to authenticate and authorize requests for the duration of defined lifespan for the token. The service
+will be implemented in the acme-auth service app.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<a href="http://stackoverflow.com/questions/1592534/what-is-token-based-authentication">What is token based authentication ?</a>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_database">Database</h3>
+<div class="paragraph">
+<p>For this sample app we&#8217;ll use a plain old boring rdbms. The schema will be as follows.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2015/acme_user_db.png" alt="acme user db">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_password_hashing">Password hashing</h3>
+<div class="paragraph">
+<p>We need to store our passwords securely hashed in the user table. Buddy provides <a href="https://github.com/funcool/buddy-hashers">buddy-hashers</a>.</p>
+</div>
+<div class="listingblock">
+<div class="title">Adding a user</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns acme-auth.service
+  (:require [buddy.hashers :as hs]
+            [acme-auth.store :as store]))
+
+(defn add-user! [ds user]
+  (store/add-user! ds (update-in user [:password] #(hs/encrypt %))))
+</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>hs/encrypt - Hashes the password using bcrypt+sha512 (default, others available)</p>
+</div>
+<div class="listingblock">
+<div class="title">Authenticating a user</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn auth-user [ds credentials]
+  (let [user (store/find-user ds (:username credentials))
+        unauthed [false {:message "Invalid username or password"}]]
+    (if user
+      (if (hs/check (:password credentials) (:password user))            <i class="conum" data-value="1"></i><b>(1)</b>
+        [true {:user (dissoc user :password)}]                           <i class="conum" data-value="2"></i><b>(2)</b>
+        unauthed)
+      unauthed)))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Verify provided plain text password credential against the hashed password in the db</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>You probably don&#8217;t want to ship the password in the token !</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Bcrypt is intentionally relatively slow. It&#8217;s a measure to help prevent brute force attacks.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_creating_a_signed_token">Creating a signed token</h3>
+<div class="paragraph">
+<p>With the user store in place we can turn our attention to creating our (signed) token. Buddy provides us with <a href="https://github.com/funcool/buddy-sign">buddy-sign</a>.
+We could have opted for a <a href="http://en.wikipedia.org/wiki/Hash-based_message_authentication_code">HMAC</a> based algorithm,
+but we&#8217;ll take it up one notch and use an algorithm that requires a public/private key-pair.
+Not only that, but we&#8217;ll serialize our token content in a json format following the <a href="https://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41">jws</a>
+draft spec.</p>
+</div>
+<div class="paragraph">
+<p><a href="https://github.com/rundis/acme-buddy/tree/master/acme-auth">acme-auth</a> will own the private key and use that for signing
+whilst the other apps will have the public key for unsigning the token.</p>
+</div>
+<div class="sect3">
+<h4 id="_creating_a_key_pair">Creating a key-pair</h4>
+<div class="paragraph">
+<p>You&#8217;ll be asked to enter a passphrase in both steps below. Keep it safe !</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint bash language-bash"><code>openssl genrsa -aes128 -out auth_privkey.pem 2048</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>You should probably use something stronger than -aes128. You&#8217;ll need to fiddle with your JVM, but might be worth it
+unless it&#8217;s important for you that your government agencies have access to decrypting your token signatures.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint bash language-bash"><code>openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_signing">Signing</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns acme-auth.service
+  (:require [buddy.sign.generic :as sign]
+            [buddy.sign.jws :as jws]
+            [buddy.core.keys :as ks]
+            [clj-time.core :as t]
+            [clojure.java.io :as io]))
+
+
+(defn- pkey [auth-conf]                                             <i class="conum" data-value="1"></i><b>(1)</b>
+  (ks/private-key
+   (io/resource (:privkey auth-conf))
+   (:passphrase auth-conf)))
+
+(defn create-auth-token [ds auth-conf credentials]
+  (let [[ok? res] (auth-user ds credentials)
+        exp (-&gt; (t/plus (t/now) (t/days 1)) (jws/to-timestamp))]   <i class="conum" data-value="2"></i><b>(2)</b>
+    (if ok?
+      [true {:token (jws/sign res                                  <i class="conum" data-value="3"></i><b>(3)</b>
+                              (pkey auth-conf)
+                              {:alg :rs256 :exp exp})}]
+      [false res])))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Helper function to read the private key we generated above</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Sets a timestamp for when the token expires</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Creates a signed token</td>
+</tr>
+</table>
+</div>
+<div class="ulist">
+<div class="title">The token consists of 3 parts concatenated using "."</div>
+<ul>
+<li>
+<p>Base64 encoded string with header data (algorithm and other optional headers you might have set)</p>
+</li>
+<li>
+<p>Base64 encoded json string with your message (claims in jws speak). Expiry ie. :exp is also a claim btw.</p>
+</li>
+<li>
+<p>Base64 encoded MAC (Message Authentication Code) signature for our message (header + claims)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>With that knowledge in mind, you see why it might be a good idea to leave the password out of the token (even though it would have been the hashed pwd we&#8217;re talking about).</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exposing_our_service">Exposing our service</h3>
+<div class="listingblock">
+<div class="title">handler</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn create-auth-token [req]
+  (let [[ok? res] (service/create-auth-token (:datasource req)
+                                           (:auth-conf req)
+                                           (:params req))]
+    (if ok?
+      {:status 201 :body res}
+      {:status 401 :body res})))</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Ring / Compojure wrap-up</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>
+(defroutes app-routes
+  (POST "/create-auth-token" [] handlers/create-auth-token))
+
+
+(defn wrap-datasource [handler]
+  (fn [req]
+      (handler (assoc req :datasource (get-ds)))))
+
+(defn wrap-config [handler]
+  (fn [req]
+    (handler (assoc req :auth-conf {:privkey "auth_privkey.pem"
+                                    :passphrase "secret-key"}))))
+
+(def app
+  (-&gt; app-routes
+      wrap-datasource
+      wrap-config
+      wrap-keyword-params
+      wrap-json-params
+      wrap-json-response))</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_invoking">Invoking</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint bash language-bash"><code>curl -i -X POST -d '{"username": "test", "password":"secret"}' -H "Content-type: application/json" http://localhost:6001/create-auth-token</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Would yield something like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint javascript language-javascript"><code>{"token":"eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6MTEsImFwcGxpY2F0aW9uLWlkIjoxMH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyMjMxNDk3MH0.bKB3fh2CcPWqP85CK18U_IITxkRce8Xuj8fZGvhqjAaq1dWeiDMKOAGfSlg6GGJi-CrRepMaLOEfAVN23R7yoYb543wgm1Tv_pOYuNQ02tYRQMRJXSxVKS1m9zMEWlszLVet8Q3kfrLBaOxjdvjSp8exjsPeOcfCaqdcXPn9mwWSz0X8k1iaLbnY2fRL0mWbbG8rz4bSUSE0KX0xnKH3LqrtJcZE3BDHSr7tVqaxcHaFt4ivRpk3EYBzMtwRSCQ4jwAMibsh1XhvJMo4QeDwil-et70qJMV5XCJOsAr3SF4FVlNeUsNx2Aj1lORGIN7c8xKq-MDaTaGYV2O7L_0mGA"}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Unsigning the token is quite similar to the signing. However when unsigning you must have the
+public key we generated earlier.</p>
+</div>
+<div class="paragraph">
+<p>For the token above, the claims part of the message would look like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint javascript language-javascript"><code>{"user":{"user-roles":[{"role-id":10,"application-id":10},
+                       {"role-id":11,"application-id":10}],
+         "username":"test",
+         "id":1},
+ "exp":1422314970}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We have created a small clojure app with a user database and a rest service that authenticates a
+user and returns a signed token with information about the user and his/her role+app/service authorizations.
+We&#8217;ve briefly covered password hashing and message signing using buddy.</p>
+</div>
+<div class="paragraph">
+<p>The auth-token service will serve as a building block for the next step. How do we make use of token
+for authentication and authorization purposes in the acme-webstore ? That&#8217;s the topic of my next blog
+post in this series. Stay tuned !</p>
+</div>
+</div>
+</div></p>
+
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'buddy_auth_part1';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+    
+  </body>
+</html>
