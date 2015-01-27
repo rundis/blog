@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
     <url>
-        <loc>http://rundis.github.io/blog/about.html</loc>
+        <loc>http://rundis.github.io/blogabout.html</loc>
         <lastmod>2015-01-19</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2015/buddy_auth_part1.html</loc>
+        <loc>http://rundis.github.io/blog2015/buddy_auth_part1.html</loc>
         <lastmod>2015-01-27</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2015/gr_lt_status_jan2015.html</loc>
+        <loc>http://rundis.github.io/blog2015/gr_lt_status_jan2015.html</loc>
         <lastmod>2015-01-25</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2015/bootify-ring.html</loc>
+        <loc>http://rundis.github.io/blog2015/bootify-ring.html</loc>
         <lastmod>2015-01-19</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2014/gr_lt_part5.html</loc>
+        <loc>http://rundis.github.io/blog2014/gr_lt_part5.html</loc>
         <lastmod>2014-06-18</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2014/gr_lt_part4.html</loc>
+        <loc>http://rundis.github.io/blog2014/gr_lt_part4.html</loc>
         <lastmod>2014-05-26</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2014/groovy_repl.html</loc>
+        <loc>http://rundis.github.io/blog2014/groovy_repl.html</loc>
         <lastmod>2014-05-19</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2014/gr_lt_part3.html</loc>
+        <loc>http://rundis.github.io/blog2014/gr_lt_part3.html</loc>
         <lastmod>2014-05-12</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2014/lt-snippets.html</loc>
+        <loc>http://rundis.github.io/blog2014/lt-snippets.html</loc>
         <lastmod>2014-05-06</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2014/instabuster_part2.html</loc>
+        <loc>http://rundis.github.io/blog2014/instabuster_part2.html</loc>
         <lastmod>2014-04-21</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2014/instabuster_part1.html</loc>
+        <loc>http://rundis.github.io/blog2014/instabuster_part1.html</loc>
         <lastmod>2014-03-17</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2014/gr_lt_part2.html</loc>
+        <loc>http://rundis.github.io/blog2014/gr_lt_part2.html</loc>
         <lastmod>2014-02-23</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2014/gr_lt_part1.html</loc>
+        <loc>http://rundis.github.io/blog2014/gr_lt_part1.html</loc>
         <lastmod>2014-02-16</lastmod>
     </url>
     <url>
-        <loc>http://rundis.github.io/blog/2013/buster-plugin.html</loc>
+        <loc>http://rundis.github.io/blog2013/buster-plugin.html</loc>
         <lastmod>2013-08-19</lastmod>
     </url>
 </urlset>

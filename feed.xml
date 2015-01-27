@@ -2,16 +2,16 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>JBake</title>
-    <link>http://rundis.github.io/blog/</link>
-    <atom:link href="http://rundis.github.io/blog//feed.xml" rel="self" type="application/rss+xml" />
+    <link>http://rundis.github.io/blog</link>
+    <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Tue, 27 Jan 2015 07:46:40 +0100</pubDate>
-    <lastBuildDate>Tue, 27 Jan 2015 07:46:40 +0100</lastBuildDate>
+    <pubDate>Tue, 27 Jan 2015 18:22:40 +0100</pubDate>
+    <lastBuildDate>Tue, 27 Jan 2015 18:22:40 +0100</lastBuildDate>
 
     <item>
       <title>Securing Clojure Microservices using buddy - Part 1: Creating Auth Tokens</title>
-      <link>http://rundis.github.io/blog//2015/buddy_auth_part1.html</link>
+      <link>http://rundis.github.io/blog/2015/buddy_auth_part1.html</link>
       <pubDate>Tue, 27 Jan 2015 00:00:00 +0100</pubDate>
       <guid isPermaLink="false">2015/buddy_auth_part1.html</guid>
       	<description>
@@ -378,7 +378,7 @@ post in this series. Stay tuned !&lt;/p&gt;
     </item>
     <item>
       <title>A Groovy Light Table client - Not dead (yet)</title>
-      <link>http://rundis.github.io/blog//2015/gr_lt_status_jan2015.html</link>
+      <link>http://rundis.github.io/blog/2015/gr_lt_status_jan2015.html</link>
       <pubDate>Sun, 25 Jan 2015 00:00:00 +0100</pubDate>
       <guid isPermaLink="false">2015/gr_lt_status_jan2015.html</guid>
       	<description>
@@ -495,7 +495,7 @@ It puts me in a better shape to contribute to Light Table, but currently leaves 
     </item>
     <item>
       <title>Bootifying my ring app</title>
-      <link>http://rundis.github.io/blog//2015/bootify-ring.html</link>
+      <link>http://rundis.github.io/blog/2015/bootify-ring.html</link>
       <pubDate>Mon, 19 Jan 2015 00:00:00 +0100</pubDate>
       <guid isPermaLink="false">2015/bootify-ring.html</guid>
       	<description>
@@ -831,7 +831,7 @@ just for fun.&lt;/p&gt;
     </item>
     <item>
       <title>A Groovy Light Table client - Step 5: Gradle dependencies in Light Table with dagre-D3</title>
-      <link>http://rundis.github.io/blog//2014/gr_lt_part5.html</link>
+      <link>http://rundis.github.io/blog/2014/gr_lt_part5.html</link>
       <pubDate>Wed, 18 Jun 2014 00:00:00 +0200</pubDate>
       <guid isPermaLink="false">2014/gr_lt_part5.html</guid>
       	<description>
@@ -1120,7 +1120,7 @@ We&amp;#8217;ll quickly run through some of the highlights of the LightTable clo
     </item>
     <item>
       <title>A Groovy Light Table client - Step 4: Exploring new avenues with Gradle</title>
-      <link>http://rundis.github.io/blog//2014/gr_lt_part4.html</link>
+      <link>http://rundis.github.io/blog/2014/gr_lt_part4.html</link>
       <pubDate>Mon, 26 May 2014 00:00:00 +0200</pubDate>
       <guid isPermaLink="false">2014/gr_lt_part4.html</guid>
       	<description>
@@ -1436,7 +1436,7 @@ We&amp;#8217;ve added decent progress reporting and performance seems to be pret
     </item>
     <item>
       <title>Groovy Light Table Plugin</title>
-      <link>http://rundis.github.io/blog//2014/groovy_repl.html</link>
+      <link>http://rundis.github.io/blog/2014/groovy_repl.html</link>
       <pubDate>Mon, 19 May 2014 00:00:00 +0200</pubDate>
       <guid isPermaLink="false">2014/groovy_repl.html</guid>
       	<description>
@@ -1452,7 +1452,7 @@ We&amp;#8217;ve added decent progress reporting and performance seems to be pret
     </item>
     <item>
       <title>A Groovy Light Table client - Step 3: Running out of quick wins</title>
-      <link>http://rundis.github.io/blog//2014/gr_lt_part3.html</link>
+      <link>http://rundis.github.io/blog/2014/gr_lt_part3.html</link>
       <pubDate>Mon, 12 May 2014 00:00:00 +0200</pubDate>
       <guid isPermaLink="false">2014/gr_lt_part3.html</guid>
       	<description>
@@ -1584,7 +1584,7 @@ case &quot;editor.clear.groovy&quot;:
     </item>
     <item>
       <title>Creating and using snippets in Light Table</title>
-      <link>http://rundis.github.io/blog//2014/lt-snippets.html</link>
+      <link>http://rundis.github.io/blog/2014/lt-snippets.html</link>
       <pubDate>Tue, 6 May 2014 00:00:00 +0200</pubDate>
       <guid isPermaLink="false">2014/lt-snippets.html</guid>
       	<description>
@@ -1600,7 +1600,7 @@ case &quot;editor.clear.groovy&quot;:
     </item>
     <item>
       <title>JavaScript testing with Light Table and Buster.JS</title>
-      <link>http://rundis.github.io/blog//2014/instabuster_part2.html</link>
+      <link>http://rundis.github.io/blog/2014/instabuster_part2.html</link>
       <pubDate>Mon, 21 Apr 2014 00:00:00 +0200</pubDate>
       <guid isPermaLink="false">2014/instabuster_part2.html</guid>
       	<description>
@@ -1617,7 +1617,7 @@ This time demonstrating some of the more advanced features.&lt;/p&gt;
     </item>
     <item>
       <title>JavaScript testing with Light Table and Buster.JS</title>
-      <link>http://rundis.github.io/blog//2014/instabuster_part1.html</link>
+      <link>http://rundis.github.io/blog/2014/instabuster_part1.html</link>
       <pubDate>Mon, 17 Mar 2014 00:00:00 +0100</pubDate>
       <guid isPermaLink="false">2014/instabuster_part1.html</guid>
       	<description>
@@ -1633,7 +1633,7 @@ This time demonstrating some of the more advanced features.&lt;/p&gt;
     </item>
     <item>
       <title>A Groovy Light Table client - Step 2: Evaluating Code</title>
-      <link>http://rundis.github.io/blog//2014/gr_lt_part2.html</link>
+      <link>http://rundis.github.io/blog/2014/gr_lt_part2.html</link>
       <pubDate>Sun, 23 Feb 2014 00:00:00 +0100</pubDate>
       <guid isPermaLink="false">2014/gr_lt_part2.html</guid>
       	<description>
@@ -1934,7 +1934,7 @@ The &quot;:eval!&quot; behavior is defined for the :groovy.lang tag. Its tied to
     </item>
     <item>
       <title>A Groovy Light Table client - Step 1: Connecting the client</title>
-      <link>http://rundis.github.io/blog//2014/gr_lt_part1.html</link>
+      <link>http://rundis.github.io/blog/2014/gr_lt_part1.html</link>
       <pubDate>Sun, 16 Feb 2014 00:00:00 +0100</pubDate>
       <guid isPermaLink="false">2014/gr_lt_part1.html</guid>
       	<description>
@@ -2256,7 +2256,7 @@ client.withStreams {input, output -&amp;gt;
     </item>
     <item>
       <title>Javascript testing in your JVM projects using Gradle and BusterJS</title>
-      <link>http://rundis.github.io/blog//2013/buster-plugin.html</link>
+      <link>http://rundis.github.io/blog/2013/buster-plugin.html</link>
       <pubDate>Mon, 19 Aug 2013 00:00:00 +0200</pubDate>
       <guid isPermaLink="false">2013/buster-plugin.html</guid>
       	<description>
