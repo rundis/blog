@@ -83,7 +83,8 @@ We need to store our passwords securely hashed in the user table. Buddy provides
 
 ----
 
-hs/encrypt - Hashes the password using bcrypt+sha512 (default, others available)
+hs/encrypt - Hashes the password using bcrypt+sha512 (default, others available). Buddy generates a
+random http://en.wikipedia.org/wiki/Salt_%28cryptography%29[salt] if you don't provide one as an option param.
 
 .Authenticating a user
 [source,clojure]
