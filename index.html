@@ -87,7 +87,7 @@
 <td class="content">
 <div class="paragraph">
 <p>There is much more to securing web apps and microservices than just authentication and authorization.
-This blog series will almoust exclusively focus on those two aspects.</p>
+This blog series will almost exclusively focus on those two aspects.</p>
 </div>
 </td>
 </tr>
@@ -99,7 +99,7 @@ This blog series will almoust exclusively focus on those two aspects.</p>
 <h2 id="_introduction">Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Lets say you have decided to go down the microservices path with Clojure. How would
+<p>Let&#8217;s say you have decided to go down the microservices path with Clojure. How would
 you go about implementing authentication and authorization for your various apps and services ?</p>
 </div>
 <div class="paragraph">
@@ -114,7 +114,7 @@ sure I&#8217;ll learn quite a bit along the way.</p>
 <div class="sectionbody">
 <div class="paragraph">
 <p>To illustrate various aspects I&#8217;ll be using the following sample high-level architecture
-as a starting point. It&#8217;s just an sketch,  so don&#8217;t get too hung up on the dependency arrows, that might change.</p>
+as a starting point. It&#8217;s just a sketch,  so don&#8217;t get too hung up on the dependency arrows, that might change.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -137,7 +137,7 @@ To my knowledge it&#8217;s a great library, and you should seriously consider us
 <div class="paragraph">
 <p>A little while back I did a small spike on using friend and <a href="http://clojure-liberator.github.io/liberator/">liberator</a>. Liberator
 is a super library for rest enabling your applications/services. I came across the blog post <a href="http://sritchie.github.io/2014/01/17/api-authentication-with-liberator-and-friend/">API Authentication with Liberator and Friend</a>.
-I tried to implement something similar but couldn&#8217;t quite get it working and I have to admit I had problems grocking what
+I tried to implement something similar but couldn&#8217;t quite get it working and I have to admit I had problems groking what
 was actually going on.</p>
 </div>
 <div class="paragraph">
@@ -197,7 +197,8 @@ will be implemented in the acme-auth service app.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>hs/encrypt - Hashes the password using bcrypt+sha512 (default, others available)</p>
+<p>hs/encrypt - Hashes the password using bcrypt+sha512 (default, others available). Buddy generates a
+random <a href="http://en.wikipedia.org/wiki/Salt_%28cryptography%29">salt</a> if you don&#8217;t provide one as an option param.</p>
 </div>
 <div class="listingblock">
 <div class="title">Authenticating a user</div>
