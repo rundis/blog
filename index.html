@@ -66,6 +66,475 @@
 	<div class="page-header">
 		<h1>Blog</h1>
 	</div>
+  			<a href="/blog/2015/buddy_auth_part2.html"><h1>Securing Clojure Microservices using buddy - Part 2: WebApp authentication and authorization</h1></a>
+  			<p>02 February 2015</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/clojure.html">clojure</a>
+	      
+		      <a href="/blog/tags/buddy.html"> buddy</a>
+	      
+		      <a href="/blog/tags/security.html"> security</a>
+	      </p>
+  			<p><div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In <a href="/blog/2015/buddy_auth_part1.html">Part 1</a> of this blog series we learned how to create tokens that could be used for authentication
+and authorization. In this episode we will create a sample web app called <a href="https://github.com/rundis/acme-buddy/tree/master/acme-webstore">acme-webstore</a>.
+The acme-webstore will make use of the tokens generated from the <a href="https://github.com/rundis/acme-buddy/tree/master/acme-auth">acme-auth</a> service.
+The app will implement a simple login and logout flow and demonstrate how you may employ role based authorization.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_disclaimer">Disclaimer</h2>
+<div class="sectionbody">
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>There are many concerns to be addressed with regards to securing a web app. Be sure to do proper research
+for what your needs and potential risks are. A good starting point might be to check out <a href="https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project#tab=OWASP_Top_10_for_2013">OWASP</a></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_buddy_support">Buddy support</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Buddy provides support for authentication and authorization of web applications through <a href="https://github.com/funcool/buddy-auth">buddy-auth</a>.
+I believe that version 0.3.0 of this lib doesn&#8217;t provide support for key-pair signed jws tokens out of the box.
+Buddy auth does provide a flexible mechanism for creating your own backends and it also provides what looks to be
+a fairly flexible scheme for authorization.</p>
+</div>
+<div class="paragraph">
+<p>For this episode I chose not to go down that route though. Actually the app won&#8217;t be using buddy-auth at all. We are going to
+plunge into the abyss and see how far we get on our own. The end result might be that me or someone else
+makes a contribution to buddy-auth to save us from some of the steps here !</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_login">Login</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The first thing to implement is a login flow to authenticate our users against the acme-auth service.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2015/acme_login.png" alt="acme login">
+</div>
+<div class="title">Figure 1. Sample login screen</div>
+</div>
+<div class="sect2">
+<h3 id="_calling_acme_auth">Calling acme-auth</h3>
+<div class="paragraph">
+<p>To perform the REST calls to acme-auth our app will use the excellent <a href="https://github.com/dakrone/clj-http">clj-http</a> library</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn create-token [req]                                                           <i class="conum" data-value="1"></i><b>(1)</b>
+  (http/post "http://localhost:6001/create-auth-token"
+             {:content-type :json
+              :accept :json
+              :throw-exceptions false
+              :as :json
+              :form-params (select-keys (:params req) [:username :password])}))
+
+(defn do-login [req]
+  (let [resp (create-token req)]
+    (condp = (:status resp)
+      201 (-&gt; (response/redirect (if-let [m (get-in req [:query-params "m"])] m "/dashboard"))    <i class="conum" data-value="2"></i><b>(2)</b>
+              (assoc :session {:token (-&gt; resp :body :token)}))                                   <i class="conum" data-value="3"></i><b>(3)</b>
+      401 (show-login req ["Invalid username or password"])                                       <i class="conum" data-value="4"></i><b>(4)</b>
+      {:status 500 :body "Something went pearshape when trying to authenticate"})))               <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Helper function that invokes acme-auth using clj-http</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The default behaviour is redirecting the user to a dashboard page after successful login, however if a query param "m"
+is set it will redirect to the url provided in m. Redirection will be covered explicitly later on.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Upon successful authentication we add the token to the users session. Sessions will also be discussed explicitly later on.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>If authentication failed, display the login screen again with an error message</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Lazy error handling&#8230;</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Logging out</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn logout [req]
+  (assoc (response/redirect "/") :session nil))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Logging out is just a matter of clearing the user session.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_rewind_middleware_overview">Rewind: Middleware overview</h3>
+<div class="paragraph">
+<div class="title">web.clj</div>
+<p>Before plunging deeper into the details its useful to get a highlevel view of the various middlewares applied to the
+routes in the sample application.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>defroutes public-routes
+  (route/resources "/")
+  (GET "/" []       show-index)
+  (GET "/login" []  sec/show-login)
+  (POST "/login" [] sec/do-login)
+  (GET "/logout" [] sec/logout))
+
+
+(defroutes secured-routes
+  (GET "/accounts/:id" [] show-account)
+  (GET "/accounts" []     (sec/wrap-restrict-by-roles show-accounts [:store-admin]))   <i class="conum" data-value="1"></i><b>(1)</b>
+  (GET "/dashboard" []    show-dashboard))
+
+
+(defroutes app-routes
+  (-&gt; public-routes
+      sec/wrap-auth-token)                                                             <i class="conum" data-value="2"></i><b>(2)</b>
+  (-&gt; secured-routes
+      sec/wrap-authentication                                                          <i class="conum" data-value="3"></i><b>(3)</b>
+      sec/wrap-auth-token))                                                            <i class="conum" data-value="4"></i><b>(4)</b>
+
+(def app (-&gt; app-routes
+             wrap-keyword-params
+             wrap-params
+             wrap-absolute-redirects                                                   <i class="conum" data-value="5"></i><b>(5)</b>
+             sec/wrap-authorized-redirects                                             <i class="conum" data-value="6"></i><b>(6)</b>
+             (sec/wrap-auth-cookie "SoSecret12345678")))                               <i class="conum" data-value="7"></i><b>(7)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Custom middleware for restricting access based on role(s)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Custom middleware for picking out user info from a users token (if logged in)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Custom middleware to verify that user is authenticated for given route(s)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Duplication, cop out to ensure we have user info both for secured and unsecured routes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Redirects should really should use absolute urls (most browsers support relative though)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Custom middleware to prevent redirect attacks</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Custom middleware wrapping a ring session using a cookie store. Obviously you would define the cookie secret here !</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sessions_and_cookies">Sessions and cookies</h3>
+<div class="paragraph">
+<p>For a single-page web app or a REST client I would probably have been completely feasible using our auth token directly.
+However if we have a web app with a nice mix of server side generated html and chunks of client side scripting with ajax,
+we need to consider whether/how to use sessions.</p>
+</div>
+<div class="paragraph">
+<p>Out of the box ring comes with session support in two flavours. Sessions based on a memory store or a cookie based store.
+In both cases a cookie will be used, but for the in memory store the cookie is only used to uniquely identify the server side cached
+data for that user session. When using the cookie store, the users session data is stored in the cookie (encrypted and MAC&#8217;ed) which is passed back and
+forth between the server and the client.</p>
+</div>
+<div class="paragraph">
+<p>The article <a href="http://www.lispcast.com/clojure-web-security">clojure web security</a> provides some valuable insight into session
+handling (amoung other things) in Clojure.</p>
+</div>
+<div class="paragraph">
+<p>Regardless of the article just mentioned the Security Architect of Acme corp instructed me to pursue the cookie based session store.
+To make matters worse, the Architect insisted on using a long-lived cookie. He went on about the benefits of avoiding
+clustered sessions stores, that the usability of the web store would be hopeless with short lived sessions and that surely
+there had to be measures to mitigate some of the additional risks involved.</p>
+</div>
+<div class="paragraph">
+<p>Who am I to argue (I&#8217;m no expert by any means) let us see where the cookie store option takes us.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>I suppose one of the biggest risk with the cookie approach is "man in the middle attacks". First mitigating step is to use SSL (and not just partially).
+Secondly there is the obvious risk of someone having taken control over the device you used for your logged in session. Maybe you should implement
+<a href="http://en.wikipedia.org/wiki/Two_factor_authentication">two factor authentication</a> and require reauthentication for any critical operations ?
+Setting a long expiry for both the token and cookie might be far to risky for your scenario, maybe you need to implement something
+akin to <a href="http://stackoverflow.com/questions/3487991/why-does-oauth-v2-have-both-access-and-refresh-tokens">oauth refresh tokens</a>.
+Also revocation of a token is definitely an interesting scenario we will need to handle in a later blog post !</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Enough analysis/paralysis for now, I guess the bottom line is you&#8217;ll need to figure out what is secure enough for you.</p>
+</div>
+<div class="sect3">
+<h4 id="_cookie_store">Cookie store</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn wrap-auth-cookie [handler cookie-secret]
+  (-&gt; handler
+      (wrap-session
+       {:store (cookie-store {:key cookie-secret})  <i class="conum" data-value="1"></i><b>(1)</b>
+        :cookie-name "acme"
+        :cookie-attrs {:max-age (* 60 60 24)}})))   <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The cookie content (session data ) is encrypted and a MAC signature added. For storing our token this may or may not be overkill. Our token is already MAC&#8217;ed, however it&#8217;s content is possible to extract quite easily as it is.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Only shown setting the max age here, but you definitely should set the :secure attribute to true (and put up something like nginx infront of your app to terminate ssl).</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+A big win with the cookie approach is that a server restart is no big deal. The user stays logged in. If you are using staged deploys, no session synchronization is needed.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_unsigning_the_token">Unsigning the token</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn unsign-token [token]
+  (jws/unsign token (ks/public-key (io/resource "auth_pubkey.pem")) {:alg :rs256}))     <i class="conum" data-value="1"></i><b>(1)</b>
+
+
+(defn wrap-auth-token [handler]
+  (fn [req]
+    (let [user (:user (when-let [token (-&gt; req :session :token)]                        <i class="conum" data-value="2"></i><b>(2)</b>
+                   (unsign-token token)))]
+      (handler (assoc req :auth-user user)))))                                          <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Unsign the jws token using the public key from acme-auth</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>If the user has logged in, the token should be stored in session. Unsign if it exists.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Add the user info from the token to an explicit key in the request-map</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ensuring_that_the_user_is_logged_in_for_a_given_route">Ensuring that the user is logged in for a given route</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn wrap-authentication [handler]
+  (fn [req]
+    (if (:auth-user req)
+      (handler req)
+      {:status 302
+       :headers {"Location " (str "/login?m=" (:uri req))}})))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the user hasn&#8217;t logged in, we redirect to the login page. To allow the user to return to the url he/she originally tried
+to access, we provide the url as a query param to the login handler.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_authorization">Authorization</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We have implemented login, now lets see how we can implement a simple mechanism for authorizing what a user may or may not
+do once authenticated. We&#8217;ll cover role based authorization for now. Your app might require more fine-grained control and
+various other mechanisms for authorization.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>
+(def acme-store-roles                                                     <i class="conum" data-value="1"></i><b>(1)</b>
+  {:customer 10 :store-admin 11})
+
+(defn any-granted? [req roles]                                            <i class="conum" data-value="2"></i><b>(2)</b>
+  ((complement empty?)
+   (clojure.set/intersection
+    (into #{} (map #(:role-id %) (-&gt; req :auth-user :user-roles)))
+    (into #{} (vals (select-keys acme-store-roles roles))))))
+
+
+(defn wrap-restrict-by-roles [handler roles]                              <i class="conum" data-value="3"></i><b>(3)</b>
+  (fn [req]
+    (if (any-granted? req roles)
+      (handler req)
+      {:status 401 :body "You are not authorized for this feature"})))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>A hardcoded set of roles we care about in this app</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Function to verify if authed user has any of the roles given</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Middleware for declaratively restricting routes based on role privileges</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_showing_elements_based_on_role_privileges">Showing elements based on role privileges</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn- render-menu [req]
+  (let [user (:auth-user req)]
+    [:nav.menu
+     [:div {:class "collapse navbar-collapse bs-navbar-collapse navbar-inverse"}
+      [:ul.nav.navbar-nav
+       [:li [:a {:href (if user "/dashboard" "/")} "Home"]]
+       (when user
+         [:li [:a {:href (str "/accounts/" (:id user))} "My account"]])
+       (when <strong>(any-granted? req [:store-admin])</strong>
+         [:li [:a {:href "/accounts"} "Account listing"]])]
+      [:ul.nav.navbar-nav.navbar-right
+       (if user
+         [:li [:a {:href "/logout"} "Logout"]]
+         [:li [:a {:href "/login"} "Login"]])]]]))</code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2015/acme_admin_dash.png" alt="acme admin dash">
+</div>
+<div class="title">Figure 2. Sample Dashboard screen with the Account listing menu option for admins</div>
+</div>
+<div class="paragraph">
+<p>As you can see, you can easily use the any-granted? function for providing granular restrictions on UI elements.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_preventing_redirect_attacks">Preventing redirect attacks</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the login handler we added a feature for redirecting the user to the url he/she tried to access before redirected to the login page.
+We don&#8217;t want to open up for redirect attacks so we added a simple middleware to help us prevent that from happening.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Lets say someone sends you a link like this <a href="http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot">http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot</a> You probably don&#8217;t want your users to end up there upon successfully login.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(def redirect-whitelist
+  [#"http://localhost:6002/.*"])
+
+(defn wrap-authorized-redirects [handler]
+  (fn [req]
+    (let [resp (handler req)
+          loc (get-in resp [:headers "Location"])]
+      (if loc
+        (if (some #(re-matches % loc) redirect-whitelist)
+          resp
+          (do
+            ;; (log/warning "Possible redirect attack: " loc)
+            (assoc-in resp [:headers "Location"] "/")))
+        resp))))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Obviously you&#8217;d need to use the proper host and scheme etc once you put a proxy with a proper domain name in front etc.
+You get the general idea though.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In part 1 we were creating a backend service for creating auth tokens. In this post you have seen how you could use that
+token service to implement authentication and role based authorization in a public facing web app. Long lived tokens are
+not without issues, and we have glossed over some big ones. Token revocation is a candidate for a near future blog post, but
+before that I&#8217;d like to cover usage of the token in a service application.</p>
+</div>
+<div class="paragraph">
+<p>The next blog post will be about acme-orders and/or acme-catalog.</p>
+</div>
+</div>
+</div></p>
   			<a href="/blog/2015/buddy_auth_part1.html"><h1>Securing Clojure Microservices using buddy - Part 1: Creating Auth Tokens</h1></a>
   			<p>27 January 2015</p>
         <p><em>Tags: </em>
@@ -2624,19 +3093,19 @@ What about IDE integration ? With the autotest feature I can&#8217;t say I have 
 		</div>
 		<div id="push"></div>
     </div>
-    
+
     <div id="footer">
       <div class="container">
-        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+        <p class="muted credit">&copy; 2015 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
       </div>
     </div>
-    
+
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="js/jquery-1.11.1.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/prettify.js"></script>
-    
+
   </body>
 </html>
