@@ -260,7 +260,7 @@ routes in the sample application.</p>
 </tr>
 <tr>
 <td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>Custom middleware wrapping a ring session using a cookie store. Obviously you would define the cookie secret here !</td>
+<td>Custom middleware wrapping a ring session using a cookie store. Obviously you wouldn&#8217;t define the cookie secret here !</td>
 </tr>
 </table>
 </div>
@@ -275,11 +275,11 @@ we need to consider whether/how to use sessions.</p>
 <div class="paragraph">
 <p>Out of the box ring comes with session support in two flavours. Sessions based on a memory store or a cookie based store.
 In both cases a cookie will be used, but for the in memory store the cookie is only used to uniquely identify the server side cached
-data for that user session. When using the cookie store, the users session data is stored in the cookie (encrypted and MAC&#8217;ed) which is passed back and
+data for that user session. When using the cookie store, the users session data is stored in the cookie (encrypted and <a href="http://en.wikipedia.org/wiki/Message_authentication_code">MAC&#8217;ed</a>) which is passed back and
 forth between the server and the client.</p>
 </div>
 <div class="paragraph">
-<p>The article <a href="http://www.lispcast.com/clojure-web-security">clojure web security</a> provides some valuable insight into session
+<p>The article <a href="http://www.lispcast.com/clojure-web-security">clojure web security</a> by Eric Normand provides some very valuable insights into session
 handling (amoung other things) in Clojure.</p>
 </div>
 <div class="paragraph">
@@ -417,10 +417,10 @@ various other mechanisms for authorization.</p>
   {:customer 10 :store-admin 11})
 
 (defn any-granted? [req roles]                                            <i class="conum" data-value="2"></i><b>(2)</b>
-  ((complement empty?)
+  (seq
    (clojure.set/intersection
-    (into #{} (map #(:role-id %) (-&gt; req :auth-user :user-roles)))
-    (into #{} (vals (select-keys acme-store-roles roles))))))
+    (set (map :role-id (-&gt; req :auth-user :user-roles)))
+    (set (vals (select-keys acme-store-roles roles))))))
 
 
 (defn wrap-restrict-by-roles [handler roles]                              <i class="conum" data-value="3"></i><b>(3)</b>
@@ -506,12 +506,10 @@ Lets say someone sends you a link like this <a href="http://localhost:6002/login
   (fn [req]
     (let [resp (handler req)
           loc (get-in resp [:headers "Location"])]
-      (if loc
-        (if (some #(re-matches % loc) redirect-whitelist)
-          resp
-          (do
+      (if (and loc (not (some #(re-matches % loc) redirect-whitelist)))
+        (do
             ;; (log/warning "Possible redirect attack: " loc)
-            (assoc-in resp [:headers "Location"] "/")))
+            (assoc-in resp [:headers "Location"] "/"))
         resp))))</code></pre>
 </div>
 </div>

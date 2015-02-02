@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 2 Feb 2015 02:09:33 +0100</pubDate>
-    <lastBuildDate>Mon, 2 Feb 2015 02:09:33 +0100</lastBuildDate>
+    <pubDate>Mon, 2 Feb 2015 22:58:26 +0100</pubDate>
+    <lastBuildDate>Mon, 2 Feb 2015 22:58:26 +0100</lastBuildDate>
 
     <item>
       <title>Securing Clojure Microservices using buddy - Part 2: WebApp authentication and authorization</title>
@@ -200,7 +200,7 @@ routes in the sample application.&lt;/p&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Custom middleware wrapping a ring session using a cookie store. Obviously you would define the cookie secret here !&lt;/td&gt;
+&lt;td&gt;Custom middleware wrapping a ring session using a cookie store. Obviously you wouldn&amp;#8217;t define the cookie secret here !&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;
@@ -215,11 +215,11 @@ we need to consider whether/how to use sessions.&lt;/p&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;Out of the box ring comes with session support in two flavours. Sessions based on a memory store or a cookie based store.
 In both cases a cookie will be used, but for the in memory store the cookie is only used to uniquely identify the server side cached
-data for that user session. When using the cookie store, the users session data is stored in the cookie (encrypted and MAC&amp;#8217;ed) which is passed back and
+data for that user session. When using the cookie store, the users session data is stored in the cookie (encrypted and &lt;a href=&quot;http://en.wikipedia.org/wiki/Message_authentication_code&quot;&gt;MAC&amp;#8217;ed&lt;/a&gt;) which is passed back and
 forth between the server and the client.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;The article &lt;a href=&quot;http://www.lispcast.com/clojure-web-security&quot;&gt;clojure web security&lt;/a&gt; provides some valuable insight into session
+&lt;p&gt;The article &lt;a href=&quot;http://www.lispcast.com/clojure-web-security&quot;&gt;clojure web security&lt;/a&gt; by Eric Normand provides some very valuable insights into session
 handling (amoung other things) in Clojure.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -357,10 +357,10 @@ various other mechanisms for authorization.&lt;/p&gt;
   {:customer 10 :store-admin 11})
 
 (defn any-granted? [req roles]                                            &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
-  ((complement empty?)
+  (seq
    (clojure.set/intersection
-    (into #{} (map #(:role-id %) (-&amp;gt; req :auth-user :user-roles)))
-    (into #{} (vals (select-keys acme-store-roles roles))))))
+    (set (map :role-id (-&amp;gt; req :auth-user :user-roles)))
+    (set (vals (select-keys acme-store-roles roles))))))
 
 
 (defn wrap-restrict-by-roles [handler roles]                              &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
@@ -446,12 +446,10 @@ Lets say someone sends you a link like this &lt;a href=&quot;http://localhost:60
   (fn [req]
     (let [resp (handler req)
           loc (get-in resp [:headers &quot;Location&quot;])]
-      (if loc
-        (if (some #(re-matches % loc) redirect-whitelist)
-          resp
-          (do
+      (if (and loc (not (some #(re-matches % loc) redirect-whitelist)))
+        (do
             ;; (log/warning &quot;Possible redirect attack: &quot; loc)
-            (assoc-in resp [:headers &quot;Location&quot;] &quot;/&quot;)))
+            (assoc-in resp [:headers &quot;Location&quot;] &quot;/&quot;))
         resp))))&lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
