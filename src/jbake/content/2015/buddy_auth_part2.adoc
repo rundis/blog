@@ -138,7 +138,7 @@ In both cases a cookie will be used, but for the in memory store the cookie is o
 data for that user session. When using the cookie store, the users session data is stored in the cookie (encrypted and MAC'ed) which is passed back and
 forth between the server and the client.
 
-The article http://www.lispcast.com/clojure-web-security[clojure web security] provides some valuable insight into session
+The article http://www.lispcast.com/clojure-web-security[clojure web security] by Eric Normand provides some very valuable insights into session
 handling (amoung other things) in Clojure.
 
 Regardless of the article just mentioned the Security Architect of Acme corp instructed me to pursue the cookie based session store.
@@ -299,8 +299,11 @@ TIP: Lets say someone sends you a link like this http://localhost:6002/login?m=h
         resp))))
 ----
 
+
 Obviously you'd need to use the proper host and scheme etc once you put a proxy with a proper domain name in front etc.
 You get the general idea though.
+
+
 
 
 == Summary
