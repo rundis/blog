@@ -1,0 +1,313 @@
+= Securing Clojure Microservices using buddy - Part 2: WebApp authentication and authorization
+Magnus Rundberget
+2015-02-02
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: clojure, buddy, security
+:imagesdir: /blog/2015/
+:icons: font
+:id: buddy_auth_part2
+
+
+
+
+== Introduction
+
+In link:/blog/2015/buddy_auth_part1.html[Part 1] of this blog series we learned how to create tokens that could be used for authentication
+and authorization. In this episode we will create a sample web app called https://github.com/rundis/acme-buddy/tree/master/acme-webstore[acme-webstore].
+The acme-webstore will make use of the tokens generated from the https://github.com/rundis/acme-buddy/tree/master/acme-auth[acme-auth] service.
+The app will implement a simple login and logout flow and demonstrate how you may employ role based authorization.
+
+== Disclaimer
+[WARNING]
+====
+There are many concerns to be addressed with regards to securing a web app. Be sure to do proper research
+for what your needs and potential risks are. A good starting point might be to check out https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project#tab=OWASP_Top_10_for_2013[OWASP]
+====
+
+== Buddy support
+Buddy provides support for authentication and authorization of web applications through https://github.com/funcool/buddy-auth[buddy-auth].
+I believe that version 0.3.0 of this lib doesn't provide support for key-pair signed jws tokens out of the box.
+Buddy auth does provide a flexible mechanism for creating your own backends and it also provides what looks to be
+a fairly flexible scheme for authorization.
+
+For this episode I chose not to go down that route though. Actually the app won't be using buddy-auth at all. We are going to
+plunge into the abyss and see how far we get on our own. The end result might be that me or someone else
+makes a contribution to buddy-auth to save us from some of the steps here !
+
+
+
+
+== Login
+The first thing to implement is a login flow to authenticate our users against the acme-auth service.
+
+.Sample login screen
+image::acme_login.png[]
+
+
+=== Calling acme-auth
+To perform the REST calls to acme-auth our app will use the excellent https://github.com/dakrone/clj-http[clj-http] library
+
+[source,clojure]
+----
+(defn create-token [req]                                                           // <1>
+  (http/post "http://localhost:6001/create-auth-token"
+             {:content-type :json
+              :accept :json
+              :throw-exceptions false
+              :as :json
+              :form-params (select-keys (:params req) [:username :password])}))
+
+(defn do-login [req]
+  (let [resp (create-token req)]
+    (condp = (:status resp)
+      201 (-> (response/redirect (if-let [m (get-in req [:query-params "m"])] m "/dashboard"))    // <2>
+              (assoc :session {:token (-> resp :body :token)}))                                   // <3>
+      401 (show-login req ["Invalid username or password"])                                       // <4>
+      {:status 500 :body "Something went pearshape when trying to authenticate"})))               // <5>
+----
+<1> Helper function that invokes acme-auth using clj-http
+<2> The default behaviour is redirecting the user to a dashboard page after successful login, however if a query param "m"
+is set it will redirect to the url provided in m. Redirection will be covered explicitly later on.
+<3> Upon successful authentication we add the token to the users session. Sessions will also be discussed explicitly later on.
+<4> If authentication failed, display the login screen again with an error message
+<5> Lazy error handling...
+
+.Logging out
+[source,clojure]
+----
+(defn logout [req]
+  (assoc (response/redirect "/") :session nil))
+----
+
+Logging out is just a matter of clearing the user session.
+
+
+=== Rewind: Middleware overview
+
+.web.clj
+Before plunging deeper into the details its useful to get a highlevel view of the various middlewares applied to the
+routes in the sample application.
+
+[source,clojure]
+----
+defroutes public-routes
+  (route/resources "/")
+  (GET "/" []       show-index)
+  (GET "/login" []  sec/show-login)
+  (POST "/login" [] sec/do-login)
+  (GET "/logout" [] sec/logout))
+
+
+(defroutes secured-routes
+  (GET "/accounts/:id" [] show-account)
+  (GET "/accounts" []     (sec/wrap-restrict-by-roles show-accounts [:store-admin]))   // <1>
+  (GET "/dashboard" []    show-dashboard))
+
+
+(defroutes app-routes
+  (-> public-routes
+      sec/wrap-auth-token)                                                             // <2>
+  (-> secured-routes
+      sec/wrap-authentication                                                          // <3>
+      sec/wrap-auth-token))                                                            // <4>
+
+(def app (-> app-routes
+             wrap-keyword-params
+             wrap-params
+             wrap-absolute-redirects                                                   // <5>
+             sec/wrap-authorized-redirects                                             // <6>
+             (sec/wrap-auth-cookie "SoSecret12345678")))                               // <7>
+----
+<1> Custom middleware for restricting access based on role(s)
+<2> Custom middleware for picking out user info from a users token (if logged in)
+<3> Custom middleware to verify that user is authenticated for given route(s)
+<4> Duplication, cop out to ensure we have user info both for secured and unsecured routes
+<5> Redirects should really should use absolute urls (most browsers support relative though)
+<6> Custom middleware to prevent redirect attacks
+<7> Custom middleware wrapping a ring session using a cookie store. Obviously you would define the cookie secret here !
+
+
+=== Sessions and cookies
+For a single-page web app or a REST client I would probably have been completely feasible using our auth token directly.
+However if we have a web app with a nice mix of server side generated html and chunks of client side scripting with ajax,
+we need to consider whether/how to use sessions.
+
+Out of the box ring comes with session support in two flavours. Sessions based on a memory store or a cookie based store.
+In both cases a cookie will be used, but for the in memory store the cookie is only used to uniquely identify the server side cached
+data for that user session. When using the cookie store, the users session data is stored in the cookie (encrypted and MAC'ed) which is passed back and
+forth between the server and the client.
+
+The article http://www.lispcast.com/clojure-web-security[clojure web security] provides some valuable insight into session
+handling (amoung other things) in Clojure.
+
+Regardless of the article just mentioned the Security Architect of Acme corp instructed me to pursue the cookie based session store.
+To make matters worse, the Architect insisted on using a long-lived cookie. He went on about the benefits of avoiding
+clustered sessions stores, that the usability of the web store would be hopeless with short lived sessions and that surely
+there had to be measures to mitigate some of the additional risks involved.
+
+Who am I to argue (I'm no expert by any means) let us see where the cookie store option takes us.
+
+
+[WARNING]
+====
+I suppose one of the biggest risk with the cookie approach is "man in the middle attacks". First mitigating step is to use SSL (and not just partially).
+Secondly there is the obvious risk of someone having taken control over the device you used for your logged in session. Maybe you should implement
+http://en.wikipedia.org/wiki/Two_factor_authentication[two factor authentication] and require reauthentication for any critical operations ?
+Setting a long expiry for both the token and cookie might be far to risky for your scenario, maybe you need to implement something
+akin to http://stackoverflow.com/questions/3487991/why-does-oauth-v2-have-both-access-and-refresh-tokens[oauth refresh tokens].
+Also revocation of a token is definitely an interesting scenario we will need to handle in a later blog post !
+====
+
+Enough analysis/paralysis for now, I guess the bottom line is you'll need to figure out what is secure enough for you.
+
+
+==== Cookie store
+
+[source,clojure]
+----
+(defn wrap-auth-cookie [handler cookie-secret]
+  (-> handler
+      (wrap-session
+       {:store (cookie-store {:key cookie-secret})  // <1>
+        :cookie-name "acme"
+        :cookie-attrs {:max-age (* 60 60 24)}})))   // <2>
+----
+<1> The cookie content (session data ) is encrypted and a MAC signature added. For storing our token this may or may not be overkill. Our token is already MAC'ed, however it's content is possible to extract quite easily as it is.
+<2> Only shown setting the max age here, but you definitely should set the :secure attribute to true (and put up something like nginx infront of your app to terminate ssl).
+
+
+NOTE: A big win with the cookie approach is that a server restart is no big deal. The user stays logged in. If you are using staged deploys, no session synchronization is needed.
+
+
+=== Unsigning the token
+[source,clojure]
+----
+(defn unsign-token [token]
+  (jws/unsign token (ks/public-key (io/resource "auth_pubkey.pem")) {:alg :rs256}))     // <1>
+
+
+(defn wrap-auth-token [handler]
+  (fn [req]
+    (let [user (:user (when-let [token (-> req :session :token)]                        // <2>
+                   (unsign-token token)))]
+      (handler (assoc req :auth-user user)))))                                          // <3>
+----
+<1> Unsign the jws token using the public key from acme-auth
+<2> If the user has logged in, the token should be stored in session. Unsign if it exists.
+<3> Add the user info from the token to an explicit key in the request-map
+
+
+=== Ensuring that the user is logged in for a given route
+[source,clojure]
+----
+(defn wrap-authentication [handler]
+  (fn [req]
+    (if (:auth-user req)
+      (handler req)
+      {:status 302
+       :headers {"Location " (str "/login?m=" (:uri req))}})))
+----
+
+If the user hasn't logged in, we redirect to the login page. To allow the user to return to the url he/she originally tried
+to access, we provide the url as a query param to the login handler.
+
+
+
+== Authorization
+We have implemented login, now lets see how we can implement a simple mechanism for authorizing what a user may or may not
+do once authenticated. We'll cover role based authorization for now. Your app might require more fine-grained control and
+various other mechanisms for authorization.
+
+
+
+[source,clojure]
+----
+
+(def acme-store-roles                                                     // <1>
+  {:customer 10 :store-admin 11})
+
+(defn any-granted? [req roles]                                            // <2>
+  ((complement empty?)
+   (clojure.set/intersection
+    (into #{} (map #(:role-id %) (-> req :auth-user :user-roles)))
+    (into #{} (vals (select-keys acme-store-roles roles))))))
+
+
+(defn wrap-restrict-by-roles [handler roles]                              // <3>
+  (fn [req]
+    (if (any-granted? req roles)
+      (handler req)
+      {:status 401 :body "You are not authorized for this feature"})))
+----
+<1> A hardcoded set of roles we care about in this app
+<2> Function to verify if authed user has any of the roles given
+<3> Middleware for declaratively restricting routes based on role privileges
+
+
+
+=== Showing elements based on role privileges
+
+[source,clojure]
+[subs="quotes"]
+----
+(defn- render-menu [req]
+  (let [user (:auth-user req)]
+    [:nav.menu
+     [:div {:class "collapse navbar-collapse bs-navbar-collapse navbar-inverse"}
+      [:ul.nav.navbar-nav
+       [:li [:a {:href (if user "/dashboard" "/")} "Home"]]
+       (when user
+         [:li [:a {:href (str "/accounts/" (:id user))} "My account"]])
+       (when **(any-granted? req [:store-admin])**
+         [:li [:a {:href "/accounts"} "Account listing"]])]
+      [:ul.nav.navbar-nav.navbar-right
+       (if user
+         [:li [:a {:href "/logout"} "Logout"]]
+         [:li [:a {:href "/login"} "Login"]])]]]))
+----
+
+.Sample Dashboard screen with the Account listing menu option for admins
+image::acme_admin_dash.png[]
+
+
+As you can see, you can easily use the any-granted? function for providing granular restrictions on UI elements.
+
+
+
+== Preventing redirect attacks
+In the login handler we added a feature for redirecting the user to the url he/she tried to access before redirected to the login page.
+We don't want to open up for redirect attacks so we added a simple middleware to help us prevent that from happening.
+
+TIP: Lets say someone sends you a link like this http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot You probably don't want your users to end up there upon successfully login.
+
+[source,clojure]
+----
+(def redirect-whitelist
+  [#"http://localhost:6002/.*"])
+
+(defn wrap-authorized-redirects [handler]
+  (fn [req]
+    (let [resp (handler req)
+          loc (get-in resp [:headers "Location"])]
+      (if loc
+        (if (some #(re-matches % loc) redirect-whitelist)
+          resp
+          (do
+            ;; (log/warning "Possible redirect attack: " loc)
+            (assoc-in resp [:headers "Location"] "/")))
+        resp))))
+----
+
+Obviously you'd need to use the proper host and scheme etc once you put a proxy with a proper domain name in front etc.
+You get the general idea though.
+
+
+== Summary
+In part 1 we were creating a backend service for creating auth tokens. In this post you have seen how you could use that
+token service to implement authentication and role based authorization in a public facing web app. Long lived tokens are
+not without issues, and we have glossed over some big ones. Token revocation is a candidate for a near future blog post, but
+before that I'd like to cover usage of the token in a service application.
+
+The next blog post will be about acme-orders and/or acme-catalog.
+
