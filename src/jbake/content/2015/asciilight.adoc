@@ -1,0 +1,180 @@
+= Scratching my AsciiDoc itch
+Magnus Rundberget
+2015-02-15
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: clojurescript, node, javascript
+:imagesdir: /blog/2015/
+:icons: font
+:id: asciilight
+
+
+== Background
+So I have been writing my previous blog posts in http://asciidoctor.org/[AsciiDoc] using https://github.com/LightTable/LightTable[Light Table].
+AsciiDoc is really great and I haven't regretted using it for my blog at any point in time. To create my blog site
+I'm http://jbake.org/[Jbake] and its all published to github (gh-pages). To preview my blog posts while writing I either
+had to start a separate browser window (with a AsciiDoc browser plugin) or I had to set up a gradle watch task and
+use something like SimpleHttpServer to serve my "baked" site locally.
+
+I'm probably still going to test my site locally, but I really felt a need for something similar to the https://github.com/MarcoPolo/lt-markdown
+plugin.
+
+[quote, Magnus Rundberget, A few years back]
+I wish I had an editor where I could easily program my own extensions.
+
+
+I guess I'm just lucky, but whacking something together wasn't really that hard. I thought I'd share my experience.
+
+
+== Technology
+
+AsciiDoctor comes with JavaScript support through https://github.com/asciidoctor/asciidoctor.js[asciidoctor.js]. It even comes
+with support for node. Light Table runs on Node (node webkit, soon Atom Shell ?). Light Table plugins are written in
+ClojureScript, I much prefer ClojureScript to JavaScript or CoffeeScript for that matter. Anyways I'm digressing, calling
+node modules from a Light Table is no big deal.
+
+
+== Solution
+The end result became a new plugin for Light Table. https://github.com/rundis/AsciiLight[AsciiLight]
+
+
+image::asciilight_preview.png[]
+
+NOTE: I pretty much nicked most of the ClojureScript code from https://github.com/MarcoPolo/lt-markdown. Cheers Marco Polo !
+
+
+=== Calling asciidoctor.js
+For reasons unknown to me I had some troubles calling the Objects/functions needed from asciidoctor.js
+directly from ClojureScript so I had to make a thing JavaScript wrapper my self. No big deal, but
+I'd be interested to find out why it croaked.
+
+[source,javascript]
+----
+var asciidoctor = require('asciidoctor.js')();
+var processor = asciidoctor.Asciidoctor(true);     // <1>
+var opal = asciidoctor.Opal;
+
+
+var doConvert = function(content, baseDir) {
+  var opts = opal.hash2(
+      ['base-dir', 'safe', 'attributes'],
+      {'base-dir': baseDir,
+       'safe': 'secure',
+        attributes: ['icons=font@', 'showtitle']});
+
+    return  processor.$convert(content, opts);     // <2>
+};
+
+module.exports = {
+  convert: function(content, baseDir) {
+    return doConvert(content, baseDir);
+  }
+}
+
+----
+<1> Load Node module and configure AsciiDoctor to support extensions
+<2> The function where we actually call asciidoctor
+
+
+There was a lot of trial and error to figure out what to call the options and how to pass
+these options to asciidoctor. Some seemed to work others seemed to have no effect. To be improved
+in a future release for sure. The most painful part here was that I couldn't figure out how to reload
+my custom node module ... hence a lot of Light Table restarts. Surely there must be a better way.
+
+
+
+=== Plugin code
+
+
+[source,clojure]
+----
+defn setAdocHTML! [ed obj]
+  (let [html (->
+              (adoc->html (.getValue (editor/->cm-ed ed))
+                          (files/parent (-> @ed :info :path)))                     // <1>
+              (s/replace #"class=\"content\"" "class=\"adoc-content\""))]
+    (set! (.-innerHTML (object/->content obj)) html)))                             // <2>
+
+(defn get-filename [ed]
+  (-> @ed :info :name))
+
+(defui adoc-skeleton [this]
+  [:div {:class "adoc"}
+   [:h1 "Asciidoc content coming here"]])
+
+(object/object* ::asciilight                                                       // <3>
+                :tags [:asciilight]
+                :name "markdown"
+                :behaviors [::on-close-destroy]
+                :init (fn [this filename]
+                        (object/update! this [:name] (constantly (str filename " - Live")))
+                        (adoc-skeleton this)))
+
+(behavior ::on-close-destroy                                                       // <4>
+          :triggers #{:close}
+          :reaction (fn [this]
+                      (when-let [ts (:lt.objs.tabs/tabset @this)]
+                        (when (= (count (:objs @ts)) 1)
+                          (tabs/rem-tabset ts)))
+                      (object/raise this :destroy)))
+
+(behavior ::read-editor                                                            // <5>
+          :triggers [:change ::read-editor]
+          :desc "AsciiLight: Read the content inside an editor"
+          :reaction (fn [this]
+                      (let [adoc-obj (:adoc @this)]
+                        (setAdocHTML! this adoc-obj))))
+
+(cmd/command {:command ::watch-editor                                              // <6>
+              :desc "AsciiLight: Watch this editor for changes"
+              :exec (fn []
+                      (let [ed (pool/last-active)
+                            filename (get-filename ed)
+                            adoc-obj (object/create ::asciilight filename)]
+                        (tabs/add-or-focus! adoc-obj)
+                        (object/update! ed [:adoc] (fn [] adoc-obj))
+                        (object/add-behavior! ed ::read-editor)
+                        (object/raise ed ::read-editor)))})
+----
+
+<1> Retrieve whatever is in the given editor ed and request ascidoctor.js to make nice html from it.
+<2> Insert the generated html into the preview viewer
+<3> An atom that holds the markup used for the preview. Destroyed when its owning tab is closed.
+<4> Behavior that is triggered when the tab (or LightTable) is closed. Performs cleanup as one should !
+<5> Behavior that is triggered whenever the user changes the content of the editor being watched. For large documents
+we might want to introduce a throttle on this behaviour.
+<6> This i the command you see in the command bar in Light Table. It's the entry point for the plugin currently and
+is responsible for adding a new tab and setting up the link between the editor to be watched and the preview tab.
+
+
+That's pretty manageable for something quite usable.
+
+
+### Behaviors and a note on CSS
+[source,clojure]
+----
+[[:app :lt.objs.plugins/load-js "asciilight_compiled.js"]
+ [:app :lt.objs.plugins/load-css "css/font-awesome.css"]
+ [:app :lt.objs.plugins/load-css "css/adoc.css"]]
+----
+
+Here we load the transpiled javascript for our plugin, css icon support throught font-awesome and
+a slightly customized css for our asciidoc preview.
+
+
+#### CSS, the cascading part you know.
+AsciiDoc ships with a default CSS you may use (it even has a https://github.com/asciidoctor/asciidoctor-stylesheet-factory[stylesheet factory])
+That's cool. Light Table also has styles, hey it even has lots of skins.
+So I had to spend some time ensuring that the css I added through the plugin didn't mess up the
+user selected styles from Light Table. For instance both LIght Table and AsciiDoc found good use for a css class called content.
+
+Lost a few hairs (not many left tbh)
+
+
+## Summary
+It's very early days for this plugin, and it has many snags. But its a decent start considering
+I used maybe 6-8 hours in total, most of which was time struggling with css. It just feels
+great writing this blogpost with a preview of what I'm writing using a plugin of my own creation.
+
+One itch scratched !
+
