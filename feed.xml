@@ -6,9 +6,258 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 2 Feb 2015 22:58:26 +0100</pubDate>
-    <lastBuildDate>Mon, 2 Feb 2015 22:58:26 +0100</lastBuildDate>
+    <pubDate>Sun, 15 Feb 2015 20:23:01 +0100</pubDate>
+    <lastBuildDate>Sun, 15 Feb 2015 20:23:01 +0100</lastBuildDate>
 
+    <item>
+      <title>Scratching my AsciiDoc itch</title>
+      <link>http://rundis.github.io/blog/2015/asciilight.html</link>
+      <pubDate>Sun, 15 Feb 2015 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2015/asciilight.html</guid>
+      	<description>
+	&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_background&quot;&gt;Background&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So I have been writing my previous blog posts in &lt;a href=&quot;http://asciidoctor.org/&quot;&gt;AsciiDoc&lt;/a&gt; using &lt;a href=&quot;https://github.com/LightTable/LightTable&quot;&gt;Light Table&lt;/a&gt;.
+AsciiDoc is really great and I haven&amp;#8217;t regretted using it for my blog at any point in time. To create my blog site
+I&amp;#8217;m &lt;a href=&quot;http://jbake.org/&quot;&gt;Jbake&lt;/a&gt; and its all published to github (gh-pages). To preview my blog posts while writing I either
+had to start a separate browser window (with a AsciiDoc browser plugin) or I had to set up a gradle watch task and
+use something like SimpleHttpServer to serve my &quot;baked&quot; site locally.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m probably still going to test my site locally, but I really felt a need for something similar to the &lt;a href=&quot;https://github.com/MarcoPolo/lt-markdown&quot;&gt;https://github.com/MarcoPolo/lt-markdown&lt;/a&gt;
+plugin.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;quoteblock&quot;&gt;
+&lt;blockquote&gt;
+I wish I had an editor where I could easily program my own extensions.
+&lt;/blockquote&gt;
+&lt;div class=&quot;attribution&quot;&gt;
+&lt;cite&gt;A few years back&lt;/cite&gt;&lt;br&gt;
+&amp;#8212; Magnus Rundberget
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I guess I&amp;#8217;m just lucky, but whacking something together wasn&amp;#8217;t really that hard. I thought I&amp;#8217;d share my experience.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_technology&quot;&gt;Technology&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;AsciiDoctor comes with JavaScript support through &lt;a href=&quot;https://github.com/asciidoctor/asciidoctor.js&quot;&gt;asciidoctor.js&lt;/a&gt;. It even comes
+with support for node. Light Table runs on Node (node webkit, soon Atom Shell ?). Light Table plugins are written in
+ClojureScript, I much prefer ClojureScript to JavaScript or CoffeeScript for that matter. Anyways I&amp;#8217;m digressing, calling
+node modules from a Light Table is no big deal.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_solution&quot;&gt;Solution&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The end result became a new plugin for Light Table. &lt;a href=&quot;https://github.com/rundis/AsciiLight&quot;&gt;AsciiLight&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2015/asciilight_preview.png&quot; alt=&quot;asciilight preview&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+I pretty much nicked most of the ClojureScript code from &lt;a href=&quot;https://github.com/MarcoPolo/lt-markdown&quot;&gt;https://github.com/MarcoPolo/lt-markdown&lt;/a&gt;. Cheers Marco Polo !
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_calling_asciidoctor_js&quot;&gt;Calling asciidoctor.js&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For reasons unknown to me I had some troubles calling the Objects/functions needed from asciidoctor.js
+directly from ClojureScript so I had to make a thing JavaScript wrapper my self. No big deal, but
+I&amp;#8217;d be interested to find out why it croaked.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;var asciidoctor = require(&apos;asciidoctor.js&apos;)();
+var processor = asciidoctor.Asciidoctor(true);     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+var opal = asciidoctor.Opal;
+
+
+var doConvert = function(content, baseDir) {
+  var opts = opal.hash2(
+      [&apos;base-dir&apos;, &apos;safe&apos;, &apos;attributes&apos;],
+      {&apos;base-dir&apos;: baseDir,
+       &apos;safe&apos;: &apos;secure&apos;,
+        attributes: [&apos;icons=font@&apos;, &apos;showtitle&apos;]});
+
+    return  processor.$convert(content, opts);     &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+};
+
+module.exports = {
+  convert: function(content, baseDir) {
+    return doConvert(content, baseDir);
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Load Node module and configure AsciiDoctor to support extensions&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The function where we actually call asciidoctor&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There was a lot of trial and error to figure out what to call the options and how to pass
+these options to asciidoctor. Some seemed to work others seemed to have no effect. To be improved
+in a future release for sure. The most painful part here was that I couldn&amp;#8217;t figure out how to reload
+my custom node module &amp;#8230; hence a lot of Light Table restarts. Surely there must be a better way.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_plugin_code&quot;&gt;Plugin code&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;defn setAdocHTML! [ed obj]
+  (let [html (-&amp;gt;
+              (adoc-&amp;gt;html (.getValue (editor/-&amp;gt;cm-ed ed))
+                          (files/parent (-&amp;gt; @ed :info :path)))                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+              (s/replace #&quot;class=\&quot;content\&quot;&quot; &quot;class=\&quot;adoc-content\&quot;&quot;))]
+    (set! (.-innerHTML (object/-&amp;gt;content obj)) html)))                             &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+
+(defn get-filename [ed]
+  (-&amp;gt; @ed :info :name))
+
+(defui adoc-skeleton [this]
+  [:div {:class &quot;adoc&quot;}
+   [:h1 &quot;Asciidoc content coming here&quot;]])
+
+(object/object* ::asciilight                                                       &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+                :tags [:asciilight]
+                :name &quot;markdown&quot;
+                :behaviors [::on-close-destroy]
+                :init (fn [this filename]
+                        (object/update! this [:name] (constantly (str filename &quot; - Live&quot;)))
+                        (adoc-skeleton this)))
+
+(behavior ::on-close-destroy                                                       &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+          :triggers #{:close}
+          :reaction (fn [this]
+                      (when-let [ts (:lt.objs.tabs/tabset @this)]
+                        (when (= (count (:objs @ts)) 1)
+                          (tabs/rem-tabset ts)))
+                      (object/raise this :destroy)))
+
+(behavior ::read-editor                                                            &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+          :triggers [:change ::read-editor]
+          :desc &quot;AsciiLight: Read the content inside an editor&quot;
+          :reaction (fn [this]
+                      (let [adoc-obj (:adoc @this)]
+                        (setAdocHTML! this adoc-obj))))
+
+(cmd/command {:command ::watch-editor                                              &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+              :desc &quot;AsciiLight: Watch this editor for changes&quot;
+              :exec (fn []
+                      (let [ed (pool/last-active)
+                            filename (get-filename ed)
+                            adoc-obj (object/create ::asciilight filename)]
+                        (tabs/add-or-focus! adoc-obj)
+                        (object/update! ed [:adoc] (fn [] adoc-obj))
+                        (object/add-behavior! ed ::read-editor)
+                        (object/raise ed ::read-editor)))})&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Retrieve whatever is in the given editor ed and request ascidoctor.js to make nice html from it.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Insert the generated html into the preview viewer&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;An atom that holds the markup used for the preview. Destroyed when its owning tab is closed.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Behavior that is triggered when the tab (or LightTable) is closed. Performs cleanup as one should !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Behavior that is triggered whenever the user changes the content of the editor being watched. For large documents
+we might want to introduce a throttle on this behaviour.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This i the command you see in the command bar in Light Table. It&amp;#8217;s the entry point for the plugin currently and
+is responsible for adding a new tab and setting up the link between the editor to be watched and the preview tab.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;That&amp;#8217;s pretty manageable for something quite usable.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_behaviors_and_a_note_on_css&quot;&gt;Behaviors and a note on CSS&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;[[:app :lt.objs.plugins/load-js &quot;asciilight_compiled.js&quot;]
+ [:app :lt.objs.plugins/load-css &quot;css/font-awesome.css&quot;]
+ [:app :lt.objs.plugins/load-css &quot;css/adoc.css&quot;]]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Here we load the transpiled javascript for our plugin, css icon support throught font-awesome and
+a slightly customized css for our asciidoc preview.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_css_the_cascading_part_you_know&quot;&gt;CSS, the cascading part you know.&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;AsciiDoc ships with a default CSS you may use (it even has a &lt;a href=&quot;https://github.com/asciidoctor/asciidoctor-stylesheet-factory&quot;&gt;stylesheet factory&lt;/a&gt;)
+That&amp;#8217;s cool. Light Table also has styles, hey it even has lots of skins.
+So I had to spend some time ensuring that the css I added through the plugin didn&amp;#8217;t mess up the
+user selected styles from Light Table. For instance both LIght Table and AsciiDoc found good use for a css class called content.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Lost a few hairs (not many left tbh)&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;It&amp;#8217;s very early days for this plugin, and it has many snags. But its a decent start considering
+I used maybe 6-8 hours in total, most of which was time struggling with css. It just feels
+great writing this blogpost with a preview of what I&amp;#8217;m writing using a plugin of my own creation.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;One itch scratched !&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Securing Clojure Microservices using buddy - Part 2: WebApp authentication and authorization</title>
       <link>http://rundis.github.io/blog/2015/buddy_auth_part2.html</link>
