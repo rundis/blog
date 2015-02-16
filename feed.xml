@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sun, 15 Feb 2015 20:23:01 +0100</pubDate>
-    <lastBuildDate>Sun, 15 Feb 2015 20:23:01 +0100</lastBuildDate>
+    <pubDate>Mon, 16 Feb 2015 06:25:20 +0100</pubDate>
+    <lastBuildDate>Mon, 16 Feb 2015 06:25:20 +0100</lastBuildDate>
 
     <item>
       <title>Scratching my AsciiDoc itch</title>
@@ -21,7 +21,7 @@
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;So I have been writing my previous blog posts in &lt;a href=&quot;http://asciidoctor.org/&quot;&gt;AsciiDoc&lt;/a&gt; using &lt;a href=&quot;https://github.com/LightTable/LightTable&quot;&gt;Light Table&lt;/a&gt;.
 AsciiDoc is really great and I haven&amp;#8217;t regretted using it for my blog at any point in time. To create my blog site
-I&amp;#8217;m &lt;a href=&quot;http://jbake.org/&quot;&gt;Jbake&lt;/a&gt; and its all published to github (gh-pages). To preview my blog posts while writing I either
+I&amp;#8217;m using &lt;a href=&quot;http://jbake.org/&quot;&gt;Jbake&lt;/a&gt; and its all published to github (gh-pages). To preview my blog posts while writing I either
 had to start a separate browser window (with a AsciiDoc browser plugin) or I had to set up a gradle watch task and
 use something like SimpleHttpServer to serve my &quot;baked&quot; site locally.&lt;/p&gt;
 &lt;/div&gt;
