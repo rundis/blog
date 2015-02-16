@@ -12,7 +12,7 @@ Magnus Rundberget
 == Background
 So I have been writing my previous blog posts in http://asciidoctor.org/[AsciiDoc] using https://github.com/LightTable/LightTable[Light Table].
 AsciiDoc is really great and I haven't regretted using it for my blog at any point in time. To create my blog site
-I'm http://jbake.org/[Jbake] and its all published to github (gh-pages). To preview my blog posts while writing I either
+I'm using http://jbake.org/[Jbake] and its all published to github (gh-pages). To preview my blog posts while writing I either
 had to start a separate browser window (with a AsciiDoc browser plugin) or I had to set up a gradle watch task and
 use something like SimpleHttpServer to serve my "baked" site locally.
 
