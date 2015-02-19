@@ -6,9 +6,420 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 16 Feb 2015 06:25:20 +0100</pubDate>
-    <lastBuildDate>Mon, 16 Feb 2015 06:25:20 +0100</lastBuildDate>
+    <pubDate>Thu, 19 Feb 2015 21:04:11 +0100</pubDate>
+    <lastBuildDate>Thu, 19 Feb 2015 21:04:11 +0100</lastBuildDate>
 
+    <item>
+      <title>Securing Clojure Microservices using buddy - Part 3: Token revocation</title>
+      <link>http://rundis.github.io/blog/2015/buddy_auth_part3.html</link>
+      <pubDate>Thu, 19 Feb 2015 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2015/buddy_auth_part3.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Part 3 in my blog series about securing clojure web services using &lt;a href=&quot;https://github.com/funcool/buddy&quot;&gt;buddy&lt;/a&gt;.
+In this episode we&amp;#8217;ll be looking at how we might handle revocation of previously issued auth tokens.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Previous episodes in this series:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://rundis.github.io/blog/2015/buddy_auth_part1.html&quot;&gt;Securing Clojure Microservices using buddy - Part 1: Creating Auth Tokens&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://rundis.github.io/blog/2015/buddy_auth_part2.html&quot;&gt;Securing Clojure Microservices using buddy - Part 2: WebApp authentication and authorization&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Sample code (tagged for each blog post) can be found on &lt;a href=&quot;https://github.com/rundis/acme-buddy&quot;&gt;github&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In part 2 I said that my next post would be about authorization using tokens in a service application.
+Well my conscience got the better of me and I decided I had to address the slightly thorny issue of how to handle
+token revocation first. In part 2 I left you in a state where you&amp;#8217;d have a really hard time locking a user out or changing
+access rights. You would have to trust that the user re-authenticated (or change the key-pair for token signing/unsigning).&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_opposing_forces&quot;&gt;Opposing forces&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Some of the things we are trying to achieve with our auth design are:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Avoiding session state for authentication and authorization. Hence the introduction of self contained auth tokens&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The auth service shouldn&amp;#8217;t become a huge dependency magnet, ideally only client facing apps should have to call the auth-service, whilst the service apps would only use the auth-token for authenticating and authorizing requests&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The user shouldn&amp;#8217;t be prompted for his/her credentials more than necessary&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;The reality though is that:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;We have to be able to lock down a user (malicious or whatever reason)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;We should be able to change a users rights without forcing a re-authentication&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Checking whether a token has been revoked would be impossible without storing state about that fact somewhere&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Continuously checking with the auth-service whether a token has been revoked and/or rights have changed with the auth service would negate
+the use of tokens in the first place&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_refresh_tokens&quot;&gt;Refresh tokens&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I briefly started reading up on &lt;a href=&quot;http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-6&quot;&gt;Oath2 Refresh tokens&lt;/a&gt;. It have to admin I didn&amp;#8217;t quite get it until I read a farily explanatory post on &lt;a href=&quot;http://stackoverflow.com/questions/3487991/why-does-oauth-v2-have-both-access-and-refresh-tokens&quot;&gt;stackoverflow&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The gist of it that we issue two tokens upon authentication. An authentication token (or access token if you like) and a refresh token.
+This allows us to set a shorter expiry for the auth token, and we can use the refresh-token to request a new auth token when a previous one has expired.
+The sole purpose of refresh tokens is to be able to request new auth tokens.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_solution_outline&quot;&gt;Solution outline&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The diagram below (UML with liberties) illustrates how refresh-tokens might work for us.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2015/refresh-token.png&quot; alt=&quot;refresh token&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;olist arabic&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Steps&lt;/div&gt;
+&lt;ol class=&quot;arabic&quot;&gt;
+&lt;li&gt;
+&lt;p&gt;User logs in with username/password&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The web app invokes the create-auth-token service in acme-auth. This in turn&lt;/p&gt;
+&lt;div class=&quot;olist loweralpha&quot;&gt;
+&lt;ol class=&quot;loweralpha&quot; type=&quot;a&quot;&gt;
+&lt;li&gt;
+&lt;p&gt;authenticates the user&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;creates an auth-token&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;creates an refresh token&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The refresh token is stored in a refresh_tokens table&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Both the auth-token and refresh-token is returned to the web-app&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The web app stores the tokens in a cookie which is returned to the browser&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;User makes a request (with a valid auth token)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The web app might make a call to a resource server/service app (providing the auth-token as a auth-header in the request)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;At some point later after the auth-token has expired (say 30 minutes) the user makes another request&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The web app finds that the auth-token has expired and request a new auth-token using the refresh-token (from the cookie)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;We retrieve the stored refresh-token to check if it still valid (ie not revoked)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;We invalidate the existing refresh token in the db (will explain this bit when we look at the implementation)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;We create a new auth token and a new refresh token. The new refresh token is stored in db&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;A new token-pair is returned to the web-app&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The web app can now make a request to a resource server/service with a valid auth-token&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Finally the cookie is updated with the new token-pair&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_where_is_the_code_man&quot;&gt;Where is the code man ?&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Well that was a long intro, so if you are still following along it&amp;#8217;s time to have a look at what changes and additions
+are needed from part 1 and 2.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_changing_token_creation_in_acme_auth&quot;&gt;Changing token creation in acme-auth&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint cloure language-cloure&quot;&gt;&lt;code&gt;(defn- unsign-token [auth-conf token]
+  (jws/unsign token (pub-key auth-conf)))
+
+(defn- make-auth-token [auth-conf user]                                        &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  (let [exp (-&amp;gt; (t/plus (t/now) (t/minutes 30)) (jws/to-timestamp))]
+    (jws/sign {:user (dissoc user :password)}
+              (priv-key auth-conf)
+              {:alg :rs256 :exp exp})))
+
+(defn- make-refresh-token! [conn auth-conf user]                               &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  (let [iat (jws/to-timestamp (t/now))
+        token (jws/sign {:user-id (:id user)}
+                        (priv-key auth-conf)
+                        {:alg :rs256 :iat iat :exp (-&amp;gt; (t/plus (t/now) (t/days 30)) (jws/to-timestamp))})]
+
+    (store/add-refresh-token! conn {:user_id (:id user)                        &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+                                    :issued iat
+                                    :token token})
+    token))
+
+(defn make-token-pair! [conn auth-conf user]                                   &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+  {:token-pair {:auth-token (make-auth-token auth-conf user)
+                :refresh-token (make-refresh-token! conn auth-conf user)}})
+
+
+(defn create-auth-token [ds auth-conf credentials]                             &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+  (jdbc/with-db-transaction [conn ds]
+    (let [[ok? res] (auth-user conn credentials)]
+      (if ok?
+        [true (make-token-pair! conn auth-conf (:user res))]
+        [false res]))))
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The auth token store user and role info as in part 1, but we now have the option of shortening the expiry&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;For simplicity we have created the refresh token using the same key-pair as for the auth token. The refresh token
+contains only user-id and issued at time (iat). This allows us retrieval of the db stored token info later on. The expiry for this token can be as long as you are comfortable with (30 days in this instance)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We store the token in the refresh_token table with some fields extracted for ease of querying&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We now return a map with both the auth-token and our shiny new refresh-token&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The entry point service for token creation&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_refreshing_tokens&quot;&gt;Refreshing tokens&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn refresh-auth-token [ds auth-conf refresh-token]
+  (if-let [unsigned (unsign-token auth-conf refresh-token)]                                               &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+    (jdbc/with-db-transaction [conn ds]
+      (let [db-token-rec (store/find-token-by-unq-key conn (:user-id unsigned) (:iat unsigned))           &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+            user (store/find-user-by-id conn (:user_id db-token-rec))]
+        (if (:valid db-token-rec)                                                                         &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+          (do
+            (store/invalidate-token! conn (:id db-token-rec))                                             &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+            [true (make-token-pair! conn auth-conf user)])                                                &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+          [false {:message &quot;Refresh token revoked/deleted or new refresh token already created&quot;}])))
+    [false {:message &quot;Invalid or expired refresh token provided&quot;}]))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We unsign the refresh-token to ensure it is valid (not tampered with or expired)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We use information from the refresh token to retrieve it&amp;#8217;s db stored representation.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This test could return false for 3 cases; token deleted, token has been revoked or the token has been invalidated because a new refresh token has been created&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The existing refresh token is invalidated in the database&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We create a new token pair (where the newly created refresh token is stored in a new db row in the refrest_token table)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Why creating a new refresh token every time ?&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Imagine that someone gets hold of a users refresh token. Lets say the user requests a token refresh first, now if the hijacker
+is making a refresh-request with the hijacked request token we detect that a refresh is attempted on a token that is already invalid.
+We can&amp;#8217;t tell if the user or the hijacker is first, but either way we could take action (trigger warning/lock user account etc)
+In the code above we can&amp;#8217;t tell the diffence between why a refresh token is invalid, so you might wish to have a separate flag for this particular check.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_middleware_changes_in_the_acme_webstore&quot;&gt;Middleware changes in the acme-webstore&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn wrap-auth-cookie [handler cookie-secret]                                    &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  (-&amp;gt; handler
+      (wrap-session
+       {:store (cookie-store {:key cookie-secret})
+        :cookie-name &quot;acme&quot;
+        :cookie-attrs {:max-age (* 60 60 24 30)}}))) ;; you should probably add :secure true to enforce https
+
+
+(defn unsign-token [token]
+  (jws/unsign token (ks/public-key (io/resource &quot;auth_pubkey.pem&quot;))))
+
+
+(defn wrap-auth-token [handler]                                                  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  (fn [req]
+    (let [auth-token (-&amp;gt; req :session :token-pair :auth-token)
+          unsigned-auth (when auth-token (unsign-token auth-token))]
+      (if unsigned-auth
+        (handler (assoc req :auth-user (:user unsigned-auth)))
+        (handler req)))))
+
+(defn- handle-token-refresh [handler req refresh-token]
+  (let [[ok? res] (refresh-auth-token refresh-token)                             &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+        user (:user (when ok? (unsign-token (-&amp;gt; res :token-pair :auth-token))))]
+    (if user
+      (-&amp;gt; (handler (assoc req :auth-user user))                                  &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+          (assoc :session {:token-pair (:token-pair res)}))
+      {:status 302
+       :headers {&quot;Location &quot; (str &quot;/login?m=&quot; (:uri req))}})))                   &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+
+(defn wrap-authentication [handler]
+  (fn [req]
+    (if (:auth-user req)
+      (handler req)
+      (let [refresh-token (-&amp;gt; req :session :token-pair :refresh-token)]
+        (if refresh-token
+          (handle-token-refresh handler req refresh-token)                       &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+          {:status 302
+           :headers {&quot;Location &quot; (str &quot;/login?m=&quot; (:uri req))}})))))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The only change we made to the cookie middleware is increase the ttl.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The wrap-auth-token middleware just needed to change to handle that auth-token is found as part of a token pair
+(not shown: the login handler adds the token pair to the session upon successful authentication)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If the auth token has expired and refresh token exists we initiate an attempt to refresh the token pair&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Invokes the acme-auth service for requesting token refresh&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If a refreshing the token pair was successful we invoke the next handler in the chain and assoc the new token pair with the session key in the response
+(which in turn ends up in the cookie)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We give up, you have to log in again&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock warning&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-warning&quot; title=&quot;Warning&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+It might not be a great ideat to store the auth token and the refresh token in the same cookie. Haven&amp;#8217;t really
+thought that bit through tbh.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A lot of thinking and not a lot of code this time. But I feel we have come up with a solution that might provide a suitable
+balance between risk and statelessless with regards to revoking tokens/user access. Reefresh tokens
+allows us to stay clear of sessions and avoid asking the usere for their credentials.  &lt;a href=&quot;https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet&quot;&gt;CSRF&lt;/a&gt;
+is obviously still an issue, but we have taken some small steps to detect when the users cookie might have been hijacked.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The next episode will definately be about authentication and authorization in a service app.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Scratching my AsciiDoc itch</title>
       <link>http://rundis.github.io/blog/2015/asciilight.html</link>
