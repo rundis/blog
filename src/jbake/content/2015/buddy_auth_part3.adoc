@@ -58,7 +58,7 @@ image::refresh-token.png[]
 . The web app invokes the create-auth-token service in acme-auth. This in turn
 .. authenticates the user
 .. creates an auth-token
-.. creates an refresh token
+.. creates a refresh token
 . The refresh token is stored in a refresh_tokens table
 . Both the auth-token and refresh-token is returned to the web-app
 . The web app stores the tokens in a cookie which is returned to the browser
@@ -193,11 +193,10 @@ In the code above we can't tell the diffence between why a refresh token is inva
   (fn [req]
     (if (:auth-user req)
       (handler req)
-      (let [refresh-token (-> req :session :token-pair :refresh-token)]
-        (if refresh-token
-          (handle-token-refresh handler req refresh-token)                       // <3>
+      (if-let [refresh-token (-> req :session :token-pair :refresh-token)]
+        (handle-token-refresh handler req refresh-token)                         // <3>
           {:status 302
-           :headers {"Location " (str "/login?m=" (:uri req))}})))))
+           :headers {"Location " (str "/login?m=" (:uri req))}}))))
 ----
 <1> The only change we made to the cookie middleware is increase the ttl.
 <2> The wrap-auth-token middleware just needed to change to handle that auth-token is found as part of a token pair
@@ -214,7 +213,7 @@ thought that bit through tbh.
 
 == Summary
 A lot of thinking and not a lot of code this time. But I feel we have come up with a solution that might provide a suitable
-balance between risk and statelessless with regards to revoking tokens/user access. Reefresh tokens
+balance between risk and statelessless with regards to revoking tokens/user access. Refresh tokens
 allows us to stay clear of sessions and avoid asking the usere for their credentials.  https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet[CSRF]
 is obviously still an issue, but we have taken some small steps to detect when the users cookie might have been hijacked.
 
