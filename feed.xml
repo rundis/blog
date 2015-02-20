@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 20 Feb 2015 08:35:47 +0100</pubDate>
-    <lastBuildDate>Fri, 20 Feb 2015 08:35:47 +0100</lastBuildDate>
+    <pubDate>Fri, 20 Feb 2015 13:18:51 +0100</pubDate>
+    <lastBuildDate>Fri, 20 Feb 2015 13:18:51 +0100</lastBuildDate>
 
     <item>
       <title>Securing Clojure Microservices using buddy - Part 3: Token revocation</title>
