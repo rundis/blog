@@ -195,7 +195,7 @@ The sole purpose of refresh tokens is to be able to request new auth tokens.</p>
 <p>creates an auth-token</p>
 </li>
 <li>
-<p>creates an refresh token</p>
+<p>creates a refresh token</p>
 </li>
 </ol>
 </div>
@@ -411,11 +411,10 @@ In the code above we can&#8217;t tell the diffence between why a refresh token i
   (fn [req]
     (if (:auth-user req)
       (handler req)
-      (let [refresh-token (-&gt; req :session :token-pair :refresh-token)]
-        (if refresh-token
-          (handle-token-refresh handler req refresh-token)                       <i class="conum" data-value="3"></i><b>(3)</b>
+      (if-let [refresh-token (-&gt; req :session :token-pair :refresh-token)]
+        (handle-token-refresh handler req refresh-token)                         <i class="conum" data-value="3"></i><b>(3)</b>
           {:status 302
-           :headers {"Location " (str "/login?m=" (:uri req))}})))))</code></pre>
+           :headers {"Location " (str "/login?m=" (:uri req))}}))))</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -469,7 +468,7 @@ thought that bit through tbh.
 <div class="sectionbody">
 <div class="paragraph">
 <p>A lot of thinking and not a lot of code this time. But I feel we have come up with a solution that might provide a suitable
-balance between risk and statelessless with regards to revoking tokens/user access. Reefresh tokens
+balance between risk and statelessless with regards to revoking tokens/user access. Refresh tokens
 allows us to stay clear of sessions and avoid asking the usere for their credentials.  <a href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet">CSRF</a>
 is obviously still an issue, but we have taken some small steps to detect when the users cookie might have been hijacked.</p>
 </div>

@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Thu, 19 Feb 2015 21:04:11 +0100</pubDate>
-    <lastBuildDate>Thu, 19 Feb 2015 21:04:11 +0100</lastBuildDate>
+    <pubDate>Fri, 20 Feb 2015 08:35:47 +0100</pubDate>
+    <lastBuildDate>Fri, 20 Feb 2015 08:35:47 +0100</lastBuildDate>
 
     <item>
       <title>Securing Clojure Microservices using buddy - Part 3: Token revocation</title>
@@ -135,7 +135,7 @@ The sole purpose of refresh tokens is to be able to request new auth tokens.&lt;
 &lt;p&gt;creates an auth-token&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;creates an refresh token&lt;/p&gt;
+&lt;p&gt;creates a refresh token&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;
@@ -351,11 +351,10 @@ In the code above we can&amp;#8217;t tell the diffence between why a refresh tok
   (fn [req]
     (if (:auth-user req)
       (handler req)
-      (let [refresh-token (-&amp;gt; req :session :token-pair :refresh-token)]
-        (if refresh-token
-          (handle-token-refresh handler req refresh-token)                       &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+      (if-let [refresh-token (-&amp;gt; req :session :token-pair :refresh-token)]
+        (handle-token-refresh handler req refresh-token)                         &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
           {:status 302
-           :headers {&quot;Location &quot; (str &quot;/login?m=&quot; (:uri req))}})))))&lt;/code&gt;&lt;/pre&gt;
+           :headers {&quot;Location &quot; (str &quot;/login?m=&quot; (:uri req))}}))))&lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;colist arabic&quot;&gt;
@@ -409,7 +408,7 @@ thought that bit through tbh.
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;A lot of thinking and not a lot of code this time. But I feel we have come up with a solution that might provide a suitable
-balance between risk and statelessless with regards to revoking tokens/user access. Reefresh tokens
+balance between risk and statelessless with regards to revoking tokens/user access. Refresh tokens
 allows us to stay clear of sessions and avoid asking the usere for their credentials.  &lt;a href=&quot;https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet&quot;&gt;CSRF&lt;/a&gt;
 is obviously still an issue, but we have taken some small steps to detect when the users cookie might have been hijacked.&lt;/p&gt;
 &lt;/div&gt;
