@@ -6,9 +6,230 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 20 Feb 2015 13:18:51 +0100</pubDate>
-    <lastBuildDate>Fri, 20 Feb 2015 13:18:51 +0100</lastBuildDate>
+    <pubDate>Sun, 8 Mar 2015 04:05:16 +0100</pubDate>
+    <lastBuildDate>Sun, 8 Mar 2015 04:05:16 +0100</lastBuildDate>
 
+    <item>
+      <title>Clojure refactoring in Light Table</title>
+      <link>http://rundis.github.io/blog/2015/clj_light_refactor.html</link>
+      <pubDate>Sun, 8 Mar 2015 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2015/clj_light_refactor.html</guid>
+      	<description>
+	&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_background&quot;&gt;Background&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A collegue of mine, the emacs wizard &lt;a href=&quot;https://github.com/magnars&quot;&gt;Magnar&lt;/a&gt; has on multiple occations demonstrated
+some of the cool refactoring features for Clojure he has at his disposal in emacs.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m currently a &lt;a href=&quot;https://github.com/LightTable/LightTable&quot;&gt;Light Table&lt;/a&gt; user and plugin author. Surely it should
+be possible to add some refactoring support to Light Table ? I started looking at &lt;a href=&quot;https://github.com/clojure-emacs/clj-refactor.el&quot;&gt;clj-refactor.el&lt;/a&gt; and
+I couldn&amp;#8217;t initially figure out where to start. But I found that some of the cool features were actually enabled
+by an nrepl middleware &lt;a href=&quot;https://github.com/clojure-emacs/refactor-nrepl&quot;&gt;refactor-nrepl&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;quoteblock&quot;&gt;
+&lt;blockquote&gt;
+nREPL middleware to support refactorings in an editor agnostic way.
+&lt;/blockquote&gt;
+&lt;div class=&quot;attribution&quot;&gt;
+&amp;#8212; refactor-nrepl
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Yay, now that&amp;#8217;s what I call a great initiative. I decided to give it a go, and here&amp;#8217;s a taste of what I managed to come up with so far.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_demo&quot;&gt;Demo&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;http://youtu.be/xlGpRTVIkYQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_the_plugin&quot;&gt;The plugin&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+You can find the plugin repo on github &lt;a href=&quot;https://github.com/rundis/clj-light-refactor&quot;&gt;https://github.com/rundis/clj-light-refactor&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_a_taste_of_implementation&quot;&gt;A taste of implementation&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I won&amp;#8217;t go into to much details in this blogpost, but I thought I&amp;#8217;d give you a little teaser
+on how I&amp;#8217;ve gone about interacting with the middleware. Light Table supports calling arbitrary clojure code through it&amp;#8217;s custom nrepl middleware.
+So getting started wasn&amp;#8217;t really that difficult.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_middleware_invocation&quot;&gt;Middleware invocation&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn artifact-list-op []
+  (str &quot;(do (require &apos;refactor-nrepl.client) (require &apos;clojure.tools.nrepl)&quot;
+       &quot;(def tr (refactor-nrepl.client/connect))&quot;
+       &quot;(clojure.tools.nrepl/message (clojure.tools.nrepl/client tr 10000) {:op \&quot;artifact-list\&quot;}))&quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The above code is an example of the code necessary to connect to and invoke an operation on then refactor-nrepl
+middleware for listing clojare artifacts.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_behaviour_in_light_table&quot;&gt;Behaviour in Light Table&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(behavior ::trigger-artifact-hints
+          :triggers #{:artifact.hints.update!}
+          :debounce 500
+          :reaction (fn [editor res]
+                      (when-let [default-client (-&amp;gt; @editor :client :default)]                  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+                          (notifos/set-msg! (str &quot;Retrieving clojars artifacts&quot;))
+                          (object/raise editor                                                  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+                                        :eval.custom                                            &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+                                        (artifact-list)
+                                        {:result-type :refactor.artifacts :verbatim true}))))   &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;For this particular operation (autocompletion of deps) we require that the user has already got a connection to a lein project&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We raise an event on the editor instance (in this case it&amp;#8217;s an editor with a project.clj file)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;:eval.custom is a behavior for evaluate arbitrary clojure code&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We set the result type to something custom so that we can define a corresponding custom behavior
+to handle the results&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(behavior ::finish-artifact-hints
+          :triggers #{:editor.eval.clj.result.refactor.artifacts}                                 &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+          :reaction (fn [editor res]
+                      (let [artifacts (-&amp;gt; res :results first :result first :value (s/split #&quot; &quot;))
+                            hints (create-artifact-hints editor artifacts)]                       &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+                        (object/merge! editor {::dep-hints hints})                                &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+                        (object/raise auto-complete/hinter :refresh!))))                          &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The important part here is that the &lt;em&gt;editor.eval.clj.result&lt;/em&gt; is assumed by the Light Table client
+whilst &lt;em&gt;refactor.artifacts&lt;/em&gt; is appended, given the corresponding param we supplied above. So by naming
+or trigger like this, our behaviour will be triggered&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We pick out the results from the refactor-nrepl operation and transform it into a datastructure that&amp;#8217;s suitable
+for whatever we need to do (in this case providing autocompletion hints)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We store the list of artifacts in the editor (atom) so that our autocomplete hinter doesn&amp;#8217;t go bananas invoking
+the middleware liek crazy&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Finally we tell the autocomplete hinter to refresh it self to include the list of artifacts&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+The autocomplete part is skimpily explained here, but the important bit I&amp;#8217;m trying to get across is how to
+invoke the middleware and how to pick up the results. Autocompletion in Light Table deserves a blog post of it&amp;#8217;s own at some point in the fureture
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_middleware_preconditions&quot;&gt;Middleware preconditions&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For any of the features in the plugin to work we have to set up the middleware.
+So you need to add something like this to your ~/.lein/profiles.clj&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;:plugins [[refactor-nrepl &quot;X.Y.Z&quot;]       &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+          [cider/cider-nrepl &quot;A.B.C&quot;]]   &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This is the core dependency that does all the heavy lifting for the features currently implemented&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The Cider nrepl middleware is used by refactor-nrepl. However the cider middleware on it&amp;#8217;s own provides several cool
+features that might come handy to the clj-light-refactor plugin in the near future :)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock warning&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-warning&quot; title=&quot;Warning&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+The version indentifiers are intentionally left out, because it&amp;#8217;s currently a little in flux.
+This plugin won&amp;#8217;t released until the refactor-nrepl comes with it&amp;#8217;s next official release.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_the_road_ahead&quot;&gt;The road ahead&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This is just the beginning, but it feels like I&amp;#8217;m on to something. The clj-refactor.el project provides
+an huge list of potential features to implement, the refactor-nrepl middleware will surely continue to evolve
+and last but not least the cider middleware has plenty of useful stuff to harvest from.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;ll keep plugin(g) along and hopefully others might get inspired to contribute as well. At some point in the future maybe parts
+of this plugin will be ported to the official Light Table Clojure plugin. Who knows !?&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Securing Clojure Microservices using buddy - Part 3: Token revocation</title>
       <link>http://rundis.github.io/blog/2015/buddy_auth_part3.html</link>
