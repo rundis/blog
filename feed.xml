@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sun, 8 Mar 2015 04:05:16 +0100</pubDate>
-    <lastBuildDate>Sun, 8 Mar 2015 04:05:16 +0100</lastBuildDate>
+    <pubDate>Sun, 8 Mar 2015 04:10:20 +0100</pubDate>
+    <lastBuildDate>Sun, 8 Mar 2015 04:10:20 +0100</lastBuildDate>
 
     <item>
       <title>Clojure refactoring in Light Table</title>
@@ -44,7 +44,10 @@ nREPL middleware to support refactorings in an editor agnostic way.
 &lt;div class=&quot;sect1&quot;&gt;
 &lt;h2 id=&quot;_demo&quot;&gt;Demo&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;http://youtu.be/xlGpRTVIkYQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;http://youtu.be/xlGpRTVIkYQ&quot;&gt;ScreenCast demo&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/xlGpRTVIkYQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;sect1&quot;&gt;
