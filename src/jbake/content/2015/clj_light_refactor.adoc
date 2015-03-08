@@ -1,0 +1,132 @@
+= Clojure refactoring in Light Table
+Magnus Rundberget
+2015-03-08
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: clojure, lighttable
+:imagesdir: /blog/2015/
+:icons: font
+:id: clj_light_refactor
+
+
+== Background
+A collegue of mine, the emacs wizard https://github.com/magnars[Magnar] has on multiple occations demonstrated
+some of the cool refactoring features for Clojure he has at his disposal in emacs.
+
+I'm currently a https://github.com/LightTable/LightTable[Light Table] user and plugin author. Surely it should
+be possible to add some refactoring support to Light Table ? I started looking at https://github.com/clojure-emacs/clj-refactor.el[clj-refactor.el] and
+I couldn't initially figure out where to start. But I found that some of the cool features were actually enabled
+by an nrepl middleware https://github.com/clojure-emacs/refactor-nrepl[refactor-nrepl].
+
+
+[quote, refactor-nrepl]
+nREPL middleware to support refactorings in an editor agnostic way.
+
+Yay, now that's what I call a great initiative. I decided to give it a go, and here's a taste of what I managed to come up with so far.
+
+
+== Demo
+++++
+<iframe width="560" height="315" src="http://youtu.be/xlGpRTVIkYQ" frameborder="0" allowfullscreen></iframe>
+++++
+
+
+== The plugin
+
+NOTE: You can find the plugin repo on github https://github.com/rundis/clj-light-refactor
+
+
+
+== A taste of implementation
+I won't go into to much details in this blogpost, but I thought I'd give you a little teaser
+on how I've gone about interacting with the middleware. Light Table supports calling arbitrary clojure code through it's custom nrepl middleware.
+So getting started wasn't really that difficult.
+
+
+=== Middleware invocation
+[source,clojure]
+----
+(defn artifact-list-op []
+  (str "(do (require 'refactor-nrepl.client) (require 'clojure.tools.nrepl)"
+       "(def tr (refactor-nrepl.client/connect))"
+       "(clojure.tools.nrepl/message (clojure.tools.nrepl/client tr 10000) {:op \"artifact-list\"}))"))
+----
+
+The above code is an example of the code necessary to connect to and invoke an operation on then refactor-nrepl
+middleware for listing clojare artifacts.
+
+
+=== Behaviour in Light Table
+
+[source,clojure]
+----
+(behavior ::trigger-artifact-hints
+          :triggers #{:artifact.hints.update!}
+          :debounce 500
+          :reaction (fn [editor res]
+                      (when-let [default-client (-> @editor :client :default)]                  // <1>
+                          (notifos/set-msg! (str "Retrieving clojars artifacts"))
+                          (object/raise editor                                                  // <2>
+                                        :eval.custom                                            // <3>
+                                        (artifact-list)
+                                        {:result-type :refactor.artifacts :verbatim true}))))   // <4>
+----
+
+<1> For this particular operation (autocompletion of deps) we require that the user has already got a connection to a lein project
+<2> We raise an event on the editor instance (in this case it's an editor with a project.clj file)
+<3> :eval.custom is a behavior for evaluate arbitrary clojure code
+<4> We set the result type to something custom so that we can define a corresponding custom behavior
+to handle the results
+
+
+
+[source,clojure]
+----
+(behavior ::finish-artifact-hints
+          :triggers #{:editor.eval.clj.result.refactor.artifacts}                                 // <1>
+          :reaction (fn [editor res]
+                      (let [artifacts (-> res :results first :result first :value (s/split #" "))
+                            hints (create-artifact-hints editor artifacts)]                       // <2>
+                        (object/merge! editor {::dep-hints hints})                                // <3>
+                        (object/raise auto-complete/hinter :refresh!))))                          // <4>
+----
+<1> The important part here is that the __editor.eval.clj.result__ is assumed by the Light Table client
+whilst __refactor.artifacts__ is appended, given the corresponding param we supplied above. So by naming
+or trigger like this, our behaviour will be triggered
+<2> We pick out the results from the refactor-nrepl operation and transform it into a datastructure that's suitable
+for whatever we need to do (in this case providing autocompletion hints)
+<3> We store the list of artifacts in the editor (atom) so that our autocomplete hinter doesn't go bananas invoking
+the middleware liek crazy
+<4> Finally we tell the autocomplete hinter to refresh it self to include the list of artifacts
+
+
+NOTE: The autocomplete part is skimpily explained here, but the important bit I'm trying to get across is how to
+invoke the middleware and how to pick up the results. Autocompletion in Light Table deserves a blog post of it's own at some point in the fureture
+
+
+
+=== Middleware preconditions
+For any of the features in the plugin to work we have to set up the middleware.
+So you need to add something like this to your ~/.lein/profiles.clj
+
+[source,clojure]
+----
+:plugins [[refactor-nrepl "X.Y.Z"]       // <1>
+          [cider/cider-nrepl "A.B.C"]]   // <2>
+----
+<1> This is the core dependency that does all the heavy lifting for the features currently implemented
+<2> The Cider nrepl middleware is used by refactor-nrepl. However the cider middleware on it's own provides several cool
+features that might come handy to the clj-light-refactor plugin in the near future :)
+
+
+WARNING: The version indentifiers are intentionally left out, because it's currently a little in flux.
+This plugin won't released until the refactor-nrepl comes with it's next official release.
+
+
+== The road ahead
+This is just the beginning, but it feels like I'm on to something. The clj-refactor.el project provides
+an huge list of potential features to implement, the refactor-nrepl middleware will surely continue to evolve
+and last but not least the cider middleware has plenty of useful stuff to harvest from.
+
+I'll keep plugin(g) along and hopefully others might get inspired to contribute as well. At some point in the future maybe parts
+of this plugin will be ported to the official Light Table Clojure plugin. Who knows !?
