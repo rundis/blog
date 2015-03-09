@@ -10,7 +10,7 @@ Magnus Rundberget
 
 
 == Background
-A collegue of mine, the emacs wizard https://github.com/magnars[Magnar] has on multiple occations demonstrated
+A colleague of mine, the emacs wizard https://github.com/magnars[Magnar] has on multiple occations demonstrated
 some of the cool refactoring features for Clojure he has at his disposal in emacs.
 
 I'm currently a https://github.com/LightTable/LightTable[Light Table] user and plugin author. Surely it should
@@ -26,8 +26,10 @@ Yay, now that's what I call a great initiative. I decided to give it a go, and h
 
 
 == Demo
+http://youtu.be/xlGpRTVIkYQ[ScreenCast demo]
+
 ++++
-<iframe width="560" height="315" src="http://youtu.be/xlGpRTVIkYQ" frameborder="0" allowfullscreen></iframe>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/xlGpRTVIkYQ" frameborder="0" allowfullscreen></iframe>
 ++++
 
 
@@ -92,16 +94,16 @@ to handle the results
 ----
 <1> The important part here is that the __editor.eval.clj.result__ is assumed by the Light Table client
 whilst __refactor.artifacts__ is appended, given the corresponding param we supplied above. So by naming
-or trigger like this, our behaviour will be triggered
+our trigger like this, our behaviour will be triggered
 <2> We pick out the results from the refactor-nrepl operation and transform it into a datastructure that's suitable
 for whatever we need to do (in this case providing autocompletion hints)
 <3> We store the list of artifacts in the editor (atom) so that our autocomplete hinter doesn't go bananas invoking
-the middleware liek crazy
-<4> Finally we tell the autocomplete hinter to refresh it self to include the list of artifacts
+the middleware like crazy
+<4> Finally we tell the autocomplete hinter to refresh itself to include the list of artifacts
 
 
 NOTE: The autocomplete part is skimpily explained here, but the important bit I'm trying to get across is how to
-invoke the middleware and how to pick up the results. Autocompletion in Light Table deserves a blog post of it's own at some point in the fureture
+invoke the middleware and how to pick up the results. Autocompletion in Light Table deserves a blog post of it's own at some point in the future
 
 
 
@@ -120,7 +122,7 @@ features that might come handy to the clj-light-refactor plugin in the near futu
 
 
 WARNING: The version indentifiers are intentionally left out, because it's currently a little in flux.
-This plugin won't released until the refactor-nrepl comes with it's next official release.
+This plugin won't be released until the refactor-nrepl comes with it's next official release.
 
 
 == The road ahead
