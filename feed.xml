@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sun, 8 Mar 2015 04:10:20 +0100</pubDate>
-    <lastBuildDate>Sun, 8 Mar 2015 04:10:20 +0100</lastBuildDate>
+    <pubDate>Mon, 9 Mar 2015 06:26:05 +0100</pubDate>
+    <lastBuildDate>Mon, 9 Mar 2015 06:26:05 +0100</lastBuildDate>
 
     <item>
       <title>Clojure refactoring in Light Table</title>
@@ -19,7 +19,7 @@
 &lt;h2 id=&quot;_background&quot;&gt;Background&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;A collegue of mine, the emacs wizard &lt;a href=&quot;https://github.com/magnars&quot;&gt;Magnar&lt;/a&gt; has on multiple occations demonstrated
+&lt;p&gt;A colleague of mine, the emacs wizard &lt;a href=&quot;https://github.com/magnars&quot;&gt;Magnar&lt;/a&gt; has on multiple occations demonstrated
 some of the cool refactoring features for Clojure he has at his disposal in emacs.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -144,7 +144,7 @@ to handle the results&lt;/td&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
 &lt;td&gt;The important part here is that the &lt;em&gt;editor.eval.clj.result&lt;/em&gt; is assumed by the Light Table client
 whilst &lt;em&gt;refactor.artifacts&lt;/em&gt; is appended, given the corresponding param we supplied above. So by naming
-or trigger like this, our behaviour will be triggered&lt;/td&gt;
+our trigger like this, our behaviour will be triggered&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
@@ -154,11 +154,11 @@ for whatever we need to do (in this case providing autocompletion hints)&lt;/td&
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
 &lt;td&gt;We store the list of artifacts in the editor (atom) so that our autocomplete hinter doesn&amp;#8217;t go bananas invoking
-the middleware liek crazy&lt;/td&gt;
+the middleware like crazy&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Finally we tell the autocomplete hinter to refresh it self to include the list of artifacts&lt;/td&gt;
+&lt;td&gt;Finally we tell the autocomplete hinter to refresh itself to include the list of artifacts&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;
@@ -170,7 +170,7 @@ the middleware liek crazy&lt;/td&gt;
 &lt;/td&gt;
 &lt;td class=&quot;content&quot;&gt;
 The autocomplete part is skimpily explained here, but the important bit I&amp;#8217;m trying to get across is how to
-invoke the middleware and how to pick up the results. Autocompletion in Light Table deserves a blog post of it&amp;#8217;s own at some point in the fureture
+invoke the middleware and how to pick up the results. Autocompletion in Light Table deserves a blog post of it&amp;#8217;s own at some point in the future
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
@@ -209,7 +209,7 @@ features that might come handy to the clj-light-refactor plugin in the near futu
 &lt;/td&gt;
 &lt;td class=&quot;content&quot;&gt;
 The version indentifiers are intentionally left out, because it&amp;#8217;s currently a little in flux.
-This plugin won&amp;#8217;t released until the refactor-nrepl comes with it&amp;#8217;s next official release.
+This plugin won&amp;#8217;t be released until the refactor-nrepl comes with it&amp;#8217;s next official release.
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
