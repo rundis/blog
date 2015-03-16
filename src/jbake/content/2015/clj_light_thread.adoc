@@ -1,0 +1,237 @@
+= Implementing a Clojure threading refactoring in ClojureScript using Light Table
+Magnus Rundberget
+2015-03-16
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: clojure, clojurescript, lighttable
+:imagesdir: /blog/2015/
+:icons: font
+:id: clj_light_thread
+
+
+
+== Introduction
+About a week ago I blogged and did a ScreenCast about http://rundis.github.io/blog/2015/clj_light_refactor.html[Clojure refactoring in Light Table].
+I introduced some clojure refactorings enabled by the not yet released https://github.com/rundis/clj-light-refactor[plugin] I'm currently
+working on. In this post I thought I'd walk you through a feature I've added since then in a little more detail.
+
+NOTE: Clj-Light-Refactor plugin on github https://github.com/rundis/clj-light-refactor
+
+
+Again https://github.com/clojure-emacs/clj-refactor.el[clj-refactor.el] provided me with a great list of potential
+refactoring candidates. I decided I'd start with the threading refactoring, mostly because I've missed something like that
+for Light Table on a daily basis.
+
+.Goal
+[source,clojure]
+----
+; Turn something like this;
+(map #(+ % 1) (filter even? [1 2 3 4 5]))
+
+;into
+(->> [1 2 3 4 5]
+     (filter even?)
+     (map #(+ % 1)))
+----
+
+* I'd like the refactorings to work for both Clojure and ClojureScript
+* I think it would be the best option if I could implement it in the lt plugin client code (using clojurescript)
+* Use third party lib if that saves me time and provides a great platform for future refactorings
+
+
+== Analysis paralysis
+[quote, WIKIPEDIA]
+..the state of over-analyzing (or over-thinking) a situation so that a decision or action is never taken, in effect paralyzing the outcome..
+
+Before I could get started on the implementation I had to do a bit of research. I tried to find
+a clojurescript compatible lib that would make it easy to read/"parse" clojure and clojurescript code
+and make it easy to navigate and manipulate it. I looked at parser libs like https://github.com/lbradstreet/instaparse-cljs[Instaparse-cljs] and https://github.com/cgrand/parsley [parsley]
+but both seemed like a little bit to much effort to get me started. https://github.com/xsc/rewrite-clj[rewrite-clj] seemed
+very promising, but unfortunately no ClojureScript port (feel free to vote for or contribute to this https://github.com/xsc/rewrite-clj/issues/4[issue])
+
+.What to do ?
+After much deliberation it dawned on my that maybe I should have a go at it without using any libs.
+ClojureScript ships with __cljs.reader__. That should get me started right ? Next step is to get the code
+into something easily navigable and modifiable (immutably of course). Another look at xlj-rewrite provided the necessary neuron kickstart: zipper of course.
+Good job there is a https://github.com/clojure/clojurescript/blob/master/src/cljs/clojure/zip.cljs[ClojreScript version] already at hand !
+
+
+NOTE: There are many resources out there on zippers in clojure. http://www.ibm.com/developerworks/library/j-treevisit/[This article] is pretty thorough
+
+
+== Thread last step by step overview
+To really get to grips with what I had to achieve I sat down and sketched up something like the illustration
+below. Quite helpful when your in-brain tree visualizer has gotten somewhat rusty.
+
+image::thread_first.png[]
+
+.Steps
+. First we wrap our form in a thread-last if we haven't done so already
+. We take the last argument of the list node right of the threading operator and promote that node
+to become the first argument to the threading ("function/"macro)
+. Same as above, now the node we promote is a vector
+. When the first node next to the threading operator node isn't a list (or a list of just one arg), we are done.
+
+
+Thread first isn't much different, so I'll leave that excersize up to you !
+
+
+[NOTE]
+========
+Some of you might raise your finger at the way I skipped breaking down the **#(+ % 1)** node.
+We'll get back to that later, but I'll give you a hint :
+[source,clojure]
+----
+Could not find tag parser for (+ in ("inst" "uuid" "queue" "js")
+----
+========
+
+
+
+== Code essential
+
+=== Reading code from a string
+[source,clojure]
+----
+(defn str->seq-zip [form-str]
+  (when (seq form-str)
+    (-> form-str
+        rdr/read-string        // <1>
+        z/seq-zip)))           // <2>
+----
+<1> Using cljs.reader to read(/parse) code.
+<2> Create a sequence zipper from the parsed form
+
+
+NOTE: Please note that cljs.reader only a subset (edn) of clojure. That means that several reader macros like #(), '() etc will croak
+
+
+=== Thread one / promote one pass
+[source,clojure]
+----
+(defn do-thread-one [cand cand-fn]
+  (if-not (further-threadable? cand)                         // <1>
+    cand
+    (let [promote (-> cand cand-fn z/node)                   // <2>
+          therest (-> cand cand-fn z/remove)]                // <3>
+      (-> therest
+          z/up
+          (z/insert-left promote)                            // <4>
+          (#(z/replace % (unwrap-list-if-one (z/node %))))   // <5>
+          z/up))))                                           // <6>
+----
+<1> First we need to check if the form is further threadable, if it isn't then just return the zipper (cand) with it's current position
+<2> Get the node that should be promoted using **cand-fn**. cand-fn basically handles navigating the zipper to find the last argument to the function call (thread-last) or the first argument (thread-first)
+<3> Gently rip out the node to be promoted, so you are left with the rest sans this node
+<4> Insert the node to be promoted as the first sibling to the threading operator node
+<5> If the node at the position of the rest node is a list with just one item, it should be the function and we can leave out the parens
+<6> Move the zipper "cursor" up to the first arg of the thread operator function (for potentially further threading)
+
+
+
+=== Thread fully
+[source,clojure]
+----
+(defn- do-thread [orig cand-fn t]
+  (when (seq orig)
+    (let [root (if (threaded? orig) orig (wrap-in-thread orig t))]  // <1>
+      (loop [cand root]
+        (if-not (further-threadable? cand)                          // <2>
+          cand
+          (recur (do-thread-one cand cand-fn)))))))
+----
+<1> If not already wrapped in a form with a threading operator, do so (just for convenience)
+<2> Keep promoting until isn't possible to promote further
+
+
+=== Zip it up
+[source,clojure]
+----
+(defn zip->str [zipnode]
+  (-> zipnode
+      z/root
+      pr-str))
+----
+
+=== Orchestration
+[source,clojure]
+----
+(defn thread [form-str]
+  (let [node (str->seq-zip form-str)
+        threading (when node (threaded? node))]
+    (when (and node threading)
+      (-> node
+          (do-thread (threading-locator threading) threading)
+          zip->str))))
+----
+Entry point function to read form string, do threading and return result as string again
+
+
+
+=== Hooking it into Light Table
+
+==== Replace helper function
+[source,clojure]
+----
+defn replace-cmd [ed replace-fn]
+  (cmd/exec! :paredit.select.parent)                                       // <1>
+  (when-let [candidate  (editor/selection ed)]
+    (let [bounds (editor/selection-bounds ed)]
+      (when-let [res (replace-fn candidate)]                               // <2>
+        (editor/replace-selection ed res))                                 // <3>
+      (editor/move-cursor ed (-> bounds :from (update-in [:ch] inc))))))
+----
+<1> Using paredit command to select parent expression
+<2> Execute threading function on selected expression
+<3> Replace selection with given the refactored result
+
+
+==== Behavior and commands
+[source,clojure]
+----
+(behavior ::thread-fully!                                           // <1>
+          :triggers #{:refactor.thread-fully!}
+          :reaction (fn [ed]
+                      (replace-cmd ed thread)))
+
+(cmd/command {:command ::thread-fully                               // <2>
+              :desc "Clojure refactor: Thread fully"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (object/raise ed :refactor.thread-fully!)))})
+
+----
+<1> We create behaviors for each refactor feature so that we can target the feature to a given set of editor tags
+<2> Commands are what the user sees in the LIght Table command pane, and which can be assigned to keyboard shortcuts
+
+
+==== Configuring behaviors
+[source,clojure]
+----
+  [:editor.clj :lt.plugins.cljrefactor.threading/thread-fully!]
+  [:editor.cljs :lt.plugins.cljrefactor.threading/thread-fully!]
+----
+We enable the behaviors for both Clojure and ClojureScript tagged editor objects.
+
+
+
+== Problems ?
+Well the limitations of cljs.reader is a problem. The anonymous function literal is something
+I use all the time. I did quickly look at __cljs.reader/register-tag-parser!__ but couldn't really come up
+with a workable strategy here. So if anyone have suggestions for a more complete parsing of clojure code in ClojureScript
+please give me a ping ! I ended up escaping it as a string for now. Not exactly great if you'd like to apply the refactoring
+inside an anonymous function literal block.
+
+WARNING: Actually I also had some issues using clojure.zipper from Light Table, but a restart seemed to solve it
+
+== Summary
+Once I managed to make a decision on which route to pursue, the rest was mainly just a blast.
+it´s really awesome how much of Clojure it's possible to use in ClojureScript and digging into
+zippers was a real eyeopener for me. I believe I now have a foundation to provide a range
+of useful client side refactoring features and I've already started pondering on what to address next.
+
+Some thorny issues remain, and some icing like customizable formatting etc still remains.
+The complete list of threading refactorings are listed https://github.com/rundis/clj-light-refactor#threading[here]
+
+The main takeaway for me is that I keep learning more and more about Clojure, and as a bonus I get
+new nifty features for my current editor of choice !
