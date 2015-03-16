@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Implementing a Clojure threading refactoring in ClojureScript using Light Table</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/blog/css/prettify.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/blog/about.html">About</a></li>
+            <li><a href="/blog/feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>Implementing a Clojure threading refactoring in ClojureScript using Light Table</h1>
+	</div>
+
+	<p><em>16 March 2015</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/clojure.html">clojure</a>
+  </em>
+    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+  </em>
+    <a href="/blog/tags/lighttable.html"> lighttable</a>
+  </p>
+  <a href="https://twitter.com/share" class="twitter-share-button"
+    data-url="http://rundis.github.io/blog/2015/clj_light_thread.html"
+    data-via="mrundberget"
+    data-lang="en">Tweet</a>
+  <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+	<p><div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>About a week ago I blogged and did a ScreenCast about <a href="http://rundis.github.io/blog/2015/clj_light_refactor.html">Clojure refactoring in Light Table</a>.
+I introduced some clojure refactorings enabled by the not yet released <a href="https://github.com/rundis/clj-light-refactor">plugin</a> I&#8217;m currently
+working on. In this post I thought I&#8217;d walk you through a feature I&#8217;ve added since then in a little more detail.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+Clj-Light-Refactor plugin on github <a href="https://github.com/rundis/clj-light-refactor">https://github.com/rundis/clj-light-refactor</a>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Again <a href="https://github.com/clojure-emacs/clj-refactor.el">clj-refactor.el</a> provided me with a great list of potential
+refactoring candidates. I decided I&#8217;d start with the threading refactoring, mostly because I&#8217;ve missed something like that
+for Light Table on a daily basis.</p>
+</div>
+<div class="listingblock">
+<div class="title">Goal</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>; Turn something like this;
+(map #(+ % 1) (filter even? [1 2 3 4 5]))
+
+;into
+(-&gt;&gt; [1 2 3 4 5]
+     (filter even?)
+     (map #(+ % 1)))</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>I&#8217;d like the refactorings to work for both Clojure and ClojureScript</p>
+</li>
+<li>
+<p>I think it would be the best option if I could implement it in the lt plugin client code (using clojurescript)</p>
+</li>
+<li>
+<p>Use third party lib if that saves me time and provides a great platform for future refactorings</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_analysis_paralysis">Analysis paralysis</h2>
+<div class="sectionbody">
+<div class="quoteblock">
+<blockquote>
+..the state of over-analyzing (or over-thinking) a situation so that a decision or action is never taken, in effect paralyzing the outcome..
+</blockquote>
+<div class="attribution">
+&#8212; WIKIPEDIA
+</div>
+</div>
+<div class="paragraph">
+<p>Before I could get started on the implementation I had to do a bit of research. I tried to find
+a clojurescript compatible lib that would make it easy to read/"parse" clojure and clojurescript code
+and make it easy to navigate and manipulate it. I looked at parser libs like <a href="https://github.com/lbradstreet/instaparse-cljs">Instaparse-cljs</a> and <a href="https://github.com/cgrand/parsley">https://github.com/cgrand/parsley</a> [parsley]
+but both seemed like a little bit to much effort to get me started. <a href="https://github.com/xsc/rewrite-clj">rewrite-clj</a> seemed
+very promising, but unfortunately no ClojureScript port (feel free to vote for or contribute to this <a href="https://github.com/xsc/rewrite-clj/issues/4">issue</a>)</p>
+</div>
+<div class="paragraph">
+<div class="title">What to do ?</div>
+<p>After much deliberation it dawned on my that maybe I should have a go at it without using any libs.
+ClojureScript ships with <em>cljs.reader</em>. That should get me started right ? Next step is to get the code
+into something easily navigable and modifiable (immutably of course). Another look at xlj-rewrite provided the necessary neuron kickstart: zipper of course.
+Good job there is a <a href="https://github.com/clojure/clojurescript/blob/master/src/cljs/clojure/zip.cljs">ClojreScript version</a> already at hand !</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+There are many resources out there on zippers in clojure. <a href="http://www.ibm.com/developerworks/library/j-treevisit/">This article</a> is pretty thorough
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_thread_last_step_by_step_overview">Thread last step by step overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To really get to grips with what I had to achieve I sat down and sketched up something like the illustration
+below. Quite helpful when your in-brain tree visualizer has gotten somewhat rusty.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2015/thread_first.png" alt="thread first">
+</div>
+</div>
+<div class="olist arabic">
+<div class="title">Steps</div>
+<ol class="arabic">
+<li>
+<p>First we wrap our form in a thread-last if we haven&#8217;t done so already</p>
+</li>
+<li>
+<p>We take the last argument of the list node right of the threading operator and promote that node
+to become the first argument to the threading ("function/"macro)</p>
+</li>
+<li>
+<p>Same as above, now the node we promote is a vector</p>
+</li>
+<li>
+<p>When the first node next to the threading operator node isn&#8217;t a list (or a list of just one arg), we are done.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Thread first isn&#8217;t much different, so I&#8217;ll leave that excersize up to you !</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Some of you might raise your finger at the way I skipped breaking down the <strong>#(+ % 1)</strong> node.
+We&#8217;ll get back to that later, but I&#8217;ll give you a hint :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>Could not find tag parser for (+ in ("inst" "uuid" "queue" "js")</code></pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_code_essential">Code essential</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_reading_code_from_a_string">Reading code from a string</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn str-&gt;seq-zip [form-str]
+  (when (seq form-str)
+    (-&gt; form-str
+        rdr/read-string        <i class="conum" data-value="1"></i><b>(1)</b>
+        z/seq-zip)))           <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Using cljs.reader to read(/parse) code.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Create a sequence zipper from the parsed form</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+Please note that cljs.reader only a subset (edn) of clojure. That means that several reader macros like #(), '() etc will croak
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_thread_one_promote_one_pass">Thread one / promote one pass</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn do-thread-one [cand cand-fn]
+  (if-not (further-threadable? cand)                         <i class="conum" data-value="1"></i><b>(1)</b>
+    cand
+    (let [promote (-&gt; cand cand-fn z/node)                   <i class="conum" data-value="2"></i><b>(2)</b>
+          therest (-&gt; cand cand-fn z/remove)]                <i class="conum" data-value="3"></i><b>(3)</b>
+      (-&gt; therest
+          z/up
+          (z/insert-left promote)                            <i class="conum" data-value="4"></i><b>(4)</b>
+          (#(z/replace % (unwrap-list-if-one (z/node %))))   <i class="conum" data-value="5"></i><b>(5)</b>
+          z/up))))                                           <i class="conum" data-value="6"></i><b>(6)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>First we need to check if the form is further threadable, if it isn&#8217;t then just return the zipper (cand) with it&#8217;s current position</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Get the node that should be promoted using <strong>cand-fn</strong>. cand-fn basically handles navigating the zipper to find the last argument to the function call (thread-last) or the first argument (thread-first)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Gently rip out the node to be promoted, so you are left with the rest sans this node</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Insert the node to be promoted as the first sibling to the threading operator node</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>If the node at the position of the rest node is a list with just one item, it should be the function and we can leave out the parens</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Move the zipper "cursor" up to the first arg of the thread operator function (for potentially further threading)</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_thread_fully">Thread fully</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn- do-thread [orig cand-fn t]
+  (when (seq orig)
+    (let [root (if (threaded? orig) orig (wrap-in-thread orig t))]  <i class="conum" data-value="1"></i><b>(1)</b>
+      (loop [cand root]
+        (if-not (further-threadable? cand)                          <i class="conum" data-value="2"></i><b>(2)</b>
+          cand
+          (recur (do-thread-one cand cand-fn)))))))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>If not already wrapped in a form with a threading operator, do so (just for convenience)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Keep promoting until isn&#8217;t possible to promote further</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_zip_it_up">Zip it up</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn zip-&gt;str [zipnode]
+  (-&gt; zipnode
+      z/root
+      pr-str))</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_orchestration">Orchestration</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn thread [form-str]
+  (let [node (str-&gt;seq-zip form-str)
+        threading (when node (threaded? node))]
+    (when (and node threading)
+      (-&gt; node
+          (do-thread (threading-locator threading) threading)
+          zip-&gt;str))))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Entry point function to read form string, do threading and return result as string again</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hooking_it_into_light_table">Hooking it into Light Table</h3>
+<div class="sect3">
+<h4 id="_replace_helper_function">Replace helper function</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>defn replace-cmd [ed replace-fn]
+  (cmd/exec! :paredit.select.parent)                                       <i class="conum" data-value="1"></i><b>(1)</b>
+  (when-let [candidate  (editor/selection ed)]
+    (let [bounds (editor/selection-bounds ed)]
+      (when-let [res (replace-fn candidate)]                               <i class="conum" data-value="2"></i><b>(2)</b>
+        (editor/replace-selection ed res))                                 <i class="conum" data-value="3"></i><b>(3)</b>
+      (editor/move-cursor ed (-&gt; bounds :from (update-in [:ch] inc))))))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Using paredit command to select parent expression</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Execute threading function on selected expression</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Replace selection with given the refactored result</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_behavior_and_commands">Behavior and commands</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::thread-fully!                                           <i class="conum" data-value="1"></i><b>(1)</b>
+          :triggers #{:refactor.thread-fully!}
+          :reaction (fn [ed]
+                      (replace-cmd ed thread)))
+
+(cmd/command {:command ::thread-fully                               <i class="conum" data-value="2"></i><b>(2)</b>
+              :desc "Clojure refactor: Thread fully"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (object/raise ed :refactor.thread-fully!)))})
+</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We create behaviors for each refactor feature so that we can target the feature to a given set of editor tags</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Commands are what the user sees in the LIght Table command pane, and which can be assigned to keyboard shortcuts</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_configuring_behaviors">Configuring behaviors</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>  [:editor.clj :lt.plugins.cljrefactor.threading/thread-fully!]
+  [:editor.cljs :lt.plugins.cljrefactor.threading/thread-fully!]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We enable the behaviors for both Clojure and ClojureScript tagged editor objects.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_problems">Problems ?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Well the limitations of cljs.reader is a problem. The anonymous function literal is something
+I use all the time. I did quickly look at <em>cljs.reader/register-tag-parser!</em> but couldn&#8217;t really come up
+with a workable strategy here. So if anyone have suggestions for a more complete parsing of clojure code in ClojureScript
+please give me a ping ! I ended up escaping it as a string for now. Not exactly great if you&#8217;d like to apply the refactoring
+inside an anonymous function literal block.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Actually I also had some issues using clojure.zipper from Light Table, but a restart seemed to solve it
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Once I managed to make a decision on which route to pursue, the rest was mainly just a blast.
+it?s really awesome how much of Clojure it&#8217;s possible to use in ClojureScript and digging into
+zippers was a real eyeopener for me. I believe I now have a foundation to provide a range
+of useful client side refactoring features and I&#8217;ve already started pondering on what to address next.</p>
+</div>
+<div class="paragraph">
+<p>Some thorny issues remain, and some icing like customizable formatting etc still remains.
+The complete list of threading refactorings are listed <a href="https://github.com/rundis/clj-light-refactor#threading">here</a></p>
+</div>
+<div class="paragraph">
+<p>The main takeaway for me is that I keep learning more and more about Clojure, and as a bonus I get
+new nifty features for my current editor of choice !</p>
+</div>
+</div>
+</div></p>
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'clj_light_thread';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+
+  </body>
+</html>
