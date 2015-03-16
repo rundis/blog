@@ -222,7 +222,7 @@ with a workable strategy here. So if anyone have suggestions for a more complete
 please give me a ping ! I ended up escaping it as a string for now. Not exactly great if you'd like to apply the refactoring
 inside an anonymous function literal block.
 
-WARNING: Actually I also had some issues using clojure.zipper from Light Table, but a restart seemed to solve it
+WARNING: Actually I also had some issues using clojure.zip from Light Table, but a restart seemed to solve it
 
 == Summary
 Once I managed to make a decision on which route to pursue, the rest was mainly just a blast.
