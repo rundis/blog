@@ -1,0 +1,258 @@
+= Securing Clojure Microservices using buddy - Part 4: Secure and liberate a service app
+Magnus Rundberget
+2015-03-25
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: clojure, buddy, security
+:imagesdir: /blog/2015/
+:icons: font
+:id: buddy_auth_part4
+
+Part 4 in my blog series about securing clojure web services using https://github.com/funcool/buddy[buddy].
+The time has finally come to demonstrate how you may secure a REST based microservice application.
+
+
+== Introduction
+.Previous episodes in this series:
+* http://rundis.github.io/blog/2015/buddy_auth_part1.html[Securing Clojure Microservices using buddy - Part 1: Creating Auth Tokens]
+* http://rundis.github.io/blog/2015/buddy_auth_part2.html[Securing Clojure Microservices using buddy - Part 2: WebApp authentication and authorization]
+* http://rundis.github.io/blog/2015/buddy_auth_part3.html[Securing Clojure Microservices using buddy - Part 3: Token revocation]
+
+NOTE: Sample code (tagged for each blog post) can be found on https://github.com/rundis/acme-buddy[github]
+
+Before I discovered buddy my first attempt at prototyping a clojure web app with security tried to combine
+the use of https://github.com/cemerick/friend[Friend] and http://clojure-liberator.github.io/liberator[Liberator].
+To complicate matters I tried to make an app that both served user content (html) and provided a REST api.
+I had a hard time figuring out how to make the two play nicely together. If it hadn't been for the brilliant article:
+http://sritchie.github.io/2014/01/17/api-authentication-with-liberator-and-friend/[API Authentication with Liberator and Friend] by Sam Ritchie,
+I wouldn't have gotten very far.
+
+In this episode I will try to demonstrate how you may use buddy in combination with Liberator
+to secure a REST-oriented microservice application. We are going to build upon the token based
+authentication and authorization from the previous episodes and create the **acme-catalog** service app.
+
+== A small contribution to buddy
+The primary buddy lib to help you secure ring based web apps is https://github.com/funcool/buddy-auth[buddy-auth].
+Unfortunately when I first wanted to use buddy-auth for authentication and authorization, it didn't provide
+out of the box support for jws tokens. What to do ? Well I decided to do what any good open citizen should do.
+I submitted a pull request. My first clojure lib contribution got accepted. Yay !
+
+
+
+== Relevant code snippets for acme-catalog
+
+
+=== Wrap authentication middleware
+[source,clojure]
+----
+(ns acme-catalog.core
+  (:require [compojure.core :refer [defroutes ANY]]
+            [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.json :refer [wrap-json-params]]
+            [clojure.java.io :as io]
+            [buddy.auth.backends.token :refer [jws-backend]]
+            [buddy.auth.middleware :refer [wrap-authentication]]
+            [buddy.core.keys :as ks]
+            [acme-catalog.resources :as r]))
+
+(defroutes app-routes
+  (ANY "/products" [] r/products)
+  (ANY "/products/:id" [id] (r/product id)))
+
+
+(def auth-backend (jws-backend {:secret (ks/public-key (io/resource "auth_pubkey.pem"))  // <1>
+                                :token-name "Acme-Token"}))
+
+(def app
+  (-> app-routes
+      (wrap-authentication auth-backend)                                                 // <2>
+      wrap-keyword-params
+      wrap-json-params))
+----
+
+<1> Buddy auth backend that supports jws tokens. We provide the public key for the certifacate used by
+acme-auth to create our tokens. In addition we can optionally provide a custom name for our token
+<2> Apply middleware that uses backend to read the token, unsign it and populate request map with the token info
+
+
+[NOTE]
+====
+.What does the wrap-authentication middleware do ?
+. Retrieves the __Authorization__ header (if one exist) from the request headers
+. Looks for the token param (default "Token", but in our case "Acme-Token")
+. If found reads the token and unsigns it using the secret (in our case the public key)
+. The contents of the unsigned token is added to an :identity key in your request map
+====
+
+.Sample request map
+[source,clojure]
+----
+{:identity
+  {:user
+    {:user-roles [{:role-id 10, :application-id 10}
+                  {:role-id 41, :application-id 40}],
+     :username test, :id 1},
+ :exp 1427285979},
+ ;; etc...
+ }
+----
+
+=== Authorizing liberator resources
+NOTE: Liberator routes your request through a graph of decisions and actions. http://clojure-liberator.github.io/liberator/assets/img/decision-graph.svg[This graph]
+provides a useful context in case you are not familiar with what decisions kicks in when !
+
+I initially tripped on the difference between HTTP status 401 and 403. http://stackoverflow.com/questions/3297048/403-forbidden-vs-401-unauthorized-http-responses[Stackoverflow]
+provides a pretty clear explanation.
+
+
+==== Helper functions for role access
+[source,clojure]
+----
+(def acme-catalog-roles
+  {:customer 41 :catalog-admin 40})                                       // <1>
+
+(defn any-granted? [ctx roles]                                            // <2>
+  (seq
+   (clojure.set/intersection
+    (set (map :role-id (-> ctx :request :identity :user :user-roles)))
+    (set (vals (select-keys acme-catalog-roles roles))))))
+----
+<1> Hardcoded definition of roles applicable for the acme-catalog app
+<2> Helper function to check if the user has been granted one or more of the applicable roles
+
+
+==== Liberator resource commons
+Liberator resources are composable, so to avoid too much repetion across resources we've created
+a small helper function to define behavior for the two key decision points with regards to
+authentication and authorization checks.
+[source,clojure]
+----
+(defn secured-resource [m]
+  {:authorized?    #(authenticated? (:request %))                                       // <1>
+   :allowed?       (fn [ctx]
+                     (let [default-auth? (any-granted? ctx (keys acme-catalog-roles))]  // <2>
+                       (if-let [auth-fn (:allowed? m)]
+                         (and default-auth? (auth-fn ctx))                              // <3>
+                         default-auth?)))})
+----
+<1> **:authorized?** corresponds to 401. Here we check if the user is authenticated. We use a buddy function: __authenticated?__
+to do the check. If the user isn't authentication this function will return false
+<2> **:allowed?** corresponds to 403. We provide a default impl here that says that the user must atleast have
+one of the acme-catalog roles to be authorized to access a secured resource
+<3> In addition we provide an optional facility to specify a custom function for more fine grained authorization checks. See below for example.
+
+
+==== Securing products resources
+[source,clojure]
+----
+
+(defresource product-categories
+  (secured-resource {})                                                                   // <1>
+  :available-media-types ["application/json"]
+  :allowed-methods       [:get]
+  :handle-ok             (fn [ctx] "List of categories"))
+
+(defresource products
+  (secured-resource {:allowed? (by-method {:get true                                      // <2>
+                                           :post #(any-granted? % [:catalog-admin])})})
+  :available-media-types ["application/json"]
+  :allowed-methods       [:get :post]
+  :handle-ok             (fn [ctx] "List of products coming your way honey"))
+
+
+(defresource product [id]
+  (secured-resource {:allowed? (by-method {:get true
+                                           :delete #(any-granted? % [:catalog-admin])
+                                           :put #(any-granted? % [:catalog-admin])})})
+  :available-media-types ["application/json"]
+  :allowed-methods       [:get :put :delete]
+  :handle-ok             (fn [ctx]                                                        // <3>
+                           (if (and (= "99" id)
+                                    (not (any-granted? ctx [:catalog-admin])))
+                             (ring-response {:status 403
+                                             :headers {}
+                                             :body "Only admins can access product 99"})
+                             "A single product returned")))
+----
+<1> For the product-categories service anybody with a acme-catalog role may access
+<2> For products we restrict access by request method. Only catalog admins may add new products, while anyone can list products.
+<3> Silly example, but demonstrates that you can always bypass the defaults and do custom authorization
+further down in the liberator decision chain.
+
+
+=== Trying it all out - commando style
+
+.Get a valid token
+[source,bash]
+----
+acme-auth: lein ring server-headless
+
+# In another terminal
+curl -i -X POST -d '{"username": "test", "password":"secret"}' -H "Content-type: application/json" http://localhost:6001/create-auth-token
+
+# Responds with something like:
+HTTP/1.1 201 Created
+Date: Wed, 25 Mar 2015 11:49:39 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 1057
+Server: Jetty(7.6.13.v20130916)
+
+{"token-pair":{"auth-token":"eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6NDEsImFwcGxpY2F0aW9uLWlkIjo0MH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyNzI4NTk3OX0.eNTNG8Hu8a4OD9xWSoEZgwGUd15Oytj-GQZY4RgmTEdx9OjkLDRBefU89GNlEEq19Bsd3ciuWzTXKg3B0qvAk4F4-najY_erPGypSlBvRUI0Fa1_wA2PRYxT-zCTiSIxD-oM0oq_3Z61QlN0k-Sf7shel42-x9z7r8RQeNMr-iMk-hOI_v7moQogN08FiZnctcQdE8qKg_DEhwO3l780eBta_vr3tGSd174IRthz59G61P-XqV8wC4HZymbe8TCMc-3uniIvQeoG_rC3oRqNfjkxZlTB_h6mOjs1p3h_cUmrsOhSk0mQe5mrwSzuCiunMcKQ1jsb88daWkvjMrwRUg","refresh-token":"eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyLWlkIjoxLCJleHAiOjE0Mjk4NzYxODAsImlhdCI6MTQyNzI4NDE4MH0.FH2xooPoGnrSEbcU17Tr8ls9A-Noc3n9ZzLWGrblrI0bbIIFz25eJLcJbVGT3dLs7syc0KG3v4O0LAwQ6URvgl0aV2IT366KpmOiMUpsYmgqDCuE45FlSB2IBQKOLBTb6j18jpIsy0Kev6iHUCpvgKyNPcglElnVLFFahVwk_DDyrWusPcX-Di3AqSJdyz6ruBuPGzbzS6DMNkasTFNI1TLwjuokzVCdIYSNiQmgc1IozBFjHdeqQ_5kUdinv_tiW7yho0CwqiGSa9i56b328aZR5lADXR6gom5Oy4XTDDR6eMoDcvZKBncLV3YO29HC58EmZLghbX6832i0J7jfGw"}}
+----
+
+.Calling acme-catalog
+[source,bash]
+----
+acme-catalog: lein ring server-headless
+
+#in another terminal
+curl -i -H "Authorization: Acme-Token eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6NDEsImFwcGxpY2F0aW9uLWlkIjo0MH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyNzI4NTk3OX0.eNTNG8Hu8a4OD9xWSoEZgwGUd15Oytj-GQZY4RgmTEdx9OjkLDRBefU89GNlEEq19Bsd3ciuWzTXKg3B0qvAk4F4-najY_erPGypSlBvRUI0Fa1_wA2PRYxT-zCTiSIxD-oM0oq_3Z61QlN0k-Sf7shel42-x9z7r8RQeNMr-iMk-hOI_v7moQogN08FiZnctcQdE8qKg_DEhwO3l780eBta_vr3tGSd174IRthz59G61P-XqV8wC4HZymbe8TCMc-3uniIvQeoG_rC3oRqNfjkxZlTB_h6mOjs1p3h_cUmrsOhSk0mQe5mrwSzuCiunMcKQ1jsb88daWkvjMrwRUg" http//localhost:6003/products/1
+
+# reponds with something like
+HTTP/1.1 200 OK
+Date: Wed, 25 Mar 2015 13:47:50 GMT
+Vary: Accept
+Content-Type: application/json;charset=UTF-8
+Content-Length: 25
+Server: Jetty(7.6.13.v20130916)
+
+A single product returned
+----
+
+== Integration with acme-webstore
+Calling acme-catalog from acme-webstore should now be a pretty simple matter. We just need to make
+sure we pass on the token.
+
+=== Calling acme-catalog
+[source,clojure]
+----
+(ns acme-webstore.catalog
+  (:require [clj-http.client :as http]))
+
+
+(defn get-from-catalog [path token]
+  (http/get path {:headers {"Authorization" (str "Acme-Token " token)}}))       // <1>
+
+(defn get-products [req]
+  (let [auth-token (-> req :session :token-pair :auth-token)                    // <2>
+        resp (get-from-catalog "http://localhost:6003/products" auth-token)]
+    (:body resp)))
+----
+<1> We make sure we pass the token in the __Authoriazation__ header with the given token name
+<2> The auth-token for the logged in user is found under the session key for the request
+
+The rest is just a matter of hooking up the appropriate route and view. I'll leave that part up to you !
+
+
+== Summary
+Most of the hard work was already done in the previous episodes. Providing authentication and authorization
+for our REST services was pretty simple. We also demonstrated that integrating with Liberator was mostly
+a matter of hooking into the appropriate decision points for our resource definitions.
+We didn't utilize all that much of buddy-auth here, but your app might find use for some of its more advanced features.
+
+I think this episode demonstrates some of the benefits of using a library like buddy. It's not very opnionated which leaves you with a lot of decisions to make.
+But it does have the building blocks you need and it provides you with great flexibility when it comes to integrating with other libraries.
+
+At the moment I'm not sure if there is going to be any further episodes in the near future. But the again it might.
+Feel free to leave suggestions in the commenting section though.
