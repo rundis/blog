@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Securing Clojure Microservices using buddy - Part 4: Secure and liberate a service app</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/blog/css/prettify.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/blog/about.html">About</a></li>
+            <li><a href="/blog/feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>Securing Clojure Microservices using buddy - Part 4: Secure and liberate a service app</h1>
+	</div>
+
+	<p><em>25 March 2015</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/clojure.html">clojure</a>
+  </em>
+    <a href="/blog/tags/buddy.html"> buddy</a>
+  </em>
+    <a href="/blog/tags/security.html"> security</a>
+  </p>
+  <a href="https://twitter.com/share" class="twitter-share-button"
+    data-url="http://rundis.github.io/blog/2015/buddy_auth_part4.html"
+    data-via="mrundberget"
+    data-lang="en">Tweet</a>
+  <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+	<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Part 4 in my blog series about securing clojure web services using <a href="https://github.com/funcool/buddy">buddy</a>.
+The time has finally come to demonstrate how you may secure a REST based microservice application.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="ulist">
+<div class="title">Previous episodes in this series:</div>
+<ul>
+<li>
+<p><a href="http://rundis.github.io/blog/2015/buddy_auth_part1.html">Securing Clojure Microservices using buddy - Part 1: Creating Auth Tokens</a></p>
+</li>
+<li>
+<p><a href="http://rundis.github.io/blog/2015/buddy_auth_part2.html">Securing Clojure Microservices using buddy - Part 2: WebApp authentication and authorization</a></p>
+</li>
+<li>
+<p><a href="http://rundis.github.io/blog/2015/buddy_auth_part3.html">Securing Clojure Microservices using buddy - Part 3: Token revocation</a></p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+Sample code (tagged for each blog post) can be found on <a href="https://github.com/rundis/acme-buddy">github</a>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Before I discovered buddy my first attempt at prototyping a clojure web app with security tried to combine
+the use of <a href="https://github.com/cemerick/friend">Friend</a> and <a href="http://clojure-liberator.github.io/liberator">Liberator</a>.
+To complicate matters I tried to make an app that both served user content (html) and provided a REST api.
+I had a hard time figuring out how to make the two play nicely together. If it hadn&#8217;t been for the brilliant article:
+<a href="http://sritchie.github.io/2014/01/17/api-authentication-with-liberator-and-friend/">API Authentication with Liberator and Friend</a> by Sam Ritchie,
+I wouldn&#8217;t have gotten very far.</p>
+</div>
+<div class="paragraph">
+<p>In this episode I will try to demonstrate how you may use buddy in combination with Liberator
+to secure a REST-oriented microservice application. We are going to build upon the token based
+authentication and authorization from the previous episodes and create the <strong>acme-catalog</strong> service app.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_a_small_contribution_to_buddy">A small contribution to buddy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The primary buddy lib to help you secure ring based web apps is <a href="https://github.com/funcool/buddy-auth">buddy-auth</a>.
+Unfortunately when I first wanted to use buddy-auth for authentication and authorization, it didn&#8217;t provide
+out of the box support for jws tokens. What to do ? Well I decided to do what any good open citizen should do.
+I submitted a pull request. My first clojure lib contribution got accepted. Yay !</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_relevant_code_snippets_for_acme_catalog">Relevant code snippets for acme-catalog</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_wrap_authentication_middleware">Wrap authentication middleware</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns acme-catalog.core
+  (:require [compojure.core :refer [defroutes ANY]]
+            [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.json :refer [wrap-json-params]]
+            [clojure.java.io :as io]
+            [buddy.auth.backends.token :refer [jws-backend]]
+            [buddy.auth.middleware :refer [wrap-authentication]]
+            [buddy.core.keys :as ks]
+            [acme-catalog.resources :as r]))
+
+(defroutes app-routes
+  (ANY "/products" [] r/products)
+  (ANY "/products/:id" [id] (r/product id)))
+
+
+(def auth-backend (jws-backend {:secret (ks/public-key (io/resource "auth_pubkey.pem"))  <i class="conum" data-value="1"></i><b>(1)</b>
+                                :token-name "Acme-Token"}))
+
+(def app
+  (-&gt; app-routes
+      (wrap-authentication auth-backend)                                                 <i class="conum" data-value="2"></i><b>(2)</b>
+      wrap-keyword-params
+      wrap-json-params))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Buddy auth backend that supports jws tokens. We provide the public key for the certifacate used by
+acme-auth to create our tokens. In addition we can optionally provide a custom name for our token</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Apply middleware that uses backend to read the token, unsign it and populate request map with the token info</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="olist arabic">
+<div class="title">What does the wrap-authentication middleware do ?</div>
+<ol class="arabic">
+<li>
+<p>Retrieves the <em>Authorization</em> header (if one exist) from the request headers</p>
+</li>
+<li>
+<p>Looks for the token param (default "Token", but in our case "Acme-Token")</p>
+</li>
+<li>
+<p>If found reads the token and unsigns it using the secret (in our case the public key)</p>
+</li>
+<li>
+<p>The contents of the unsigned token is added to an :identity key in your request map</p>
+</li>
+</ol>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Sample request map</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>{:identity
+  {:user
+    {:user-roles [{:role-id 10, :application-id 10}
+                  {:role-id 41, :application-id 40}],
+     :username test, :id 1},
+ :exp 1427285979},
+ ;; etc...
+ }</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authorizing_liberator_resources">Authorizing liberator resources</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+Liberator routes your request through a graph of decisions and actions. <a href="http://clojure-liberator.github.io/liberator/assets/img/decision-graph.svg">This graph</a>
+provides a useful context in case you are not familiar with what decisions kicks in when !
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>I initially tripped on the difference between HTTP status 401 and 403. <a href="http://stackoverflow.com/questions/3297048/403-forbidden-vs-401-unauthorized-http-responses">Stackoverflow</a>
+provides a pretty clear explanation.</p>
+</div>
+<div class="sect3">
+<h4 id="_helper_functions_for_role_access">Helper functions for role access</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(def acme-catalog-roles
+  {:customer 41 :catalog-admin 40})                                       <i class="conum" data-value="1"></i><b>(1)</b>
+
+(defn any-granted? [ctx roles]                                            <i class="conum" data-value="2"></i><b>(2)</b>
+  (seq
+   (clojure.set/intersection
+    (set (map :role-id (-&gt; ctx :request :identity :user :user-roles)))
+    (set (vals (select-keys acme-catalog-roles roles))))))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Hardcoded definition of roles applicable for the acme-catalog app</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Helper function to check if the user has been granted one or more of the applicable roles</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_liberator_resource_commons">Liberator resource commons</h4>
+<div class="paragraph">
+<p>Liberator resources are composable, so to avoid too much repetion across resources we&#8217;ve created
+a small helper function to define behavior for the two key decision points with regards to
+authentication and authorization checks.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn secured-resource [m]
+  {:authorized?    #(authenticated? (:request %))                                       <i class="conum" data-value="1"></i><b>(1)</b>
+   :allowed?       (fn [ctx]
+                     (let [default-auth? (any-granted? ctx (keys acme-catalog-roles))]  <i class="conum" data-value="2"></i><b>(2)</b>
+                       (if-let [auth-fn (:allowed? m)]
+                         (and default-auth? (auth-fn ctx))                              <i class="conum" data-value="3"></i><b>(3)</b>
+                         default-auth?)))})</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><strong>:authorized?</strong> corresponds to 401. Here we check if the user is authenticated. We use a buddy function: <em>authenticated?</em>
+to do the check. If the user isn&#8217;t authentication this function will return false</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><strong>:allowed?</strong> corresponds to 403. We provide a default impl here that says that the user must atleast have
+one of the acme-catalog roles to be authorized to access a secured resource</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>In addition we provide an optional facility to specify a custom function for more fine grained authorization checks. See below for example.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_securing_products_resources">Securing products resources</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>
+(defresource product-categories
+  (secured-resource {})                                                                   <i class="conum" data-value="1"></i><b>(1)</b>
+  :available-media-types ["application/json"]
+  :allowed-methods       [:get]
+  :handle-ok             (fn [ctx] "List of categories"))
+
+(defresource products
+  (secured-resource {:allowed? (by-method {:get true                                      <i class="conum" data-value="2"></i><b>(2)</b>
+                                           :post #(any-granted? % [:catalog-admin])})})
+  :available-media-types ["application/json"]
+  :allowed-methods       [:get :post]
+  :handle-ok             (fn [ctx] "List of products coming your way honey"))
+
+
+(defresource product [id]
+  (secured-resource {:allowed? (by-method {:get true
+                                           :delete #(any-granted? % [:catalog-admin])
+                                           :put #(any-granted? % [:catalog-admin])})})
+  :available-media-types ["application/json"]
+  :allowed-methods       [:get :put :delete]
+  :handle-ok             (fn [ctx]                                                        <i class="conum" data-value="3"></i><b>(3)</b>
+                           (if (and (= "99" id)
+                                    (not (any-granted? ctx [:catalog-admin])))
+                             (ring-response {:status 403
+                                             :headers {}
+                                             :body "Only admins can access product 99"})
+                             "A single product returned")))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>For the product-categories service anybody with a acme-catalog role may access</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>For products we restrict access by request method. Only catalog admins may add new products, while anyone can list products.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Silly example, but demonstrates that you can always bypass the defaults and do custom authorization
+further down in the liberator decision chain.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_trying_it_all_out_commando_style">Trying it all out - commando style</h3>
+<div class="listingblock">
+<div class="title">Get a valid token</div>
+<div class="content">
+<pre class="prettyprint bash language-bash"><code>acme-auth: lein ring server-headless
+
+# In another terminal
+curl -i -X POST -d '{"username": "test", "password":"secret"}' -H "Content-type: application/json" http://localhost:6001/create-auth-token
+
+# Responds with something like:
+HTTP/1.1 201 Created
+Date: Wed, 25 Mar 2015 11:49:39 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 1057
+Server: Jetty(7.6.13.v20130916)
+
+{"token-pair":{"auth-token":"eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6NDEsImFwcGxpY2F0aW9uLWlkIjo0MH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyNzI4NTk3OX0.eNTNG8Hu8a4OD9xWSoEZgwGUd15Oytj-GQZY4RgmTEdx9OjkLDRBefU89GNlEEq19Bsd3ciuWzTXKg3B0qvAk4F4-najY_erPGypSlBvRUI0Fa1_wA2PRYxT-zCTiSIxD-oM0oq_3Z61QlN0k-Sf7shel42-x9z7r8RQeNMr-iMk-hOI_v7moQogN08FiZnctcQdE8qKg_DEhwO3l780eBta_vr3tGSd174IRthz59G61P-XqV8wC4HZymbe8TCMc-3uniIvQeoG_rC3oRqNfjkxZlTB_h6mOjs1p3h_cUmrsOhSk0mQe5mrwSzuCiunMcKQ1jsb88daWkvjMrwRUg","refresh-token":"eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyLWlkIjoxLCJleHAiOjE0Mjk4NzYxODAsImlhdCI6MTQyNzI4NDE4MH0.FH2xooPoGnrSEbcU17Tr8ls9A-Noc3n9ZzLWGrblrI0bbIIFz25eJLcJbVGT3dLs7syc0KG3v4O0LAwQ6URvgl0aV2IT366KpmOiMUpsYmgqDCuE45FlSB2IBQKOLBTb6j18jpIsy0Kev6iHUCpvgKyNPcglElnVLFFahVwk_DDyrWusPcX-Di3AqSJdyz6ruBuPGzbzS6DMNkasTFNI1TLwjuokzVCdIYSNiQmgc1IozBFjHdeqQ_5kUdinv_tiW7yho0CwqiGSa9i56b328aZR5lADXR6gom5Oy4XTDDR6eMoDcvZKBncLV3YO29HC58EmZLghbX6832i0J7jfGw"}}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Calling acme-catalog</div>
+<div class="content">
+<pre class="prettyprint bash language-bash"><code>acme-catalog: lein ring server-headless
+
+#in another terminal
+curl -i -H "Authorization: Acme-Token eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6NDEsImFwcGxpY2F0aW9uLWlkIjo0MH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyNzI4NTk3OX0.eNTNG8Hu8a4OD9xWSoEZgwGUd15Oytj-GQZY4RgmTEdx9OjkLDRBefU89GNlEEq19Bsd3ciuWzTXKg3B0qvAk4F4-najY_erPGypSlBvRUI0Fa1_wA2PRYxT-zCTiSIxD-oM0oq_3Z61QlN0k-Sf7shel42-x9z7r8RQeNMr-iMk-hOI_v7moQogN08FiZnctcQdE8qKg_DEhwO3l780eBta_vr3tGSd174IRthz59G61P-XqV8wC4HZymbe8TCMc-3uniIvQeoG_rC3oRqNfjkxZlTB_h6mOjs1p3h_cUmrsOhSk0mQe5mrwSzuCiunMcKQ1jsb88daWkvjMrwRUg" http//localhost:6003/products/1
+
+# reponds with something like
+HTTP/1.1 200 OK
+Date: Wed, 25 Mar 2015 13:47:50 GMT
+Vary: Accept
+Content-Type: application/json;charset=UTF-8
+Content-Length: 25
+Server: Jetty(7.6.13.v20130916)
+
+A single product returned</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_integration_with_acme_webstore">Integration with acme-webstore</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Calling acme-catalog from acme-webstore should now be a pretty simple matter. We just need to make
+sure we pass on the token.</p>
+</div>
+<div class="sect2">
+<h3 id="_calling_acme_catalog">Calling acme-catalog</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns acme-webstore.catalog
+  (:require [clj-http.client :as http]))
+
+
+(defn get-from-catalog [path token]
+  (http/get path {:headers {"Authorization" (str "Acme-Token " token)}}))       <i class="conum" data-value="1"></i><b>(1)</b>
+
+(defn get-products [req]
+  (let [auth-token (-&gt; req :session :token-pair :auth-token)                    <i class="conum" data-value="2"></i><b>(2)</b>
+        resp (get-from-catalog "http://localhost:6003/products" auth-token)]
+    (:body resp)))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We make sure we pass the token in the <em>Authoriazation</em> header with the given token name</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The auth-token for the logged in user is found under the session key for the request</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The rest is just a matter of hooking up the appropriate route and view. I&#8217;ll leave that part up to you !</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Most of the hard work was already done in the previous episodes. Providing authentication and authorization
+for our REST services was pretty simple. We also demonstrated that integrating with Liberator was mostly
+a matter of hooking into the appropriate decision points for our resource definitions.
+We didn&#8217;t utilize all that much of buddy-auth here, but your app might find use for some of its more advanced features.</p>
+</div>
+<div class="paragraph">
+<p>I think this episode demonstrates some of the benefits of using a library like buddy. It&#8217;s not very opnionated which leaves you with a lot of decisions to make.
+But it does have the building blocks you need and it provides you with great flexibility when it comes to integrating with other libraries.</p>
+</div>
+<div class="paragraph">
+<p>At the moment I&#8217;m not sure if there is going to be any further episodes in the near future. But the again it might.
+Feel free to leave suggestions in the commenting section though.</p>
+</div>
+</div>
+</div></p>
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'buddy_auth_part4';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+
+  </body>
+</html>
