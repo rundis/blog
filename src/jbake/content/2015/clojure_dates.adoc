@@ -1,0 +1,237 @@
+= Taming those pesky datetimes in a clojure stack
+Magnus Rundberget
+2015-03-27
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: clojure, clojurescript, date
+:imagesdir: /blog/2015/
+:icons: font
+:id: clojure_dates
+
+
+Have you ever faced frustrating issues when using dates in your clojure stack ? If I mention java.util.Date, java.sql.Date/java.sql.Timestamp
+clj-time, json/ISO-8861 and UTC/Timezones, does your bloodpressure rise slightly ?
+
+This is the blog post I wished I had several weeks back to save me from some of the date pains my current project has been through.
+
+
+
+== Introduction
+A little while back date handling started to become a nightmare in my current project. We have a stack with
+a ClojureScript frontend, a clojure WebApp and a couple of clojure microservices apps using Oracle as a data store.
+
+
+We decided pretty early on to use https://github.com/clj-time/clj-time[clj-time]. It's a really quite nice wrapper on top of http://www.joda.org/joda-time/[joda-time].
+But we didn't pay much attention to how dates should be read/written to Oracle or how we should transmit dates across process boundaries.
+Timezones is another issue we didn't worry to much about either.
+
+
+TIP: You will probably not regret using an UTC timezone for your Servers and Database. This http://yellerapp.com/posts/2015-01-12-the-worst-server-setup-you-can-make.html[post] puts it succinctly.
+Your webclient(s) though is out of your control !
+
+
+I'm sure some of the measures we have taken can be solved more elegantly, but hopefully you might find some of them useful.
+
+
+== Reading from/writing to the database
+We use https://github.com/clojure/java.jdbc[clojure/java.jdbc] for our database integration. Here's how we managed to
+simplify reading and writing dates/datetimes.
+
+[source,clojure]
+----
+(ns acme.helpers.db
+  (:import [java.sql PreparedStatement])
+  (:require [acme.util.date :as du]
+            [clj-time.coerce :as c]
+            [clojure.java.jdbc :as jdbc]))
+
+
+(extend-protocol jdbc/IResultSetReadColumn                                // <1>
+  java.sql.Date
+  (result-set-read-column [v _ _] (c/from-sql-date v))                    // <2>
+
+  java.sql.Timestamp
+  (result-set-read-column [v _ _] (c/from-sql-time v)))
+
+(extend-type org.joda.time.DateTime                                       // <3>
+  jdbc/ISQLParameter
+  (set-parameter [v ^PreparedStatement stmt idx]
+    (.setTimestamp stmt idx (c/to-sql-time v))))                          // <4>
+----
+<1> We extend the protocol for reading objects from the java.sql.ResultSet.
+In our case we chose to treat java.sql.Date and java.sql.Timestamp in the same manner
+<2> clj-time provides some nifty coercion functions including the facility to coerce from sql dates/times to DateTime
+<3> We extend the DateTime class (which is final btw!) with the ISQLParameter protocol. This is a protocol for setting SQL parameters in statement objects.
+<4> We explicitly call setTimestamp on the prepared statement with a DateTime coerced to a java.sqlTimestamp as our value
+
+
+Now we can interact with oracle without being bothered with java.sql.Date and java.sql.Timestamp malarkey.
+
+WARNING: It's vital that you require the namespace you have the above incantations, before doing any db interactions. Might be evident, but it's worth emphasizing.
+
+
+NOTE: Clojure http://clojure.org/protocols[protocols] are pretty powerful stuff. It's deffo on my list of clojure things I need
+to dig deeper into.
+
+
+== Dates across process boundaries
+Our services unsurpringly uses JSON as the data exchange format. I suppose the defacto standard date format is http://www.iso.org/iso/home/standards/iso8601.htm[ISO-8861],
+it makes sence to use that. It so happens this is the standard format for DateTime when you stringify it.
+
+
+TIP: You might want to look into https://github.com/cognitect/transit-format[transit]. It would probably have been very useful for us :)
+
+
+=== Outbound dates
+
+[source,clojure]
+----
+(ns acme.core
+  (:require [clojure.data.json :as json]
+            [clj-time.coerce :as c]))
+
+
+(extend-type org.joda.time.DateTime           // <1>
+  json/JSONWriter
+  (-write [date out]
+    (json/-write (c/to-string date) out)))    // <2>
+----
+<1> Another extend of DateTime, this time with the JSONWriter protocol.
+<2> When serializing DateTime to json we coerce it to string. clj-time.coerce luckily uses the ISO-8861 format as default
+
+
+=== Inbound dates
+[source, clojure]
+----
+(ns acme.util.date
+  (:require [clj-time.core :as t]
+            [clj-time.format :as f]
+            [clj-time.coerce :as c]))
+
+
+(def iso-date-pattern (re-pattern "^\\d{4}-\\d{2}-\\d{2}.*"))
+
+
+(defn date? [date-str]                                                         // <1>
+  (when (and date-str (string? date-str))
+    (re-matches iso-date-pattern date-str)))
+
+
+(defn json->datetime [json-str]
+  (when (date? json-str)
+    (if-let [res (c/from-string json-str)]                                     // <2>
+      res
+      nil))) ;; you should probably throw an exception or something here !
+
+(defn datetimeify [m]
+  (let [f (fn [[k v]]
+            (if (date? v)
+              [k (json->datetime v)]                                           // <3>
+              [k v]))]
+    (clojure.walk/postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
+----
+<1> A crude helper function to check if a given value is a date. There is a lot that passes through as valid ISO-8861
+we settled for atleast a minimum of YYYY-MM-DD
+<2> Coerces a string to a DateTime, the coercion will return nil if it can't be coerced, that's probably worth an exception
+<3> Traverse a arbitrary nested map and coerce values that (most likely) are dates
+
+
+.Hook up middleware
+[source,clojure]
+----
+
+(defn wrap-date [handler]                                     // <1>
+  (fn [req]
+    (handler (update-in req [:params] (datetimeify %)))))
+
+
+def app (-> routes
+            auth/wrap-auth
+            wrap-date                                         // <2>
+            wrap-keyword-params
+            wrap-json-params
+            wrap-datasource
+            wrap-params
+            wrap-config))
+----
+<1> Middleware that calls our helper function to coerce dates with the request map as input
+<2> Hook up the middleware
+
+
+== Handling dates in the webclient
+We have a ClojureScript based client so it made sense for us to use https://github.com/andrewmcveigh/cljs-time[cljs-time].
+It's very much inspired by clj-time, but there are some differences. The most obvious one is that there is no jodatime, so
+http://docs.closure-library.googlecode.com/git/namespace_goog_date.html[Google Closure goog.date] is used behind the scenes.
+
+.So how do we convert to and from the iSO-8861 string based format in our client ?
+Surprisingly similar to how we do it on the server side as it happens !
+
+[source,clojure]
+----
+;; require similar to the ones on the server side. cljs-time. rather than clj-time.
+
+
+(defn datetimes->json [m]                                                       // <1>
+  (let [f (fn [[k v]]
+            (if (instance? goog.date.Date v)                                    // <2>
+              [k (c/to-string v)]
+              [k v]))]
+    (clojure.walk/postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
+
+
+;; AJAX/HTTP Utils
+
+(defn resp->view [resp]                                                         // <3>
+  (-> resp
+      (update-in [:headers] #(keywordize-keys %))
+      (assoc-in [:body] (-> resp datetimeify :body))))                          // <4>
+
+(defn view->req [params]                                                        // <5>
+  (-> params
+      datetimes->json))                                                         // <6>
+----
+<1> Function that traverses a nested map and converts from DateTime to ISO-8861
+<2> Almost an instanceOf check to decide if the value is eligible for coercion
+<3> Handy function to transform an ajax response to something appropriate for use in our client side logic
+<4> datetimeify is identical to our server side impl
+<5> Handy function to take a map, typically request params, and transform to something appropriate for communication
+with a backend server. If you are using something like https://github.com/r0man/cljs-http[cljs-http] it might be appropriate to hook it in as a middleware.
+<6> Coerce any DateTime values to ISO-8861 date strings
+
+
+NOTE: What about timezones on the client ? The default for the datetime constructor in cljs-time is to use UTC. So when displaying
+time and/or accepting date with time input from the client you need to convert to/from the appropriate timezone.
+
+[source,clojure]
+----
+(ns acme.client
+  (:require [cljs-time.format :as f]
+            [cljs-time.core :as t]))
+
+
+(def sample (t/now)) ;; lets say 2015-03-27T00:53:38.950Z
+
+
+(->> sample
+     t/to-default-time-zone                          ; UTC+1 for me
+     (f/unparse (f/formatter "dd.MM.yyyy hh:mm")))   ; => 27.03.2015 01:53
+
+----
+
+
+== Summary
+Using clojure protocols we managed to simplify reading and writing date(times) to the database. Protocols also helped us serialize
+date(times) to json. For reading json we had to hack it a little bit. Using fairly similar libs for dates on both the client and our server apps
+we managed to reuse quite abit. In addition We have reasonable control of where we need to compensate for timezone related logic.
+Most importantly though, our server-side and client-side logic can work consistently with a sensible and powerful date implementation.
+
+
+
+
+
+
+
+
+
+
+
