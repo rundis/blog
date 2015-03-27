@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 27 Mar 2015 05:50:01 +0100</pubDate>
-    <lastBuildDate>Fri, 27 Mar 2015 05:50:01 +0100</lastBuildDate>
+    <pubDate>Fri, 27 Mar 2015 05:54:54 +0100</pubDate>
+    <lastBuildDate>Fri, 27 Mar 2015 05:54:54 +0100</lastBuildDate>
 
     <item>
       <title>Taming those pesky datetimes in a clojure stack</title>
@@ -275,7 +275,7 @@ It&amp;#8217;s very much inspired by clj-time, but there are some differences. T
 &lt;a href=&quot;http://docs.closure-library.googlecode.com/git/namespace_goog_date.html&quot;&gt;Google Closure goog.date&lt;/a&gt; is used behind the scenes.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;div class=&quot;title&quot;&gt;So how do we convert to and from the iSO-8861 string based format in our client ?&lt;/div&gt;
+&lt;div class=&quot;title&quot;&gt;So how do we convert to and from the iSO-8601 string based format in our client ?&lt;/div&gt;
 &lt;p&gt;Surprisingly similar to how we do it on the server side as it happens !&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
