@@ -10,7 +10,7 @@ Magnus Rundberget
 
 
 Have you ever faced frustrating issues when using dates in your clojure stack ? If I mention java.util.Date, java.sql.Date/java.sql.Timestamp
-clj-time, json/ISO-8861 and UTC/Timezones, does your bloodpressure rise slightly ?
+clj-time, json/ISO-8601 and UTC/Timezones, does your bloodpressure rise slightly ?
 
 This is the blog post I wished I had several weeks back to save me from some of the date pains my current project has been through.
 
@@ -75,7 +75,7 @@ to dig deeper into.
 
 
 == Dates across process boundaries
-Our services unsurpringly uses JSON as the data exchange format. I suppose the defacto standard date format is http://www.iso.org/iso/home/standards/iso8601.htm[ISO-8861],
+Our services unsurpringly uses JSON as the data exchange format. I suppose the defacto standard date format is http://www.iso.org/iso/home/standards/iso8601.htm[ISO-8601],
 it makes sence to use that. It so happens this is the standard format for DateTime when you stringify it.
 
 
@@ -97,7 +97,7 @@ TIP: You might want to look into https://github.com/cognitect/transit-format[tra
     (json/-write (c/to-string date) out)))    // <2>
 ----
 <1> Another extend of DateTime, this time with the JSONWriter protocol.
-<2> When serializing DateTime to json we coerce it to string. clj-time.coerce luckily uses the ISO-8861 format as default
+<2> When serializing DateTime to json we coerce it to string. clj-time.coerce luckily uses the ISO-8601 format as default
 
 
 === Inbound dates
@@ -130,7 +130,7 @@ TIP: You might want to look into https://github.com/cognitect/transit-format[tra
               [k v]))]
     (clojure.walk/postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
 ----
-<1> A crude helper function to check if a given value is a date. There is a lot that passes through as valid ISO-8861
+<1> A crude helper function to check if a given value is a date. There is a lot that passes through as valid ISO-8601
 we settled for atleast a minimum of YYYY-MM-DD
 <2> Coerces a string to a DateTime, the coercion will return nil if it can't be coerced, that's probably worth an exception
 <3> Traverse a arbitrary nested map and coerce values that (most likely) are dates
@@ -190,13 +190,13 @@ Surprisingly similar to how we do it on the server side as it happens !
   (-> params
       datetimes->json))                                                         // <6>
 ----
-<1> Function that traverses a nested map and converts from DateTime to ISO-8861
+<1> Function that traverses a nested map and converts from DateTime to ISO-8601
 <2> Almost an instanceOf check to decide if the value is eligible for coercion
 <3> Handy function to transform an ajax response to something appropriate for use in our client side logic
 <4> datetimeify is identical to our server side impl
 <5> Handy function to take a map, typically request params, and transform to something appropriate for communication
 with a backend server. If you are using something like https://github.com/r0man/cljs-http[cljs-http] it might be appropriate to hook it in as a middleware.
-<6> Coerce any DateTime values to ISO-8861 date strings
+<6> Coerce any DateTime values to ISO-8601 date strings
 
 
 NOTE: What about timezones on the client ? The default for the datetime constructor in cljs-time is to use UTC. So when displaying
