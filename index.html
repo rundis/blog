@@ -86,7 +86,7 @@
 <div class="sectionbody">
 <div class="paragraph">
 <p>Have you ever faced frustrating issues when using dates in your clojure stack ? If I mention java.util.Date, java.sql.Date/java.sql.Timestamp
-clj-time, json/ISO-8861 and UTC/Timezones, does your bloodpressure rise slightly ?</p>
+clj-time, json/ISO-8601 and UTC/Timezones, does your bloodpressure rise slightly ?</p>
 </div>
 <div class="paragraph">
 <p>This is the blog post I wished I had several weeks back to save me from some of the date pains my current project has been through.</p>
@@ -207,7 +207,7 @@ to dig deeper into.
 <h2 id="_dates_across_process_boundaries">Dates across process boundaries</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Our services unsurpringly uses JSON as the data exchange format. I suppose the defacto standard date format is <a href="http://www.iso.org/iso/home/standards/iso8601.htm">ISO-8861</a>,
+<p>Our services unsurpringly uses JSON as the data exchange format. I suppose the defacto standard date format is <a href="http://www.iso.org/iso/home/standards/iso8601.htm">ISO-8601</a>,
 it makes sence to use that. It so happens this is the standard format for DateTime when you stringify it.</p>
 </div>
 <div class="admonitionblock tip">
@@ -245,7 +245,7 @@ You might want to look into <a href="https://github.com/cognitect/transit-format
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>When serializing DateTime to json we coerce it to string. clj-time.coerce luckily uses the ISO-8861 format as default</td>
+<td>When serializing DateTime to json we coerce it to string. clj-time.coerce luckily uses the ISO-8601 format as default</td>
 </tr>
 </table>
 </div>
@@ -286,7 +286,7 @@ You might want to look into <a href="https://github.com/cognitect/transit-format
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>A crude helper function to check if a given value is a date. There is a lot that passes through as valid ISO-8861
+<td>A crude helper function to check if a given value is a date. There is a lot that passes through as valid ISO-8601
 we settled for atleast a minimum of YYYY-MM-DD</td>
 </tr>
 <tr>
@@ -374,7 +374,7 @@ It&#8217;s very much inspired by clj-time, but there are some differences. The m
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Function that traverses a nested map and converts from DateTime to ISO-8861</td>
+<td>Function that traverses a nested map and converts from DateTime to ISO-8601</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -395,7 +395,7 @@ with a backend server. If you are using something like <a href="https://github.c
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>Coerce any DateTime values to ISO-8861 date strings</td>
+<td>Coerce any DateTime values to ISO-8601 date strings</td>
 </tr>
 </table>
 </div>

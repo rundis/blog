@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 27 Mar 2015 02:24:44 +0100</pubDate>
-    <lastBuildDate>Fri, 27 Mar 2015 02:24:44 +0100</lastBuildDate>
+    <pubDate>Fri, 27 Mar 2015 05:50:01 +0100</pubDate>
+    <lastBuildDate>Fri, 27 Mar 2015 05:50:01 +0100</lastBuildDate>
 
     <item>
       <title>Taming those pesky datetimes in a clojure stack</title>
@@ -19,7 +19,7 @@
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;Have you ever faced frustrating issues when using dates in your clojure stack ? If I mention java.util.Date, java.sql.Date/java.sql.Timestamp
-clj-time, json/ISO-8861 and UTC/Timezones, does your bloodpressure rise slightly ?&lt;/p&gt;
+clj-time, json/ISO-8601 and UTC/Timezones, does your bloodpressure rise slightly ?&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;This is the blog post I wished I had several weeks back to save me from some of the date pains my current project has been through.&lt;/p&gt;
@@ -140,7 +140,7 @@ to dig deeper into.
 &lt;h2 id=&quot;_dates_across_process_boundaries&quot;&gt;Dates across process boundaries&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;Our services unsurpringly uses JSON as the data exchange format. I suppose the defacto standard date format is &lt;a href=&quot;http://www.iso.org/iso/home/standards/iso8601.htm&quot;&gt;ISO-8861&lt;/a&gt;,
+&lt;p&gt;Our services unsurpringly uses JSON as the data exchange format. I suppose the defacto standard date format is &lt;a href=&quot;http://www.iso.org/iso/home/standards/iso8601.htm&quot;&gt;ISO-8601&lt;/a&gt;,
 it makes sence to use that. It so happens this is the standard format for DateTime when you stringify it.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;admonitionblock tip&quot;&gt;
@@ -178,7 +178,7 @@ You might want to look into &lt;a href=&quot;https://github.com/cognitect/transi
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;When serializing DateTime to json we coerce it to string. clj-time.coerce luckily uses the ISO-8861 format as default&lt;/td&gt;
+&lt;td&gt;When serializing DateTime to json we coerce it to string. clj-time.coerce luckily uses the ISO-8601 format as default&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;
@@ -219,7 +219,7 @@ You might want to look into &lt;a href=&quot;https://github.com/cognitect/transi
 &lt;table&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;A crude helper function to check if a given value is a date. There is a lot that passes through as valid ISO-8861
+&lt;td&gt;A crude helper function to check if a given value is a date. There is a lot that passes through as valid ISO-8601
 we settled for atleast a minimum of YYYY-MM-DD&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -307,7 +307,7 @@ It&amp;#8217;s very much inspired by clj-time, but there are some differences. T
 &lt;table&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Function that traverses a nested map and converts from DateTime to ISO-8861&lt;/td&gt;
+&lt;td&gt;Function that traverses a nested map and converts from DateTime to ISO-8601&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
@@ -328,7 +328,7 @@ with a backend server. If you are using something like &lt;a href=&quot;https://
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Coerce any DateTime values to ISO-8861 date strings&lt;/td&gt;
+&lt;td&gt;Coerce any DateTime values to ISO-8601 date strings&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;
