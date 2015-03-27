@@ -163,7 +163,7 @@ We have a ClojureScript based client so it made sense for us to use https://gith
 It's very much inspired by clj-time, but there are some differences. The most obvious one is that there is no jodatime, so
 http://docs.closure-library.googlecode.com/git/namespace_goog_date.html[Google Closure goog.date] is used behind the scenes.
 
-.So how do we convert to and from the iSO-8861 string based format in our client ?
+.So how do we convert to and from the iSO-8601 string based format in our client ?
 Surprisingly similar to how we do it on the server side as it happens !
 
 [source,clojure]
