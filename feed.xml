@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 27 Mar 2015 02:22:17 +0100</pubDate>
-    <lastBuildDate>Fri, 27 Mar 2015 02:22:17 +0100</lastBuildDate>
+    <pubDate>Fri, 27 Mar 2015 02:24:44 +0100</pubDate>
+    <lastBuildDate>Fri, 27 Mar 2015 02:24:44 +0100</lastBuildDate>
 
     <item>
       <title>Taming those pesky datetimes in a clojure stack</title>
@@ -368,8 +368,8 @@ time and/or accepting date with time input from the client you need to convert t
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;Using clojure protocols we managed to simplify reading and writing date(times) to the database. Protocols also helped us serialize
-date(times) to json. For reading json we had to hack it a little bit. Using fairly similar libs for dates on both the client and our server apps
-we managed to reuse quite abit. In addition We have reasonable control of where we need to compensate for timezone related logic.
+date(times) to json. For reading json we had to hack it a little bit. By using fairly similar libs for dates on both the client and our server apps
+we managed to reuse quite a bit. In addition We have reasonable control of where we need to compensate for timezones.
 Most importantly though, our server-side and client-side logic can work consistently with a sensible and powerful date implementation.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
