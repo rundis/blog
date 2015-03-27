@@ -66,6 +66,381 @@
 	<div class="page-header">
 		<h1>Blog</h1>
 	</div>
+  			<a href="/blog/2015/clojure_dates.html"><h1>Taming those pesky datetimes in a clojure stack</h1></a>
+  			<p>27 March 2015</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/clojure.html">clojure</a>
+	      
+		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+	      
+		      <a href="/blog/tags/date.html"> date</a>
+	      </p>
+        <a href="https://twitter.com/share"
+           class="twitter-share-button"
+           data-text="Taming those pesky datetimes in a clojure stack"
+           data-url="http://rundis.github.io/blog/2015/clojure_dates.html"
+           data-via="mrundberget" data-lang="en">Tweet</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+  			<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Have you ever faced frustrating issues when using dates in your clojure stack ? If I mention java.util.Date, java.sql.Date/java.sql.Timestamp
+clj-time, json/ISO-8861 and UTC/Timezones, does your bloodpressure rise slightly ?</p>
+</div>
+<div class="paragraph">
+<p>This is the blog post I wished I had several weeks back to save me from some of the date pains my current project has been through.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A little while back date handling started to become a nightmare in my current project. We have a stack with
+a ClojureScript frontend, a clojure WebApp and a couple of clojure microservices apps using Oracle as a data store.</p>
+</div>
+<div class="paragraph">
+<p>We decided pretty early on to use <a href="https://github.com/clj-time/clj-time">clj-time</a>. It&#8217;s a really quite nice wrapper on top of <a href="http://www.joda.org/joda-time/">joda-time</a>.
+But we didn&#8217;t pay much attention to how dates should be read/written to Oracle or how we should transmit dates across process boundaries.
+Timezones is another issue we didn&#8217;t worry to much about either.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+You will probably not regret using an UTC timezone for your Servers and Database. This <a href="http://yellerapp.com/posts/2015-01-12-the-worst-server-setup-you-can-make.html">post</a> puts it succinctly.
+Your webclient(s) though is out of your control !
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>I&#8217;m sure some of the measures we have taken can be solved more elegantly, but hopefully you might find some of them useful.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reading_from_writing_to_the_database">Reading from/writing to the database</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We use <a href="https://github.com/clojure/java.jdbc">clojure/java.jdbc</a> for our database integration. Here&#8217;s how we managed to
+simplify reading and writing dates/datetimes.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns acme.helpers.db
+  (:import [java.sql PreparedStatement])
+  (:require [acme.util.date :as du]
+            [clj-time.coerce :as c]
+            [clojure.java.jdbc :as jdbc]))
+
+
+(extend-protocol jdbc/IResultSetReadColumn                                <i class="conum" data-value="1"></i><b>(1)</b>
+  java.sql.Date
+  (result-set-read-column [v _ _] (c/from-sql-date v))                    <i class="conum" data-value="2"></i><b>(2)</b>
+
+  java.sql.Timestamp
+  (result-set-read-column [v _ _] (c/from-sql-time v)))
+
+(extend-type org.joda.time.DateTime                                       <i class="conum" data-value="3"></i><b>(3)</b>
+  jdbc/ISQLParameter
+  (set-parameter [v ^PreparedStatement stmt idx]
+    (.setTimestamp stmt idx (c/to-sql-time v))))                          <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We extend the protocol for reading objects from the java.sql.ResultSet.
+In our case we chose to treat java.sql.Date and java.sql.Timestamp in the same manner</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>clj-time provides some nifty coercion functions including the facility to coerce from sql dates/times to DateTime</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>We extend the DateTime class (which is final btw!) with the ISQLParameter protocol. This is a protocol for setting SQL parameters in statement objects.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>We explicitly call setTimestamp on the prepared statement with a DateTime coerced to a java.sqlTimestamp as our value</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Now we can interact with oracle without being bothered with java.sql.Date and java.sql.Timestamp malarkey.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+It&#8217;s vital that you require the namespace you have the above incantations, before doing any db interactions. Might be evident, but it&#8217;s worth emphasizing.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+Clojure <a href="http://clojure.org/protocols">protocols</a> are pretty powerful stuff. It&#8217;s deffo on my list of clojure things I need
+to dig deeper into.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dates_across_process_boundaries">Dates across process boundaries</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Our services unsurpringly uses JSON as the data exchange format. I suppose the defacto standard date format is <a href="http://www.iso.org/iso/home/standards/iso8601.htm">ISO-8861</a>,
+it makes sence to use that. It so happens this is the standard format for DateTime when you stringify it.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+You might want to look into <a href="https://github.com/cognitect/transit-format">transit</a>. It would probably have been very useful for us :)
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_outbound_dates">Outbound dates</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns acme.core
+  (:require [clojure.data.json :as json]
+            [clj-time.coerce :as c]))
+
+
+(extend-type org.joda.time.DateTime           <i class="conum" data-value="1"></i><b>(1)</b>
+  json/JSONWriter
+  (-write [date out]
+    (json/-write (c/to-string date) out)))    <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Another extend of DateTime, this time with the JSONWriter protocol.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>When serializing DateTime to json we coerce it to string. clj-time.coerce luckily uses the ISO-8861 format as default</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_inbound_dates">Inbound dates</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns acme.util.date
+  (:require [clj-time.core :as t]
+            [clj-time.format :as f]
+            [clj-time.coerce :as c]))
+
+
+(def iso-date-pattern (re-pattern "^\\d{4}-\\d{2}-\\d{2}.*"))
+
+
+(defn date? [date-str]                                                         <i class="conum" data-value="1"></i><b>(1)</b>
+  (when (and date-str (string? date-str))
+    (re-matches iso-date-pattern date-str)))
+
+
+(defn json-&gt;datetime [json-str]
+  (when (date? json-str)
+    (if-let [res (c/from-string json-str)]                                     <i class="conum" data-value="2"></i><b>(2)</b>
+      res
+      nil))) ;; you should probably throw an exception or something here !
+
+(defn datetimeify [m]
+  (let [f (fn [[k v]]
+            (if (date? v)
+              [k (json-&gt;datetime v)]                                           <i class="conum" data-value="3"></i><b>(3)</b>
+              [k v]))]
+    (clojure.walk/postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>A crude helper function to check if a given value is a date. There is a lot that passes through as valid ISO-8861
+we settled for atleast a minimum of YYYY-MM-DD</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Coerces a string to a DateTime, the coercion will return nil if it can&#8217;t be coerced, that&#8217;s probably worth an exception</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Traverse a arbitrary nested map and coerce values that (most likely) are dates</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Hook up middleware</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>
+(defn wrap-date [handler]                                     <i class="conum" data-value="1"></i><b>(1)</b>
+  (fn [req]
+    (handler (update-in req [:params] (datetimeify %)))))
+
+
+def app (-&gt; routes
+            auth/wrap-auth
+            wrap-date                                         <i class="conum" data-value="2"></i><b>(2)</b>
+            wrap-keyword-params
+            wrap-json-params
+            wrap-datasource
+            wrap-params
+            wrap-config))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Middleware that calls our helper function to coerce dates with the request map as input</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Hook up the middleware</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_handling_dates_in_the_webclient">Handling dates in the webclient</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We have a ClojureScript based client so it made sense for us to use <a href="https://github.com/andrewmcveigh/cljs-time">cljs-time</a>.
+It&#8217;s very much inspired by clj-time, but there are some differences. The most obvious one is that there is no jodatime, so
+<a href="http://docs.closure-library.googlecode.com/git/namespace_goog_date.html">Google Closure goog.date</a> is used behind the scenes.</p>
+</div>
+<div class="paragraph">
+<div class="title">So how do we convert to and from the iSO-8861 string based format in our client ?</div>
+<p>Surprisingly similar to how we do it on the server side as it happens !</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>;; require similar to the ones on the server side. cljs-time. rather than clj-time.
+
+
+(defn datetimes-&gt;json [m]                                                       <i class="conum" data-value="1"></i><b>(1)</b>
+  (let [f (fn [[k v]]
+            (if (instance? goog.date.Date v)                                    <i class="conum" data-value="2"></i><b>(2)</b>
+              [k (c/to-string v)]
+              [k v]))]
+    (clojure.walk/postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
+
+
+;; AJAX/HTTP Utils
+
+(defn resp-&gt;view [resp]                                                         <i class="conum" data-value="3"></i><b>(3)</b>
+  (-&gt; resp
+      (update-in [:headers] #(keywordize-keys %))
+      (assoc-in [:body] (-&gt; resp datetimeify :body))))                          <i class="conum" data-value="4"></i><b>(4)</b>
+
+(defn view-&gt;req [params]                                                        <i class="conum" data-value="5"></i><b>(5)</b>
+  (-&gt; params
+      datetimes-&gt;json))                                                         <i class="conum" data-value="6"></i><b>(6)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Function that traverses a nested map and converts from DateTime to ISO-8861</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Almost an instanceOf check to decide if the value is eligible for coercion</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Handy function to transform an ajax response to something appropriate for use in our client side logic</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>datetimeify is identical to our server side impl</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Handy function to take a map, typically request params, and transform to something appropriate for communication
+with a backend server. If you are using something like <a href="https://github.com/r0man/cljs-http">cljs-http</a> it might be appropriate to hook it in as a middleware.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Coerce any DateTime values to ISO-8861 date strings</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+What about timezones on the client ? The default for the datetime constructor in cljs-time is to use UTC. So when displaying
+time and/or accepting date with time input from the client you need to convert to/from the appropriate timezone.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns acme.client
+  (:require [cljs-time.format :as f]
+            [cljs-time.core :as t]))
+
+
+(def sample (t/now)) ;; lets say 2015-03-27T00:53:38.950Z
+
+
+(-&gt;&gt; sample
+     t/to-default-time-zone                          ; UTC+1 for me
+     (f/unparse (f/formatter "dd.MM.yyyy hh:mm")))   ; =&gt; 27.03.2015 01:53
+</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Using clojure protocols we managed to simplify reading and writing date(times) to the database. Protocols also helped us serialize
+date(times) to json. For reading json we had to hack it a little bit. Using fairly similar libs for dates on both the client and our server apps
+we managed to reuse quite abit. In addition We have reasonable control of where we need to compensate for timezone related logic.
+Most importantly though, our server-side and client-side logic can work consistently with a sensible and powerful date implementation.</p>
+</div>
+</div>
+</div></p>
   			<a href="/blog/2015/buddy_auth_part4.html"><h1>Securing Clojure Microservices using buddy - Part 4: Secure and liberate a service app</h1></a>
   			<p>25 March 2015</p>
         <p><em>Tags: </em>
