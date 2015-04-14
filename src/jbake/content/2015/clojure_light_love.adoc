@@ -1,0 +1,55 @@
+= A pinch of Clojure icon:heart[] to Light Table
+Magnus Rundberget
+2015-04-14
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: clojure, lighttable
+:imagesdir: /blog/2015/
+:icons: font
+:id: clj_light_love
+
+
+
+The Clojure Refactoring plugin for Light Table has finally been released !
+You'll find the plugin in the LIght Table plugin manager. Alternatively you
+can clone the repo to the plugin folder of LIght Table if you know what you are doing :)
+
+NOTE: You will need to check out the readme https://github.com/rundis/clj-light-refactor
+
+To celebrate the launch of the plugin I've made a small demo of some of the features in the plugin.
+You might also be interrested in the pre-release http://rundis.github.io/blog/2015/clj_light_refactor.html[demo]
+
+
+== Demo
+https://youtu.be/1yk8nsjJxb0[ScreenCast demo]
+
+++++
+<iframe width="420" height="315" src="https://www.youtube.com/embed/1yk8nsjJxb0" frameborder="0" allowfullscreen></iframe>
+++++
+
+== Feature highlights
+* Simple form refactoring (cycle if, cycle col, introduce threading etc)
+* Extract function
+* Dependency completion and hotloading of dependencies
+* Find usages and rename
+* Namespace cleanup
+* Resolve mising requires/imports
+* Some cider features like: test support, smarter autocompletion and better formatting
+
+Most of the features are currently Clojure only, but some of the simpler ones also works in ClojureScript.
+
+
+
+== Resources
+* Pre release demo: http://rundis.github.io/blog/2015/clj_light_refactor.html
+* Plugin repo: https://github.com/rundis/clj-light-refactor
+
+== Credits
+* https://github.com/clojure-emacs/refactor-nrepl[refactor-nrepl] - nREPL middleware to support refactorings in an editor agnostic way. This awesome middleware
+has enable most of the advanced refactoring features in the plugin
+* https://github.com/clojure-emacs/cider-nrepl[cider-nrepl] - A collection of nREPL middleware designed to enhance CIDER. Additional cool
+features have been enabled by this middleware, and there are more to come !
+* https://github.com/clojure-emacs/clj-refactor.el[clj-refactor.el] - Emacs Clojure Refactor plugin. The source of inspiration for my Light Table plugin.
+It provides a long list of really cool refactoring features for emacs users.
+
+
