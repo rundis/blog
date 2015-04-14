@@ -6,9 +6,120 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 27 Mar 2015 05:54:54 +0100</pubDate>
-    <lastBuildDate>Fri, 27 Mar 2015 05:54:54 +0100</lastBuildDate>
+    <pubDate>Tue, 14 Apr 2015 03:40:50 +0200</pubDate>
+    <lastBuildDate>Tue, 14 Apr 2015 03:40:50 +0200</lastBuildDate>
 
+    <item>
+      <title>A pinch of Clojure &lt;span class=&quot;icon&quot;&gt;[heart]&lt;/span&gt; to Light Table</title>
+      <link>http://rundis.github.io/blog/2015/clojure_light_love.html</link>
+      <pubDate>Tue, 14 Apr 2015 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">2015/clojure_light_love.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The Clojure Refactoring plugin for Light Table has finally been released !
+You&amp;#8217;ll find the plugin in the LIght Table plugin manager. Alternatively you
+can clone the repo to the plugin folder of LIght Table if you know what you are doing :)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+You will need to check out the readme &lt;a href=&quot;https://github.com/rundis/clj-light-refactor&quot;&gt;https://github.com/rundis/clj-light-refactor&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To celebrate the launch of the plugin I&amp;#8217;ve made a small demo of some of the features in the plugin.
+You might also be interrested in the pre-release &lt;a href=&quot;http://rundis.github.io/blog/2015/clj_light_refactor.html&quot;&gt;demo&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_demo&quot;&gt;Demo&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://youtu.be/1yk8nsjJxb0&quot;&gt;ScreenCast demo&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/1yk8nsjJxb0&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_feature_highlights&quot;&gt;Feature highlights&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Simple form refactoring (cycle if, cycle col, introduce threading etc)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Extract function&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Dependency completion and hotloading of dependencies&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Find usages and rename&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Namespace cleanup&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Resolve mising requires/imports&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Some cider features like: test support, smarter autocompletion and better formatting&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Most of the features are currently Clojure only, but some of the simpler ones also works in ClojureScript.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_resources&quot;&gt;Resources&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Pre release demo: &lt;a href=&quot;http://rundis.github.io/blog/2015/clj_light_refactor.html&quot;&gt;http://rundis.github.io/blog/2015/clj_light_refactor.html&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Plugin repo: &lt;a href=&quot;https://github.com/rundis/clj-light-refactor&quot;&gt;https://github.com/rundis/clj-light-refactor&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_credits&quot;&gt;Credits&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/clojure-emacs/refactor-nrepl&quot;&gt;refactor-nrepl&lt;/a&gt; - nREPL middleware to support refactorings in an editor agnostic way. This awesome middleware
+has enable most of the advanced refactoring features in the plugin&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/clojure-emacs/cider-nrepl&quot;&gt;cider-nrepl&lt;/a&gt; - A collection of nREPL middleware designed to enhance CIDER. Additional cool
+features have been enabled by this middleware, and there are more to come !&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/clojure-emacs/clj-refactor.el&quot;&gt;clj-refactor.el&lt;/a&gt; - Emacs Clojure Refactor plugin. The source of inspiration for my Light Table plugin.
+It provides a long list of really cool refactoring features for emacs users.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Taming those pesky datetimes in a clojure stack</title>
       <link>http://rundis.github.io/blog/2015/clojure_dates.html</link>

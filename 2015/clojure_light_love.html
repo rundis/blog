@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>A pinch of Clojure &lt;span class=&quot;icon&quot;&gt;[heart]&lt;/span&gt; to Light Table</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/blog/css/prettify.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/blog/about.html">About</a></li>
+            <li><a href="/blog/feed.xml">Subscribe</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	<div class="page-header">
+		<h1>A pinch of Clojure &lt;span class=&quot;icon&quot;&gt;[heart]&lt;/span&gt; to Light Table</h1>
+	</div>
+
+	<p><em>14 April 2015</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/clojure.html">clojure</a>
+  </em>
+    <a href="/blog/tags/lighttable.html"> lighttable</a>
+  </p>
+  <a href="https://twitter.com/share" class="twitter-share-button"
+    data-url="http://rundis.github.io/blog/2015/clojure_light_love.html"
+    data-via="mrundberget"
+    data-lang="en">Tweet</a>
+  <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+	<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Clojure Refactoring plugin for Light Table has finally been released !
+You&#8217;ll find the plugin in the LIght Table plugin manager. Alternatively you
+can clone the repo to the plugin folder of LIght Table if you know what you are doing :)</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+You will need to check out the readme <a href="https://github.com/rundis/clj-light-refactor">https://github.com/rundis/clj-light-refactor</a>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To celebrate the launch of the plugin I&#8217;ve made a small demo of some of the features in the plugin.
+You might also be interrested in the pre-release <a href="http://rundis.github.io/blog/2015/clj_light_refactor.html">demo</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_demo">Demo</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="https://youtu.be/1yk8nsjJxb0">ScreenCast demo</a></p>
+</div>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/1yk8nsjJxb0" frameborder="0" allowfullscreen></iframe>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_feature_highlights">Feature highlights</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Simple form refactoring (cycle if, cycle col, introduce threading etc)</p>
+</li>
+<li>
+<p>Extract function</p>
+</li>
+<li>
+<p>Dependency completion and hotloading of dependencies</p>
+</li>
+<li>
+<p>Find usages and rename</p>
+</li>
+<li>
+<p>Namespace cleanup</p>
+</li>
+<li>
+<p>Resolve mising requires/imports</p>
+</li>
+<li>
+<p>Some cider features like: test support, smarter autocompletion and better formatting</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Most of the features are currently Clojure only, but some of the simpler ones also works in ClojureScript.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_resources">Resources</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Pre release demo: <a href="http://rundis.github.io/blog/2015/clj_light_refactor.html">http://rundis.github.io/blog/2015/clj_light_refactor.html</a></p>
+</li>
+<li>
+<p>Plugin repo: <a href="https://github.com/rundis/clj-light-refactor">https://github.com/rundis/clj-light-refactor</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_credits">Credits</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/clojure-emacs/refactor-nrepl">refactor-nrepl</a> - nREPL middleware to support refactorings in an editor agnostic way. This awesome middleware
+has enable most of the advanced refactoring features in the plugin</p>
+</li>
+<li>
+<p><a href="https://github.com/clojure-emacs/cider-nrepl">cider-nrepl</a> - A collection of nREPL middleware designed to enhance CIDER. Additional cool
+features have been enabled by this middleware, and there are more to come !</p>
+</li>
+<li>
+<p><a href="https://github.com/clojure-emacs/clj-refactor.el">clj-refactor.el</a> - Emacs Clojure Refactor plugin. The source of inspiration for my Light Table plugin.
+It provides a long list of really cool refactoring features for emacs users.</p>
+</li>
+</ul>
+</div>
+</div>
+</div></p>
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'clj_light_love';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.3.0</a></p>
+      </div>
+    </div>
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+
+  </body>
+</html>
