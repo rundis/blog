@@ -66,6 +66,706 @@
 	<div class="page-header">
 		<h1>Blog</h1>
 	</div>
+  			<a href="/blog/2015/lt_react.html"><h1>Implementing a Clojure ns-browser in Light Table with React</h1></a>
+  			<p>22 April 2015</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/clojure.html">clojure</a>
+	      
+		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+	      
+		      <a href="/blog/tags/lighttable.html"> lighttable</a>
+	      
+		      <a href="/blog/tags/react.html"> react</a>
+	      </p>
+        <a href="https://twitter.com/share"
+           class="twitter-share-button"
+           data-text="Implementing a Clojure ns-browser in Light Table with React"
+           data-url="http://rundis.github.io/blog/2015/lt_react.html"
+           data-via="mrundberget" data-lang="en">Tweet</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+  			<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>I&#8217;ve long been looking for better ways to navigate between code in Clojure projects in Light Table.
+The workspace navigator isn&#8217;t particularily keyboard friendly. For navigating files <a href="https://github.com/joshuafcole/claire">claire</a>
+is a better option. Coming from IntelliJ I have been used to navigating to classes/resources in java projects in a breeze.</p>
+</div>
+<div class="paragraph">
+<p>I needed something more clojure project aware, so I decided to implement a namespace browser.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Lately I&#8217;ve been working on the <a href="https://github.com/rundis/clj-light-refactor">clj-light-refactor</a> plugin, providing
+better Clojure support in Light Table. It made sense to me to add a namespace browser feature to the plugin at some point.
+Through experience with integrating the <a href="https://github.com/clojure-emacs/cider-nrepl">cider-nrepl</a> middleware
+I found that I had most of the tools necessary to implement a simple namespace browser.</p>
+</div>
+<div class="paragraph">
+<p>A namespace browser obviously needs a bit of UI, and this is where the power of having an editor framework
+based on node-webkit/atom-shell opens up for a range of opportunities. I could use the std dom lib that ships
+with Light Table, but I decided I&#8217;d rather have a go at implementing the UI part using React. Just for fun.</p>
+</div>
+<div class="paragraph">
+<p>There are a range of ClojureScript wrappers for React, but I decided to opt for one of the least opinionated ones : <a href="https://github.com/levand/quiescent">quiescent</a>.
+Let&#8217;s have a look at how I did it !</p>
+</div>
+<div class="openblock float-group">
+<div class="content">
+<div class="imageblock left">
+<div class="content">
+<img src="/blog/2015/ns_list.png" alt="ns list" width="400">
+</div>
+<div class="title">Figure 1. Namespace list</div>
+</div>
+<div class="imageblock left">
+<div class="content">
+<img src="/blog/2015/ns_vars.png" alt="ns vars" width="400">
+</div>
+<div class="title">Figure 2. Public vars for selected namespace</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_setting_up_react_and_quiescent">Setting up React and quiescent</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>As you&#8217;ll see, this part is pretty easy.</p>
+</div>
+<div class="sect2">
+<h3 id="_quiescent_dependency_project_clj">Quiescent dependency - project.clj</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defproject clj-light-refactor "0.1.5"
+  :dependencies [[org.clojure/clojure "1.5.1"]
+                 [quiescent "0.1.4"]])               <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>To include quiescent, just add it as a dependency. I opted for an older version because the ClojureScript version currently supported by LT is fairly old.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_react_dependency_plugin_behaviours_file">React dependency - plugin behaviours file</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>[:app :lt.objs.plugins/load-js ["react.min.js"                       <i class="conum" data-value="1"></i><b>(1)</b>
+                                "clj-light-refactor_compiled.js"]]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Just add the react js using the load-js behavior for plugins. It needs to load before quiescent, so it&#8217;s added before the transpiled js for the plugin project.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_state_bot_and_such">State, BOT and such</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>My namespace browser will need to have state. The namespace browser will retrieve it&#8217;s data
+from a cider-nrepl middleware op. Continuously invoking this backend for the data would kill the performance.
+State in Light Table is typically stored in objects. Objects are basically a map of data stored in an ClojureScript atom.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+To learn more about BOT (Behaviors, Objects and Tags), check out <a href="http://www.chris-granger.com/2013/01/24/the-ide-as-data/">The IDE as a value</a> by Chris Granger.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Quiescent has no opinions with regards to state, you just feed quiescent components with data, so using LT objects shouldn&#8217;t be of any concern.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>
+(defui wrapper [this]                                             <i class="conum" data-value="1"></i><b>(1)</b>
+  [:div.outer
+   [:div {:id "nsbrowser-wrapper"} "Retrieving namespaces..."]])
+
+(object/object* ::nsbrowser
+                :tags #{:clojure.nsbrowser}                       <i class="conum" data-value="2"></i><b>(2)</b>
+                :label "Clojure ns browser"
+                :order 2
+                :init (fn [this]                                  <i class="conum" data-value="3"></i><b>(3)</b>
+                        (wrapper this)))
+
+(def ns-bar (object/create ::nsbrowser))                          <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>React needs a container element to mount in. We just create a wrapper (nsbrowser-wrapper), using the LT defui macro.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We add a custom tag to our object. Using this tag we can attach behaviors, i.e reaction to events, to our object.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Objects have an init function that can return a UI representation. Initially thats just our wrapper div. The actual content we will provide through behaviors.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Instantiate the object</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_rendering_the_nsbrowser_ui_using_quiescent_and_react">Rendering the nsbrowser UI using quiescent and react</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(declare render)
+
+(defn handle-keypress [props ev]                                           <i class="conum" data-value="6"></i><b>(6)</b>
+  (let [kk (.-which ev)]
+    (case kk
+      38 (do (.preventDefault ev) ((:on-up props)))
+      40 (do (.preventDefault ev) ((:on-down props)))
+      13 (do (.preventDefault ev) ((:on-select props)))
+      27 (do (.preventDefault ev) ((:on-escape props)))
+      :default)))
+
+(q/defcomponent SearchInput [props]                                        <i class="conum" data-value="5"></i><b>(5)</b>
+  (d/input {:placeholder "search"
+            :value (:search-for props)
+            :onKeyDown (partial handle-keypress props)
+            :onChange  #((:on-change props) (aget % "target" "value"))
+            :autoFocus (:focus props)}))
+
+(q/defcomponent ResultItem [item]                                          <i class="conum" data-value="4"></i><b>(4)</b>
+  (d/li {:className (when (:selected item) "selected")} (:name item)))
+
+(q/defcomponent ResultList [props]                                         <i class="conum" data-value="3"></i><b>(3)</b>
+  (apply d/ul {:className (when (:selected-ns props) " nsselection")}
+               (map ResultItem (:items props))))
+
+(q/defcomponent Searcher [props]                                           <i class="conum" data-value="2"></i><b>(2)</b>
+  (d/div {:className "filter-list"}
+         (SearchInput props)
+         (when-let [sel-ns (:selected-ns props)]
+           (d/div {:className "nstitle"} sel-ns))
+         (ResultList (select-keys props [:items :selected-ns]))))
+
+
+(defn render [props]                                                       <i class="conum" data-value="1"></i><b>(1)</b>
+  (q/render (Searcher (merge {:on-down #(object/raise ns-bar :move-down!)
+                              :on-up #(object/raise ns-bar :move-up!)
+                              :on-select #(object/raise ns-bar :select!)
+                              :on-escape #(object/raise ns-bar :escape!)
+                              :on-change (fn [search-for]
+                                           (object/raise ns-bar :search! search-for))}
+                             props))
+            (.getElementById js/document "nsbrowser-wrapper")))
+</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The render function is where we initially mount our react components and subsequently
+rerender our UI upon any change in our data. The function takes a map (containing the data to render) and we merge in some properties
+for handling events we wish to handle in our ui. More on that later.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This is the root component for our UI. It basically contains a search input and a result list (with a optional heading, when a namespace has been selected)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Subcomponent for the result list</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Subcomponent for a result list item, applies a <em>.selected</em> class if this item is selected</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Subcomponent for the search input. This is used for filtering and navigating our result list.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Handler for keyboard events in the search input</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you are not familiar with react, it might seem inefficient to render the entire UI everytime. But
+react is quite clever with its DOM operations, using a virtual dom it only performs the DOM operations necessary to
+represent the diff since the last render. Further optimization is provided by quiescent as any quiescent component
+will check whether the first param have changed using a clojure equality test (fast). If no props have changed, it will tell React that
+the component doesn&#8217;t need to rerender. Short story, you don&#8217;t need to worry about render speed. It&#8217;s more than fast enough.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The benefits of this approach might not be immediatly visible, but believe me it makes it very simple to reason about the UI.
+When some state changes, rerender the entire UI. You don&#8217;t need to worry about making the individual dom updates needed to
+represent the change. This part is handled by react.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_working_with_data">Working with data</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When implementing the logic for changing which items is selected it made sense to extract the core
+of that to immutable helper functions. Nothing new here, but it&#8217;s a whole lot easier when no state is represented
+in the dom, but rather in data structures somewhere else (like in an atom).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn move-down [items]
+  (let [curr-idx (selected-idx items)]
+    (if-not (&lt; curr-idx (dec (count items)))
+      items
+      (-&gt; items
+          (assoc-in  [curr-idx :selected] false)
+          (assoc-in  [(inc curr-idx) :selected] true)))))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Implementing then move up/down logic are just simple functions. Testing them interactivly in Light Table
+is dead easy using the inbuild repl with inline results.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_behaviors_for_filter_navigation_and_selection">Behaviors for filter, navigation and selection</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::move-up!                                                     <i class="conum" data-value="1"></i><b>(1)</b>
+          :triggers #{:move-up!}
+          :reaction (fn [this]
+                      (let [moved (move-up (:filtered-items @this))]
+                        (object/merge! this {:filtered-items moved})
+                        (render {:items moved
+                                 :selected-ns (:selected-ns @this)
+                                 :search-for (:search-for @this)})
+                        (sidebar-cmd/ensure-visible this))))            <i class="conum" data-value="2"></i><b>(2)</b>
+
+(behavior ::select!                                                     <i class="conum" data-value="3"></i><b>(3)</b>
+          :triggers #{:select!}
+          :reaction (fn [this]
+                      (when-let [sel-idx (selected-idx (:filtered-items @this))]
+                        (when-let [ed (pool/last-active)]
+                          (let [item-name (:name (nth (:filtered-items @this) sel-idx))]
+                            (if-not (:selected-ns @this)
+                              (do
+                                (object/merge! this {:search-for ""
+                                                     :selected-ns item-name})
+                                (object/raise ed :list-ns-vars item-name))
+                              (let [sym (str (:selected-ns @this) "/" item-name)]
+                                (object/raise ed :editor.jump-to-definition! sym)
+                                (object/raise this :clear!))))))))
+
+
+(behavior ::search!                                                    <i class="conum" data-value="4"></i><b>(4)</b>
+          :triggers #{:search!}
+          :reaction (fn [this search-for]
+                      (let [items (if (:selected-ns @this) (:vars @this) (:items @this))
+                            filtered
+                            (-&gt;&gt; items
+                                 (filter-items search-for)
+                                 maybe-select-first
+                                 vec)]
+                        (object/merge! this {:filtered-items filtered
+                                             :search-for search-for})
+                        (render {:items filtered
+                                 :selected-ns (:selected-ns @this)
+                                 :search-for search-for}))))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>All the move up behavior basically does is updating the state holding which item (in our filtered list of items)
+is selected and then rerenders the UI with the updated item list</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>When scrolling down the list (an UL element), we need to make sure the item is visible so we need to scroll. I
+couldn&#8217;t figure out a react-way to do this, so I reused a function from LT&#8217;s command browser to achieve this.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The select behavior does one of two things. If the item selected is an namespace item it triggers
+a behavior for retrieving (and subsequently later render) a list of public vars for that namespace. If the item is a var
+it triggers a behavior for jumping to the definition of that var. The latter is a behavior already present in the Light Table Clojure plugin.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The search behavior filters the list of items to show based on what the user has entered in the search input.
+It stores that filtered list in our object and rerenders the ui.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The <em>this</em> argument for our behavior reaction function is the ns-bar object instance we defined earlier.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code> [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/move-up!]
+ [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/select!]
+ [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/search!]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Hooking up our behaviors to our object can be done inline using code, or declaratively using
+a behaviors definition file. I&#8217;ve opted for the latter and hooked them up in the plugin behaviors file.
+What we say here is that objects with the given tag <em>:clojure.nsbrowser</em> responds to the behavior defined in the second arg for the vectors.
+Should you find that you&#8217;d like to override one or more of the behaviors (or disable them alltogether) you can easily
+do that.</p>
+</div>
+<div class="sect2">
+<h3 id="_a_silly_example_overriding_the_move_behavior">A silly example - overriding the move behavior</h3>
+<div class="paragraph">
+<p>Let&#8217;s say you have a better idea for how the move behavior should work. You override that
+in your Light Table user plugin (everyone has one !).</p>
+</div>
+<div class="sect3">
+<h4 id="_providing_your_own_behavior">Providing your own behavior</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns lt.plugins.user                                                    <i class="conum" data-value="1"></i><b>(1)</b>
+  (:require [lt.object :as object]
+            [lt.plugins.nsrefactor.nsbrowser :as nsbrowser])           <i class="conum" data-value="2"></i><b>(2)</b>
+  (:require-macros [lt.macros :refer [behavior]]))
+
+(behavior ::user-move-up!
+          :triggers #{:move-up!}                                       <i class="conum" data-value="3"></i><b>(3)</b>
+          :reaction (fn [this]
+                      (println "Add my custom version here...")))      <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>You&#8217;ll find the user plugin in $LT_HOME/User. It ships with a default $LT_HOME/User/src/plugins/user.cljs file for your convenience</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Require any namespace you need, for the purpose of this override you might need to have access to functions
+in the namespace where the nsbrowser is implemented</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>This is the really important bit. Triggers (together with tags) tells LT which behavior reaction functions to invoke
+when an event is triggered (through <em>object/raise</em>)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Implementation for the overriding behavior</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_replacing_the_default_behavior_with_our_own">Replacing the default behavior with our own</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code> [:clojure.nsbrowser :-lt.plugins.cljrefactor.nsbrowser/move-up!]   <i class="conum" data-value="1"></i><b>(1)</b>
+ [:clojure.nsbrowser :lt.plugins.user/user-move-up!]                <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>First we turn off the default behavior from the plugin <em>:-</em> disable a given behavior)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The we hook up our new custom made override behavior</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>I think you now can start to the see the power of the BOT model in Light Table. It&#8217;s very flexible,
+but the price you pay is that it can be difficult to grasp at first sight. Once you do grock it, you&#8217;ll realize that
+you have an incredibly customizable editor at your disposal.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_getting_the_namespace_data">Getting the namespace data</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>So how do we go about getting the list of namespaces and vars for each namespace ?
+This is where cider-nrepl comes into play. The ops we wish to call are in the <a href="https://github.com/clojure-emacs/cider-nrepl/blob/master/src/cider/nrepl/middleware/ns.clj">ns middleware</a> for cider-nrepl.</p>
+</div>
+<div class="sect2">
+<h3 id="_interacting_with_cider_nrepl">Interacting with cider-nrepl</h3>
+<div class="paragraph">
+<p>A precondition for this to work is that the cider-nrepl is added as a plugin dependency for your project.
+You could do this on a project level, or you could do it globally for all your projects in profiles.clj.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>  :user {:plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]]}}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::list-ns
+          :triggers #{:list-ns}
+          :reaction (fn [ed]
+                      (object/raise ed
+                                    :eval.custom                                 <i class="conum" data-value="1"></i><b>(1)</b>
+                                    (mw/create-op {:op "ns-list"})               <i class="conum" data-value="2"></i><b>(2)</b>
+                                    {:result-type :refactor.list-ns-res          <i class="conum" data-value="3"></i><b>(3)</b>
+                                     :verbatim true})))
+
+
+(behavior ::list-ns-res
+          :triggers #{:editor.eval.clj.result.refactor.list-ns-res}              <i class="conum" data-value="4"></i><b>(4)</b>
+          :reaction (fn [ed res]
+                      (let [[ok? ret] (mw/extract-result res                     <i class="conum" data-value="5"></i><b>(5)</b>
+                                                         :singles
+                                                         [:ns-list :results])]
+                        (if-not ok?
+                          (object/raise ed
+                                        :editor.exception
+                                        (:err ret)
+                                        {:line (-&gt; ret :meta :line)})
+
+                          (do
+                            (object/raise sidebar/rightbar :toggle ns-bar)       <i class="conum" data-value="6"></i><b>(6)</b>
+                            (object/raise ns-bar
+                                          :update-ns-list!                       <i class="conum" data-value="7"></i><b>(7)</b>
+                                          (-&gt;&gt; (:ns-list ret)
+                                               (maybe-exclude (:exclusions @ns-bar))
+                                               (map #(hash-map :name %)))))))))
+</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>To evaluate arbitrary clojure code in LT you can use the <em>eval.custom</em> behavior</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This is a helper method that creates the code to invoke the cider-nrepl middleware</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>We can tell LT that the trigger for the response should end with <em>refactor.list-ns-res</em>. So when
+the operation completes in will trigger a behavior named as defined in <strong>4</strong></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The trigger for our behavior to handle the response</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Helper function to extract the result from cider-nrepl op</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Our nsbrowser is displayed in a predefined UI component which is a sidebar. We tell it to display</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>We raise a behavior for displaying the list of namespaces found (see the <a href="https://github.com/rundis/clj-light-refactor/blob/master/src/lt/plugins/cljrefactor/nsbrowser.cljs">full source</a> for how this behavior is defined)</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+The code eval behavior is triggered on an ed object. This is an LT editor object. This means that
+we need to have a clojure editor open for our namespace browser to work (hoping to remedy that in the near future).
+The editor object contains information about which project we are connected to (and if not connected, prompts you to do so).
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_providing_a_command_to_show_the_namespace_browser">Providing a command to show the namespace browser</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The final piece of the puzzle is to provide a command to allow us to trigger when the namespace browser should be displayed.
+Commands in Light Table are typically the user actions. Commands are actions that can be tied to keyboard shortcuts. They are also displayed
+in the Light Table command browser (open by pressing ctrl + space).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(cmd/command {:command :show-nsbrowser                          <i class="conum" data-value="1"></i><b>(1)</b>
+              :desc "Clojure refactor: Show ns-browser"         <i class="conum" data-value="2"></i><b>(2)</b>
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]         <i class="conum" data-value="3"></i><b>(3)</b>
+                        (object/raise ed :list-ns)))})          <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The name of the command</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The description for our command, this text is shown in the command browser</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Get the currently active editor object (if one is open)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Trigger the behavior for retrieving the initial namespace list and ultimately display the namespace browser</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_defining_a_keyboard_shortcut">Defining a keyboard shortcut</h3>
+<div class="paragraph">
+<p>In your user keymap (ctrl + space, find "Setting: User keymap" and select it)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code> [:editor.clj "ctrl-alt-n" :show-nsbrowser]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here we&#8217;ve scoped the shortcut to only trigger when we invoke it having an active clojure editor open</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_some_final_sugaring_custom_filtering">Some final sugaring - Custom filtering</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To provide some customization for our nsbrowser we&#8217;ve defined a user configurable behavior
+for that purpose. Currently you can define a list of regex&#8217;s for namespaces you wish to exclude from the listing.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::set-nsbrowser-filters
+          :triggers #{:object.instant}                                   <i class="conum" data-value="1"></i><b>(1)</b>
+          :desc "Clojure Refactor: Configure filter for nsbrowser"
+          :type :user
+          :params [{:label "exclusions" :type :list}]                    <i class="conum" data-value="2"></i><b>(2)</b>
+          :exclusive true
+          :reaction (fn [this exclusions]
+                      (object/merge! this {:exclusions exclusions})))    <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This particular behavior is triggered when the ns-bar object is instatiated</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>You can provide param descriptions which show up in .behaviors files to assist user configuration</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>We store the user provided setting in our object</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2015/nsconfig_beh.png" alt="nsconfig beh">
+</div>
+</div>
+<div class="paragraph">
+<p>The default behavior adds a few exclusions by default. You can easily override those by configuring the behavior
+in your own user.behaviors. (ctrl + space, find "Settings: User behavior" and select)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Having an editor that is basically a web browser with node-js integration provides the foundation to do an incredible amount of
+cool stuff. In this post I have shown you how to use React (with quiescent on top) for rendering view items in Light Table.
+I have walked you through how that may fit in with the BOT architecture Light Table is based on.
+I hope I have managed to give you a glimpse of the power of the BOT architecture and the facilities it provides for extending and customizing
+your editor. I haven&#8217;t gone into great detail on how I&#8217;ve interacted with cider-nrepl to provide the namespace data, that belongs in a separate blogpost.</p>
+</div>
+<div class="paragraph">
+<p><em>Some of you might have noticed that the Light Table project and it&#8217;s progress has stalled somewhat (ref <a href="https://groups.google.com/d/msg/light-table-discussion/2csnnNA1pfo/693EWDJVhuwJ">this post from Chris Granger</a> on the LT discussion forum.
+I&#8217;m still hoping that this situation can be remedied. I firmly believe it&#8217;s possible and with just a wee bit more community effort Light Table can still have a future
+as a great Open Source IDE alternative.</em></p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+For improved Clojure support in Light Table, you really should try out the <a href="https://github.com/rundis/clj-light-refactor">clj-light-refactor</a> plugin !
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div></p>
   			<a href="/blog/2015/clojure_light_love.html"><h1>A pinch of Clojure love to Light Table</h1></a>
   			<p>14 April 2015</p>
         <p><em>Tags: </em>
@@ -1372,7 +2072,7 @@ Actually I also had some issues using clojure.zip from Light Table, but a restar
 <div class="sectionbody">
 <div class="paragraph">
 <p>Once I managed to make a decision on which route to pursue, the rest was mainly just a blast.
-it?s really awesome how much of Clojure it&#8217;s possible to use in ClojureScript and digging into
+it´s really awesome how much of Clojure it&#8217;s possible to use in ClojureScript and digging into
 zippers was a real eyeopener for me. I believe I now have a foundation to provide a range
 of useful client side refactoring features and I&#8217;ve already started pondering on what to address next.</p>
 </div>
@@ -4035,7 +4735,7 @@ def conf = new CompilerConfiguration()
 </div>
 <div class="paragraph">
 <p>Its basically just a matter of adding the class path list to the CompilerConfiguration we initialise our GroovyShell with. Sweet !
-Voila your groovy scripts can invoke any class in your project?s class path.</p>
+Voila your groovy scripts can invoke any class in your project´s class path.</p>
 </div>
 <div class="paragraph">
 <p>This addition basically resulted in version 0.0.4</p>
@@ -4781,7 +5481,7 @@ If the behavior is to handle an error, we show evaluation results up until the s
 </div>
 <div class="paragraph">
 <p>The eval and results/err behaviors are defined for the editor tag. So they are only applicable for editors marked as groovy editors. Any editor open with a file name ending in .groovy will automatically be attached to a editor.groovy tag. (You can also set it manually cmd+space &#8594; "Editor: Set current editor syntax").
-The ":eval!" behavior is defined for the :groovy.lang tag. Its tied to our groovy mother object just like the connect behavior. These behaviors are totally groovy client specific, whilst the other behaviors are less so (although not exactly generic as they are now?)</p>
+The ":eval!" behavior is defined for the :groovy.lang tag. Its tied to our groovy mother object just like the connect behavior. These behaviors are totally groovy client specific, whilst the other behaviors are less so (although not exactly generic as they are now…)</p>
 </div>
 </div>
 </div>
@@ -4904,7 +5604,7 @@ It becomes evident that our plugin needs to provide some kind of process that re
 <div class="title">A default pattern for achieving this has been devised for Light Table and roughly equates to the following steps:</div>
 <ol class="arabic">
 <li>
-<p>A connect event is triggered from Light Table (you need to set up your plugin to trigger that event?). Typically the connect event can be invoked manually from the connect bar in light table, or it can be triggered implicetly when evaluating code.</p>
+<p>A connect event is triggered from Light Table (you need to set up your plugin to trigger that event…). Typically the connect event can be invoked manually from the connect bar in light table, or it can be triggered implicetly when evaluating code.</p>
 </li>
 <li>
 <p>You fire of a process - Using inbuilt support from Light Table you start a process either a shell script or whatever really. I created a shell script that sets some environment stuff and then basically kicks off a groovy script. Light table provides a tcp/ip port and a unique client id which you need to forward to the process.</p>
