@@ -1,0 +1,438 @@
+= Implementing a Clojure ns-browser in Light Table with React
+Magnus Rundberget
+2015-04-22
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: clojure, clojurescript, lighttable, react
+:imagesdir: /blog/2015/
+:icons: font
+:id: lt_react
+
+
+I've long been looking for better ways to navigate between code in Clojure projects in Light Table.
+The workspace navigator isn't particularily keyboard friendly. For navigating files https://github.com/joshuafcole/claire[claire]
+is a better option. Coming from IntelliJ I have been used to navigating to classes/resources in java projects in a breeze.
+
+I needed something more clojure project aware, so I decided to implement a namespace browser.
+
+
+== Introduction
+Lately I've been working on the https://github.com/rundis/clj-light-refactor[clj-light-refactor] plugin, providing
+better Clojure support in Light Table. It made sense to me to add a namespace browser feature to the plugin at some point.
+Through experience with integrating the https://github.com/clojure-emacs/cider-nrepl[cider-nrepl] middleware
+I found that I had most of the tools necessary to implement a simple namespace browser.
+
+A namespace browser obviously needs a bit of UI, and this is where the power of having an editor framework
+based on node-webkit/atom-shell opens up for a range of opportunities. I could use the std dom lib that ships
+with Light Table, but I decided I'd rather have a go at implementing the UI part using React. Just for fun.
+
+There are a range of ClojureScript wrappers for React, but I decided to opt for one of the least opinionated ones : https://github.com/levand/quiescent[quiescent].
+Let's have a look at how I did it !
+
+
+[.float-group]
+--
+[.left]
+.Namespace list
+image::ns_list.png[width=400]
+
+[.left]
+.Public vars for selected namespace
+image::ns_vars.png[width=400]
+--
+
+
+
+
+== Setting up React and quiescent
+As you'll see, this part is pretty easy.
+
+=== Quiescent dependency - project.clj
+[source,clojure]
+----
+(defproject clj-light-refactor "0.1.5"
+  :dependencies [[org.clojure/clojure "1.5.1"]
+                 [quiescent "0.1.4"]])               // <1>
+----
+<1> To include quiescent, just add it as a dependency. I opted for an older version because the ClojureScript version currently supported by LT is fairly old.
+
+
+=== React dependency - plugin behaviours file
+[source,clojure]
+----
+[:app :lt.objs.plugins/load-js ["react.min.js"                       // <1>
+                                "clj-light-refactor_compiled.js"]]
+----
+<1> Just add the react js using the load-js behavior for plugins. It needs to load before quiescent, so it's added before the transpiled js for the plugin project.
+
+
+
+== State, BOT and such
+My namespace browser will need to have state. The namespace browser will retrieve it's data
+from a cider-nrepl middleware op. Continuously invoking this backend for the data would kill the performance.
+State in Light Table is typically stored in objects. Objects are basically a map of data stored in an ClojureScript atom.
+
+
+NOTE: To learn more about BOT (Behaviors, Objects and Tags), check out http://www.chris-granger.com/2013/01/24/the-ide-as-data/[The IDE as a value] by Chris Granger.
+
+Quiescent has no opinions with regards to state, you just feed quiescent components with data, so using LT objects shouldn't be of any concern.
+
+
+[source,clojure]
+----
+
+(defui wrapper [this]                                             // <1>
+  [:div.outer
+   [:div {:id "nsbrowser-wrapper"} "Retrieving namespaces..."]])
+
+(object/object* ::nsbrowser
+                :tags #{:clojure.nsbrowser}                       // <2>
+                :label "Clojure ns browser"
+                :order 2
+                :init (fn [this]                                  // <3>
+                        (wrapper this)))
+
+(def ns-bar (object/create ::nsbrowser))                          // <4>
+----
+<1> React needs a container element to mount in. We just create a wrapper (nsbrowser-wrapper), using the LT defui macro.
+<2> We add a custom tag to our object. Using this tag we can attach behaviors, i.e reaction to events, to our object.
+<3> Objects have an init function that can return a UI representation. Initially thats just our wrapper div. The actual content we will provide through behaviors.
+<4> Instantiate the object
+
+
+== Rendering the nsbrowser UI using quiescent and react
+
+
+[source,clojure]
+----
+(declare render)
+
+(defn handle-keypress [props ev]                                           // <6>
+  (let [kk (.-which ev)]
+    (case kk
+      38 (do (.preventDefault ev) ((:on-up props)))
+      40 (do (.preventDefault ev) ((:on-down props)))
+      13 (do (.preventDefault ev) ((:on-select props)))
+      27 (do (.preventDefault ev) ((:on-escape props)))
+      :default)))
+
+(q/defcomponent SearchInput [props]                                        // <5>
+  (d/input {:placeholder "search"
+            :value (:search-for props)
+            :onKeyDown (partial handle-keypress props)
+            :onChange  #((:on-change props) (aget % "target" "value"))
+            :autoFocus (:focus props)}))
+
+(q/defcomponent ResultItem [item]                                          // <4>
+  (d/li {:className (when (:selected item) "selected")} (:name item)))
+
+(q/defcomponent ResultList [props]                                         // <3>
+  (apply d/ul {:className (when (:selected-ns props) " nsselection")}
+               (map ResultItem (:items props))))
+
+(q/defcomponent Searcher [props]                                           // <2>
+  (d/div {:className "filter-list"}
+         (SearchInput props)
+         (when-let [sel-ns (:selected-ns props)]
+           (d/div {:className "nstitle"} sel-ns))
+         (ResultList (select-keys props [:items :selected-ns]))))
+
+
+(defn render [props]                                                       // <1>
+  (q/render (Searcher (merge {:on-down #(object/raise ns-bar :move-down!)
+                              :on-up #(object/raise ns-bar :move-up!)
+                              :on-select #(object/raise ns-bar :select!)
+                              :on-escape #(object/raise ns-bar :escape!)
+                              :on-change (fn [search-for]
+                                           (object/raise ns-bar :search! search-for))}
+                             props))
+            (.getElementById js/document "nsbrowser-wrapper")))
+
+----
+<1> The render function is where we initially mount our react components and subsequently
+rerender our UI upon any change in our data. The function takes a map (containing the data to render) and we merge in some properties
+for handling events we wish to handle in our ui. More on that later.
+<2> This is the root component for our UI. It basically contains a search input and a result list (with a optional heading, when a namespace has been selected)
+<3> Subcomponent for the result list
+<4> Subcomponent for a result list item, applies a __.selected__ class if this item is selected
+<5> Subcomponent for the search input. This is used for filtering and navigating our result list.
+<6> Handler for keyboard events in the search input
+
+NOTE: If you are not familiar with react, it might seem inefficient to render the entire UI everytime. But
+react is quite clever with its DOM operations, using a virtual dom it only performs the DOM operations necessary to
+represent the diff since the last render. Further optimization is provided by quiescent as any quiescent component
+will check whether the first param have changed using a clojure equality test (fast). If no props have changed, it will tell React that
+the component doesn't need to rerender. Short story, you don't need to worry about render speed. It's more than fast enough.
+
+
+The benefits of this approach might not be immediatly visible, but believe me it makes it very simple to reason about the UI.
+When some state changes, rerender the entire UI. You don't need to worry about making the individual dom updates needed to
+represent the change. This part is handled by react.
+
+
+== Working with data
+When implementing the logic for changing which items is selected it made sense to extract the core
+of that to immutable helper functions. Nothing new here, but it's a whole lot easier when no state is represented
+in the dom, but rather in data structures somewhere else (like in an atom).
+
+[source,clojure]
+----
+(defn move-down [items]
+  (let [curr-idx (selected-idx items)]
+    (if-not (< curr-idx (dec (count items)))
+      items
+      (-> items
+          (assoc-in  [curr-idx :selected] false)
+          (assoc-in  [(inc curr-idx) :selected] true)))))
+----
+
+Implementing then move up/down logic are just simple functions. Testing them interactivly in Light Table
+is dead easy using the inbuild repl with inline results.
+
+
+== Behaviors for filter, navigation and selection
+
+
+[source,clojure]
+----
+(behavior ::move-up!                                                     // <1>
+          :triggers #{:move-up!}
+          :reaction (fn [this]
+                      (let [moved (move-up (:filtered-items @this))]
+                        (object/merge! this {:filtered-items moved})
+                        (render {:items moved
+                                 :selected-ns (:selected-ns @this)
+                                 :search-for (:search-for @this)})
+                        (sidebar-cmd/ensure-visible this))))            // <2>
+
+(behavior ::select!                                                     // <3>
+          :triggers #{:select!}
+          :reaction (fn [this]
+                      (when-let [sel-idx (selected-idx (:filtered-items @this))]
+                        (when-let [ed (pool/last-active)]
+                          (let [item-name (:name (nth (:filtered-items @this) sel-idx))]
+                            (if-not (:selected-ns @this)
+                              (do
+                                (object/merge! this {:search-for ""
+                                                     :selected-ns item-name})
+                                (object/raise ed :list-ns-vars item-name))
+                              (let [sym (str (:selected-ns @this) "/" item-name)]
+                                (object/raise ed :editor.jump-to-definition! sym)
+                                (object/raise this :clear!))))))))
+
+
+(behavior ::search!                                                    // <4>
+          :triggers #{:search!}
+          :reaction (fn [this search-for]
+                      (let [items (if (:selected-ns @this) (:vars @this) (:items @this))
+                            filtered
+                            (->> items
+                                 (filter-items search-for)
+                                 maybe-select-first
+                                 vec)]
+                        (object/merge! this {:filtered-items filtered
+                                             :search-for search-for})
+                        (render {:items filtered
+                                 :selected-ns (:selected-ns @this)
+                                 :search-for search-for}))))
+----
+
+<1> All the move up behavior basically does is updating the state holding which item (in our filtered list of items)
+is selected and then rerenders the UI with the updated item list
+<2> When scrolling down the list (an UL element), we need to make sure the item is visible so we need to scroll. I
+couldn't figure out a react-way to do this, so I reused a function from LT's command browser to achieve this.
+<3> The select behavior does one of two things. If the item selected is an namespace item it triggers
+a behavior for retrieving (and subsequently later render) a list of public vars for that namespace. If the item is a var
+it triggers a behavior for jumping to the definition of that var. The latter is a behavior already present in the Light Table Clojure plugin.
+<4> The search behavior filters the list of items to show based on what the user has entered in the search input.
+It stores that filtered list in our object and rerenders the ui.
+
+
+
+TIP: The __this__ argument for our behavior reaction function is the ns-bar object instance we defined earlier.
+
+[source, clojure]
+----
+ [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/move-up!]
+ [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/select!]
+ [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/search!]
+----
+
+Hooking up our behaviors to our object can be done inline using code, or declaratively using
+a behaviors definition file. I've opted for the latter and hooked them up in the plugin behaviors file.
+What we say here is that objects with the given tag __:clojure.nsbrowser__ responds to the behavior defined in the second arg for the vectors.
+Should you find that you'd like to override one or more of the behaviors (or disable them alltogether) you can easily
+do that.
+
+=== A silly example - overriding the move behavior
+Let's say you have a better idea for how the move behavior should work. You override that
+in your Light Table user plugin (everyone has one !).
+
+==== Providing your own behavior
+[source,clojure]
+----
+(ns lt.plugins.user                                                    // <1>
+  (:require [lt.object :as object]
+            [lt.plugins.nsrefactor.nsbrowser :as nsbrowser])           // <2>
+  (:require-macros [lt.macros :refer [behavior]]))
+
+(behavior ::user-move-up!
+          :triggers #{:move-up!}                                       // <3>
+          :reaction (fn [this]
+                      (println "Add my custom version here...")))      // <4>
+----
+<1> You'll find the user plugin in $LT_HOME/User. It ships with a default $LT_HOME/User/src/plugins/user.cljs file for your convenience
+<2> Require any namespace you need, for the purpose of this override you might need to have access to functions
+in the namespace where the nsbrowser is implemented
+<3> This is the really important bit. Triggers (together with tags) tells LT which behavior reaction functions to invoke
+when an event is triggered (through __object/raise__)
+<4> Implementation for the overriding behavior
+
+
+==== Replacing the default behavior with our own
+[source,clojure]
+----
+ [:clojure.nsbrowser :-lt.plugins.cljrefactor.nsbrowser/move-up!]   // <1>
+ [:clojure.nsbrowser :lt.plugins.user/user-move-up!]                // <2>
+----
+<1> First we turn off the default behavior from the plugin __:-__ disable a given behavior)
+<2> The we hook up our new custom made override behavior
+
+I think you now can start to the see the power of the BOT model in Light Table. It's very flexible,
+but the price you pay is that it can be difficult to grasp at first sight. Once you do grock it, you'll realize that
+you have an incredibly customizable editor at your disposal.
+
+
+== Getting the namespace data
+So how do we go about getting the list of namespaces and vars for each namespace ?
+This is where cider-nrepl comes into play. The ops we wish to call are in the https://github.com/clojure-emacs/cider-nrepl/blob/master/src/cider/nrepl/middleware/ns.clj[ns middleware] for cider-nrepl.
+
+
+=== Interacting with cider-nrepl
+
+A precondition for this to work is that the cider-nrepl is added as a plugin dependency for your project.
+You could do this on a project level, or you could do it globally for all your projects in profiles.clj.
+
+[source,clojure]
+----
+  :user {:plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]]}}
+----
+
+
+[source,clojure]
+----
+(behavior ::list-ns
+          :triggers #{:list-ns}
+          :reaction (fn [ed]
+                      (object/raise ed
+                                    :eval.custom                                 // <1>
+                                    (mw/create-op {:op "ns-list"})               // <2>
+                                    {:result-type :refactor.list-ns-res          // <3>
+                                     :verbatim true})))
+
+
+(behavior ::list-ns-res
+          :triggers #{:editor.eval.clj.result.refactor.list-ns-res}              // <4>
+          :reaction (fn [ed res]
+                      (let [[ok? ret] (mw/extract-result res                     // <5>
+                                                         :singles
+                                                         [:ns-list :results])]
+                        (if-not ok?
+                          (object/raise ed
+                                        :editor.exception
+                                        (:err ret)
+                                        {:line (-> ret :meta :line)})
+
+                          (do
+                            (object/raise sidebar/rightbar :toggle ns-bar)       // <6>
+                            (object/raise ns-bar
+                                          :update-ns-list!                       // <7>
+                                          (->> (:ns-list ret)
+                                               (maybe-exclude (:exclusions @ns-bar))
+                                               (map #(hash-map :name %)))))))))
+
+----
+<1> To evaluate arbitrary clojure code in LT you can use the __eval.custom__ behavior
+<2> This is a helper method that creates the code to invoke the cider-nrepl middleware
+<3> We can tell LT that the trigger for the response should end with __refactor.list-ns-res__. So when
+the operation completes in will trigger a behavior named as defined in **4**
+<4> The trigger for our behavior to handle the response
+<5> Helper function to extract the result from cider-nrepl op
+<6> Our nsbrowser is displayed in a predefined UI component which is a sidebar. We tell it to display
+<7> We raise a behavior for displaying the list of namespaces found (see the https://github.com/rundis/clj-light-refactor/blob/master/src/lt/plugins/cljrefactor/nsbrowser.cljs[full source] for how this behavior is defined)
+
+
+NOTE: The code eval behavior is triggered on an ed object. This is an LT editor object. This means that
+we need to have a clojure editor open for our namespace browser to work (hoping to remedy that in the near future).
+The editor object contains information about which project we are connected to (and if not connected, prompts you to do so).
+
+
+== Providing a command to show the namespace browser
+The final piece of the puzzle is to provide a command to allow us to trigger when the namespace browser should be displayed.
+Commands in Light Table are typically the user actions. Commands are actions that can be tied to keyboard shortcuts. They are also displayed
+in the Light Table command browser (open by pressing ctrl + space).
+
+[source,clojure]
+----
+(cmd/command {:command :show-nsbrowser                          // <1>
+              :desc "Clojure refactor: Show ns-browser"         // <2>
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]         // <3>
+                        (object/raise ed :list-ns)))})          // <4>
+----
+<1> The name of the command
+<2> The description for our command, this text is shown in the command browser
+<3> Get the currently active editor object (if one is open)
+<4> Trigger the behavior for retrieving the initial namespace list and ultimately display the namespace browser
+
+
+=== Defining a keyboard shortcut
+In your user keymap (ctrl + space, find "Setting: User keymap" and select it)
+
+[source,clojure]
+----
+ [:editor.clj "ctrl-alt-n" :show-nsbrowser]
+----
+Here we've scoped the shortcut to only trigger when we invoke it having an active clojure editor open
+
+
+== Some final sugaring - Custom filtering
+To provide some customization for our nsbrowser we've defined a user configurable behavior
+for that purpose. Currently you can define a list of regex's for namespaces you wish to exclude from the listing.
+
+
+[source,clojure]
+----
+(behavior ::set-nsbrowser-filters
+          :triggers #{:object.instant}                                   // <1>
+          :desc "Clojure Refactor: Configure filter for nsbrowser"
+          :type :user
+          :params [{:label "exclusions" :type :list}]                    // <2>
+          :exclusive true
+          :reaction (fn [this exclusions]
+                      (object/merge! this {:exclusions exclusions})))    // <3>
+----
+<1> This particular behavior is triggered when the ns-bar object is instatiated
+<2> You can provide param descriptions which show up in .behaviors files to assist user configuration
+<3> We store the user provided setting in our object
+
+image::nsconfig_beh.png[]
+
+The default behavior adds a few exclusions by default. You can easily override those by configuring the behavior
+in your own user.behaviors. (ctrl + space, find "Settings: User behavior" and select)
+
+
+== Summary
+Having an editor that is basically a web browser with node-js integration provides the foundation to do an incredible amount of
+cool stuff. In this post I have shown you how to use React (with quiescent on top) for rendering view items in Light Table.
+I have walked you through how that may fit in with the BOT architecture Light Table is based on.
+I hope I have managed to give you a glimpse of the power of the BOT architecture and the facilities it provides for extending and customizing
+your editor. I haven't gone into great detail on how I've interacted with cider-nrepl to provide the namespace data, that belongs in a separate blogpost.
+
+
+__Some of you might have noticed that the Light Table project and it's progress has stalled somewhat (ref https://groups.google.com/d/msg/light-table-discussion/2csnnNA1pfo/693EWDJVhuwJ[this post from Chris Granger] on the LT discussion forum.
+I'm still hoping that this situation can be remedied. I firmly believe it's possible and with just a wee bit more community effort Light Table can still have a future
+as a great Open Source IDE alternative.__
+
+
+TIP: For improved Clojure support in Light Table, you really should try out the https://github.com/rundis/clj-light-refactor[clj-light-refactor] plugin !

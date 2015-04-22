@@ -1,9 +1,9 @@
-= A pinch of Clojure icon:heart[] to Light Table
+= A pinch of Clojure love to Light Table
 Magnus Rundberget
 2015-04-14
 :jbake-type: post
 :jbake-status: published
-:jbake-tags: clojure, lighttable
+:jbake-tags: clojure, clojurescript, lighttable
 :imagesdir: /blog/2015/
 :icons: font
 :id: clj_light_love
