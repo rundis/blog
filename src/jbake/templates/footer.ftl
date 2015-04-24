@@ -4,16 +4,16 @@
 
     <div id="footer">
       <div class="container">
-        <p class="muted credit">&copy; 2015 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake ${version}</a></p>
+        <p class="muted credit">&copy; 2015 Magnus Rundberget
+          <a class="pull-right btn btn-xs" href="https://twitter.com/mrundberget"><i class="fa fa-twitter"></i></a>
+          <a class="pull-right btn btn-xs" href="https://github.com/rundis"><i class="fa fa-github"></i></a>
+          <a class="pull-right btn btn-xs" href="http://no.linkedin.com/in/mrundberget"><i class="fa fa-linkedin"></i></a>
+        </p>
       </div>
     </div>
 
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
     <script src="<#if (content.rootpath)??>${content.rootpath}<#else></#if>js/jquery-1.11.1.min.js"></script>
     <script src="<#if (content.rootpath)??>${content.rootpath}<#else></#if>js/bootstrap.min.js"></script>
     <script src="<#if (content.rootpath)??>${content.rootpath}<#else></#if>js/prettify.js"></script>
-
   </body>
 </html>

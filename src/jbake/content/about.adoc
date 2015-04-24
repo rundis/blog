@@ -1,13 +1,22 @@
 = Magnus Rundberget
 Magnus Rundberget
-2015-01-19
 :jbake-type: page
 :jbake-status: published
 
+.About me
+****
+I guess I'm a so called full-stack developer. A jack of many trades and hopefully master of a few. I'm currently working for http://www.kodemaker.no[Kodemaker] and having a blast doing so.
+I have a background as a Java (web-app) developer. The last couple of years I have been using Groovy/Grails and lately
+I've been fortunate enough to be able to work on a Clojure/ClojureScript project. In 2014 I started to gain interest in the Light Table IDE.
+I guess I spend way to much time extending and tweaking my editor, but it's too rewarding and too much fun to resist.
 
-.Find me on:
+I'm still amazed by the concept of Open Source and Free Software. I have to remind myself that everyday I'm reaping the benefits
+of all the knowledge and hard work people are putting in. This blog is a humble attempt to give something back.
+
+.You can reach me on:
 * GitHub:   https://github.com/rundis[rundis]
 * Twitter:  https://twitter.com/mrundberget[mrundberget]
 * LinkedIn: http://no.linkedin.com/in/mrundberget[mrundberget]
 * My Company: http://www.kodemaker.no[Kodemaker]
+****
 
