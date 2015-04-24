@@ -1,5 +1,6 @@
 = Magnus Rundberget
 Magnus Rundberget
+2015-04-24
 :jbake-type: page
 :jbake-status: published
 
