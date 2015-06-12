@@ -1,0 +1,211 @@
+= Showcasing rewrite-cljs - Parembrace for Light Table
+Magnus Rundberget
+2015-06-12
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: clojure, clojurescript, lighttable
+:imagesdir: /blog/2015/
+:icons: font
+:id: parembrace
+
+Wow! Implementing my own paredit plugin for Light Table. How (and why) on earth did I end up doing that ?
+
+
+== Introduction
+A few months back I set forth on a mission trying to bring some proper Clojure refactoring support to Light Table through
+the https://github.com/rundis/clj-light-refactor/[clj-light-refactor] plugin. One of the first features I implemented
+was a http://rundis.github.io/blog/2015/clj_light_thread.html[threading refactoring] using clojure.zip and cljs.reader.
+It quickly became evident that both clojure.zip and cljs.reader put severe limitations on what I would be able to implement.
+The reader is quite limited in terms of the syntaz it allows and using a plain zipper would make it incredibly tedious in terms of
+handling formatting (whitespace, newlines and comments etc).
+
+The experience of using a zipper for refactoring was really appealing to me, but I needed something way better to be able
+to do anything really useful. I put the whole thing on the backburner for a while, until I stumbled upon
+https://github.com/xsc/rewrite-clj/[rewrite-clj]. It looked like just the thing I needed, however it had no ClojureScript
+support though. After weeks of deliberation I decided to write a ClojureScript port, aptly named https://github.com/rundis/rewrite-cljs[rewrite-cljs].
+
+The ParEdit support in Light Table is somewhat limited, a few plugins to remedy that has been implemented none of which
+are actively maintained or easily extendable. They all focus on the editor, text and moving braces around.
+
+
+Could I make something a lot more structured for Light Table, where the focus is on navigating and moving proper clojure code nodes in a virtual AST ?
+If Light Table falls over and dies, will all my efforts have been in vain ?
+
+
+TIP: Well I present to you https://github.com/rundis/parembrace[**parembrace**] a slightly different take on implementing
+a paredit plugin for Light Table using rewrite-cljs for most of it's heavy lifting
+
+.Wrap forward slurping
+image::wrap_slurping.gif[]
+
+
+
+== Implementation challenges
+
+
+=== A more powerful reader
+My first challenge was that the default reader in ClojureScript, cljs.reader, only supports a subset of
+of valid clojure code. Things like anonymous functions and other reader macros are not supported.
+I had to address that before I could even consider trying to do a port of rewrite-clj.
+
+Luckily I found most of what I needed in the https://github.com/lazerwalker/clojurescript-in-clojurescript[clojurescript-in-clojurescript] project.
+It even supported a IndexingPUshBackReader which was essential for retaining source positional information about the nodes in a zipper.
+I had to hack around it a little bit, but nearly everything I needed was in place. Yay !
+
+NOTE: I ended up bundling the modded reader in rewrite-cljs btw.
+
+
+=== Porting rewrite-clj
+I won't bore you with the details here, but it was mostly pretty straight forward. While I was at it, I opted
+for extending its' features somewhat:
+
+- I added bounds meta information for all nodes (start - end coordinates)
+- Finder functions to locate nodes by a given position in the underlying source
+- A paredit namespace
+
+NOTE: The paredit namespace should probably be factored out to a separate lib. I really shouldn't  bloat rewrite-cljs unnecessarily.
+
+Whan creating(/aka porting) rewrite-cljs my intention was always to ensure that it was reusable from many other contexts than
+my own client libs/apps. Whether I've succeeded with that I guess is yet to be proven !
+
+It's used from parembrace and clj-light-refactor, but I see no reason why you wouldn't be able to reuse it
+from say the Atom editor or your somewhat overly ambitious fully structural ClojureScript SPA editor project.
+
+
+=== Performance
+It quickly became evident that parsing all code in an editor to a rewrite-cljs zipper structure
+for every paredit editor action wouldn't be usable for files beyond 100-200 lines of code.
+For now I have to settle for the inconvenience of working within the context of top level forms.
+Having used the plugin during it's development for a couple of weeks now, that's not really a problem
+99 % if the time (at least for me that is).
+
+
+
+
+== A smattering of code
+
+Let me run you through an example. Paredit raise-sexpr
+
+[source,clojure]
+----
+(dynamic-wind in (lambda () |body) out) ; ->
+(dynamic-wind in |body out) ; ->
+body
+----
+
+
+=== rewrite-cljs
+
+[source,clojure]
+----
+(defn raise [zloc]                               // <1>
+  (if-let [containing (z/up zloc)]
+    (z/replace containing (z/node zloc))         // <2>
+    zloc))                                       // <3>
+----
+<1> zloc is a the zipper node we wish to raise. From the example above the body token node
+<2> If zloc has a parent node (seq), then we replace the parent node with the node at zloc
+<3> If zloc has no parent, we can't raise we just return zloc
+
+
+.Trying it out
+[source, clojure]
+----
+(ns foo-bar
+  (:require [rewrite-clj.zip :as z]
+            [rewrite-clj.paredit :as pe])
+
+(-> (z/of-string "(dynamic-wind in (lambda () body) out)")    // <1>
+    (pe/find-by-pos {:row 1 :col 29})                         // <2>
+    pe/raise                                                  // <3>
+    pe/raise
+    z/root-string)                                            // <4>
+----
+<1> Create a clojure zipper with rewrite nodes for the initial code
+<2> Locate zloc, a pointer to the **body** node in our instance
+<3> Raise (twice to produce the end result)
+<4> Wrap up the zipper and return it's stringified representation
+
+
+=== Light Table
+
+The generic function for invoking paredit commands in parembrace looks something like the this:
+[source,clojure]
+----
+(defn paredit-cmd [ed f]
+  (let [pos (editor/->cursor ed)
+        form (u/get-top-level-form ed)                                         // <1>
+        zloc (positioned-zip pos form)]                                        // <2>
+    (when zloc
+      (editor/replace ed (:start form) (:end form) (-> zloc f z/root-string))  // <3>
+      (editor/move-cursor ed pos)                                              // <4>
+      (format-keep-pos ed))))                                                  // <5>
+
+----
+
+<1> Get the top-level form at given position
+<2> Given form an position in LT terms, create a zipper and position it at node with given position
+<3> Replace the form in editor with the rewritten form after applying paredit/zipper function **f**
+<4> The positioning isn't quite as trivial as this with depth changing commands
+<5> Format the form nicely
+
+[TIP]
+====
+For raise, f would in our example be a reference to `pe/raise`, but really it could be
+something really whacky like :
+[source,clojure]
+----
+#(-> % pe/raise pe/kill z/leftmost)
+----
+
+which would given you:
+[source,clojure]
+----
+(|dynamic-wind in)
+----
+
+Let me know if that is something you would find useful icon:smile-o[role="green"]
+====
+
+
+.Behaviors and commands
+[source, clojure]
+----
+(behavior ::raise!                                                   // <1>
+          :triggers #{:parembrace.raise!}
+          :reaction (fn [ed]
+                      (paredit-cmd ed pe/raise)))
+
+
+
+(cmd/command {:command :parembrace.raise                             // <2>
+              :desc "Parembrace: Raise"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (object/raise ed :parembrace.raise!)))})
+----
+<1> The behavior here strictly speaking isn't needed, but it provides a means to scope the feature
+to only be available for editors tagged as clojure editors
+<2> The commands are there for you to be able to either execute from the command bar, or for mapping a keyboard shortcut
+
+
+
+== Current state and future plans for Parembrace ?
+A large percentage of the features in the http://pub.gajendra.net/src/paredit-refcard.pdf[paredit reference card] has been
+implemented. Some features behave slightly different, and there are a couple of novel nuggets there as well.
+All is not well though. Cursor positioning needs improving and performance needs to be tweaked.
+
+What does the future hold ? Well I'm planning on implementing the missing features and I'm sure I'll add a few more
+useful nuggets too. The most important thing I aim to provide is a clear pluggable way of extending and modifying features
+to allow you to customize parembrace to your liking.
+
+
+
+== Conclusion
+I believe rewrite-cljs already has paid off multiple times. I can't thank https://github.com/xsc[xsc] enough
+for writing https://github.com/xsc/rewrite-clj/[rewrite-clj]. It's really awesome and without it I'd still be fumbling around with parsers and what-not.
+I can reuse rewrite-cljs from both parembrace and clj-light-refactor. In the latter not only can I start implementing cool code refactoring features, but
+I can do things like structurally traverse and  rewrite the project.clj file. I can't wait to get started... well I have to wait because I'm moving to a new house, but after that...
+
+
+TIP: If you are a Light Table user, do take https://github.com/rundis/parembrace[Parembrace] for a spin and let me know what you think !
