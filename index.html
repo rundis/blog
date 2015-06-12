@@ -71,6 +71,373 @@
 	<div class="page-header">
 		<h1>Blog</h1>
 	</div>
+  			<a href="/blog/2015/parembrace.html"><h1>Showcasing rewrite-cljs - Parembrace for Light Table</h1></a>
+  			<p>12 June 2015</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/clojure.html">clojure</a>
+	      
+		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+	      
+		      <a href="/blog/tags/lighttable.html"> lighttable</a>
+	      </p>
+        <a href="https://twitter.com/share"
+           class="twitter-share-button"
+           data-text="Showcasing rewrite-cljs - Parembrace for Light Table"
+           data-url="http://rundis.github.io/blog/2015/parembrace.html"
+           data-via="mrundberget" data-lang="en">Tweet</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+  			<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Wow! Implementing my own paredit plugin for Light Table. How (and why) on earth did I end up doing that ?</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A few months back I set forth on a mission trying to bring some proper Clojure refactoring support to Light Table through
+the <a href="https://github.com/rundis/clj-light-refactor/">clj-light-refactor</a> plugin. One of the first features I implemented
+was a <a href="http://rundis.github.io/blog/2015/clj_light_thread.html">threading refactoring</a> using clojure.zip and cljs.reader.
+It quickly became evident that both clojure.zip and cljs.reader put severe limitations on what I would be able to implement.
+The reader is quite limited in terms of the syntaz it allows and using a plain zipper would make it incredibly tedious in terms of
+handling formatting (whitespace, newlines and comments etc).</p>
+</div>
+<div class="paragraph">
+<p>The experience of using a zipper for refactoring was really appealing to me, but I needed something way better to be able
+to do anything really useful. I put the whole thing on the backburner for a while, until I stumbled upon
+<a href="https://github.com/xsc/rewrite-clj/">rewrite-clj</a>. It looked like just the thing I needed, however it had no ClojureScript
+support though. After weeks of deliberation I decided to write a ClojureScript port, aptly named <a href="https://github.com/rundis/rewrite-cljs">rewrite-cljs</a>.</p>
+</div>
+<div class="paragraph">
+<p>The ParEdit support in Light Table is somewhat limited, a few plugins to remedy that has been implemented none of which
+are actively maintained or easily extendable. They all focus on the editor, text and moving braces around.</p>
+</div>
+<div class="paragraph">
+<p>Could I make something a lot more structured for Light Table, where the focus is on navigating and moving proper clojure code nodes in a virtual AST ?
+If Light Table falls over and dies, will all my efforts have been in vain ?</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Well I present to you <a href="https://github.com/rundis/parembrace"><strong>parembrace</strong></a> a slightly different take on implementing
+a paredit plugin for Light Table using rewrite-cljs for most of it&#8217;s heavy lifting
+</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2015/wrap_slurping.gif" alt="wrap slurping">
+</div>
+<div class="title">Figure 1. Wrap forward slurping</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_implementation_challenges">Implementation challenges</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_a_more_powerful_reader">A more powerful reader</h3>
+<div class="paragraph">
+<p>My first challenge was that the default reader in ClojureScript, cljs.reader, only supports a subset of
+of valid clojure code. Things like anonymous functions and other reader macros are not supported.
+I had to address that before I could even consider trying to do a port of rewrite-clj.</p>
+</div>
+<div class="paragraph">
+<p>Luckily I found most of what I needed in the <a href="https://github.com/lazerwalker/clojurescript-in-clojurescript">clojurescript-in-clojurescript</a> project.
+It even supported a IndexingPUshBackReader which was essential for retaining source positional information about the nodes in a zipper.
+I had to hack around it a little bit, but nearly everything I needed was in place. Yay !</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+I ended up bundling the modded reader in rewrite-cljs btw.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_porting_rewrite_clj">Porting rewrite-clj</h3>
+<div class="paragraph">
+<p>I won&#8217;t bore you with the details here, but it was mostly pretty straight forward. While I was at it, I opted
+for extending its' features somewhat:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>I added bounds meta information for all nodes (start - end coordinates)</p>
+</li>
+<li>
+<p>Finder functions to locate nodes by a given position in the underlying source</p>
+</li>
+<li>
+<p>A paredit namespace</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+The paredit namespace should probably be factored out to a separate lib. I really shouldn&#8217;t  bloat rewrite-cljs unnecessarily.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Whan creating(/aka porting) rewrite-cljs my intention was always to ensure that it was reusable from many other contexts than
+my own client libs/apps. Whether I&#8217;ve succeeded with that I guess is yet to be proven !</p>
+</div>
+<div class="paragraph">
+<p>It&#8217;s used from parembrace and clj-light-refactor, but I see no reason why you wouldn&#8217;t be able to reuse it
+from say the Atom editor or your somewhat overly ambitious fully structural ClojureScript SPA editor project.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_performance">Performance</h3>
+<div class="paragraph">
+<p>It quickly became evident that parsing all code in an editor to a rewrite-cljs zipper structure
+for every paredit editor action wouldn&#8217;t be usable for files beyond 100-200 lines of code.
+For now I have to settle for the inconvenience of working within the context of top level forms.
+Having used the plugin during it&#8217;s development for a couple of weeks now, that&#8217;s not really a problem
+99 % if the time (at least for me that is).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_a_smattering_of_code">A smattering of code</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Let me run you through an example. Paredit raise-sexpr</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(dynamic-wind in (lambda () |body) out) ; -&gt;
+(dynamic-wind in |body out) ; -&gt;
+body</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_rewrite_cljs">rewrite-cljs</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn raise [zloc]                               <i class="conum" data-value="1"></i><b>(1)</b>
+  (if-let [containing (z/up zloc)]
+    (z/replace containing (z/node zloc))         <i class="conum" data-value="2"></i><b>(2)</b>
+    zloc))                                       <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>zloc is a the zipper node we wish to raise. From the example above the body token node</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>If zloc has a parent node (seq), then we replace the parent node with the node at zloc</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>If zloc has no parent, we can&#8217;t raise we just return zloc</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Trying it out</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(ns foo-bar
+  (:require [rewrite-clj.zip :as z]
+            [rewrite-clj.paredit :as pe])
+
+(-&gt; (z/of-string "(dynamic-wind in (lambda () body) out)")    <i class="conum" data-value="1"></i><b>(1)</b>
+    (pe/find-by-pos {:row 1 :col 29})                         <i class="conum" data-value="2"></i><b>(2)</b>
+    pe/raise                                                  <i class="conum" data-value="3"></i><b>(3)</b>
+    pe/raise
+    z/root-string)                                            <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Create a clojure zipper with rewrite nodes for the initial code</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Locate zloc, a pointer to the <strong>body</strong> node in our instance</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Raise (twice to produce the end result)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Wrap up the zipper and return it&#8217;s stringified representation</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_light_table">Light Table</h3>
+<div class="paragraph">
+<p>The generic function for invoking paredit commands in parembrace looks something like the this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn paredit-cmd [ed f]
+  (let [pos (editor/-&gt;cursor ed)
+        form (u/get-top-level-form ed)                                         <i class="conum" data-value="1"></i><b>(1)</b>
+        zloc (positioned-zip pos form)]                                        <i class="conum" data-value="2"></i><b>(2)</b>
+    (when zloc
+      (editor/replace ed (:start form) (:end form) (-&gt; zloc f z/root-string))  <i class="conum" data-value="3"></i><b>(3)</b>
+      (editor/move-cursor ed pos)                                              <i class="conum" data-value="4"></i><b>(4)</b>
+      (format-keep-pos ed))))                                                  <i class="conum" data-value="5"></i><b>(5)</b>
+</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Get the top-level form at given position</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Given form an position in LT terms, create a zipper and position it at node with given position</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Replace the form in editor with the rewritten form after applying paredit/zipper function <strong>f</strong></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The positioning isn&#8217;t quite as trivial as this with depth changing commands</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Format the form nicely</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>For raise, f would in our example be a reference to <code>pe/raise</code>, but really it could be
+something really whacky like :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>#(-&gt; % pe/raise pe/kill z/leftmost)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>which would given you:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(|dynamic-wind in)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let me know if that is something you would find useful <span class="icon green"><i class="icon-smile-o"></i></span></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Behaviors and commands</div>
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(behavior ::raise!                                                   <i class="conum" data-value="1"></i><b>(1)</b>
+          :triggers #{:parembrace.raise!}
+          :reaction (fn [ed]
+                      (paredit-cmd ed pe/raise)))
+
+
+
+(cmd/command {:command :parembrace.raise                             <i class="conum" data-value="2"></i><b>(2)</b>
+              :desc "Parembrace: Raise"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (object/raise ed :parembrace.raise!)))})</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The behavior here strictly speaking isn&#8217;t needed, but it provides a means to scope the feature
+to only be available for editors tagged as clojure editors</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The commands are there for you to be able to either execute from the command bar, or for mapping a keyboard shortcut</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_current_state_and_future_plans_for_parembrace">Current state and future plans for Parembrace ?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A large percentage of the features in the <a href="http://pub.gajendra.net/src/paredit-refcard.pdf">paredit reference card</a> has been
+implemented. Some features behave slightly different, and there are a couple of novel nuggets there as well.
+All is not well though. Cursor positioning needs improving and performance needs to be tweaked.</p>
+</div>
+<div class="paragraph">
+<p>What does the future hold ? Well I&#8217;m planning on implementing the missing features and I&#8217;m sure I&#8217;ll add a few more
+useful nuggets too. The most important thing I aim to provide is a clear pluggable way of extending and modifying features
+to allow you to customize parembrace to your liking.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I believe rewrite-cljs already has paid off multiple times. I can&#8217;t thank <a href="https://github.com/xsc">xsc</a> enough
+for writing <a href="https://github.com/xsc/rewrite-clj/">rewrite-clj</a>. It&#8217;s really awesome and without it I&#8217;d still be fumbling around with parsers and what-not.
+I can reuse rewrite-cljs from both parembrace and clj-light-refactor. In the latter not only can I start implementing cool code refactoring features, but
+I can do things like structurally traverse and  rewrite the project.clj file. I can&#8217;t wait to get started&#8230; well I have to wait because I&#8217;m moving to a new house, but after that&#8230;</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+If you are a Light Table user, do take <a href="https://github.com/rundis/parembrace">Parembrace</a> for a spin and let me know what you think !
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div></p>
   			<a href="/blog/2015/lt_react.html"><h1>Implementing a Clojure ns-browser in Light Table with React</h1></a>
   			<p>22 April 2015</p>
         <p><em>Tags: </em>
