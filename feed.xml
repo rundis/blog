@@ -6,9 +6,383 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 12 Jun 2015 16:18:45 +0200</pubDate>
-    <lastBuildDate>Fri, 12 Jun 2015 16:18:45 +0200</lastBuildDate>
+    <pubDate>Tue, 4 Aug 2015 23:45:02 +0200</pubDate>
+    <lastBuildDate>Tue, 4 Aug 2015 23:45:02 +0200</lastBuildDate>
 
+    <item>
+      <title>ClojureScript - Performance tuning rewrite-cljs</title>
+      <link>http://rundis.github.io/blog/2015/clojurescript_performance_tuning.html</link>
+      <pubDate>Tue, 4 Aug 2015 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">2015/clojurescript_performance_tuning.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;How would you go about performance tuning a ClojureScript Library or a ClojureScript application ? Before I started
+my summer holidays I started to investigate how I should go about doing that for one of my ClojureScript libraries: &lt;a href=&quot;https://github.com/rundis/rewrite-cljs&quot;&gt;rewrite-cljs&lt;/a&gt;
+I didn&amp;#8217;t find a whole lot of info from my trusted old friend Google, so I thought I&amp;#8217;d share some bits and bobs I&amp;#8217;ve learned so far.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;ve previously blogged about how I used rewrite-cljs for two of my Light Table plugins; &lt;a href=&quot;https://github.com/rundis/clj-light-refactor/&quot;&gt;clj-light-refactor&lt;/a&gt; and  &lt;a href=&quot;https://github.com/rundis/parembrace&quot;&gt;parembrace&lt;/a&gt;
+The library is a ClojureScript port of the awesome &lt;a href=&quot;https://github.com/xsc/rewrite-clj/&quot;&gt;rewrite-clj&lt;/a&gt; library by Yannick Scherer.
+A lot of the porting was just plain sailing with a few adaptations here and there. It&amp;#8217;s truly great that Clojure and ClojureScript are so much aligned.
+After the port I also made some changes and adaptations that I knew I needed in my plugins and that I though might be useful for other use cases as well.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;However one limitation that seriously nagged me was that rewrite-cljs wasn&amp;#8217;t performant enough to be able to handle
+rewriting of medium to large sized files (as strings currently mind you) from Light Table.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+One of my sample ClojureScript files (about 600 lines / 20K characters) took about 250 ms to parse and build a zip for before
+I started looking at performance tuning. At the time of writing this blog post it&amp;#8217;s down to 50-60 ms. Pretty good, but
+still need shave it down a quite a bit further to do some of the things I have in mind !
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_opposing_forces&quot;&gt;Opposing forces&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I guess I could have started blindly changing a lot of the implementation to be closer to native JavaScript. However for
+several reasons I&amp;#8217;d like to keep it as Clojur&amp;#8217;y as possible and ideally I don&amp;#8217;t want to stray to far away from it origins (rewrite-clj).
+How to balance and where to begin ?&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_tools&quot;&gt;Tools&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To get some idea of where to bottlenecks were and what/if any of my optimzations had any effect I really need some tools
+to help me out. Fortunately Light Table ships with the chrome developer tools. The profiler is quite helpful, in addition
+I used a small benchmark script to see how it perfomed over a slightly longer timespan.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_tuning&quot;&gt;Tuning&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_first_quickwin_moving_away_from_multimethods&quot;&gt;First quickwin - Moving away from multimethods&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Before I profiled anything I came accross a google group discussion about multimethod performance vs protocols for
+dispatching. The &lt;a href=&quot;https://github.com/xsc/rewrite-clj/blob/master/src/rewrite_clj/parser/core.clj&quot;&gt;core&lt;/a&gt; of the parser in rewrite-cljs was pretty much a 1-1 port of the one from rewrite-clj.
+I decided to try to just dispatch using a cond or case.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn- dispatch
+  [c]
+  (cond (nil? c)                        parse-eof
+        (identical? c *delimiter*)      reader/ignore
+        (reader/whitespace? c)          parse-whitespace
+        (identical? c \^)               parse-meta
+        (identical? c \#)               parse-sharp
+        (identical? c \()               parse-list
+        (identical? c \[)               parse-vector
+        (identical? c \{)               parse-map
+        (identical? c \})               parse-unmatched
+        (identical? c \])               parse-unmatched
+        (identical? c \))               parse-unmatched
+        (identical? c \~)               parse-unquote
+        (identical? c \&apos;)               parse-quote
+        (identical? c \`)               parse-syntax-quote
+        (identical? c \;)               parse-comment
+        (identical? c \@)               parse-deref
+        (identical? c \&quot;)               parse-string
+        (identical? c \:)               parse-keyword
+        :else                           parse-token))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The result was that I shaved of somewhere between 30-50 ms. I can&amp;#8217;t remember the exact number, but it was substantial.
+So eventhough multimethods are nice, for this use case I don&amp;#8217;t think they added that much value and the performance overhead (due to indirection?) just wasn&amp;#8217;t justified.
+I did tried using both a map and case for char tests, but found that a simple cond outperformed both (on my machine running on an old ClojureScript version in Light Table)&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_some_random_pickings&quot;&gt;Some random pickings&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;When working with Light Table I&amp;#8217;ve previously found that in some cases I could gain some nice performance improvements
+by changing from clojure datastructures to native js.
+I&amp;#8217;ll show a couple of samples&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_checking_for_token_boundaries&quot;&gt;Checking for token boundaries&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn boundary?
+  [c]
+  &quot;Check whether a given char is a token boundary.&quot;
+  (contains?
+    #{\&quot; \: \; \&apos; \@ \^ \` \~
+      \( \) \[ \] \{ \} \\ nil}
+    c))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;was rewritten to:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(def js-boundaries                                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  #js [\&quot; \: \; \&apos; \@ \^ \` \~
+      \( \) \[ \] \{ \} \\ nil])
+
+
+(defn boundary?
+  [c]
+  &quot;Check whether a given char is a token boundary.&quot;
+  (&amp;lt; -1 (.indexOf js-boundaries c)))                   &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Figured the list of boundaries only needs to be defined once&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Using JavaScript Array.indexOf proved to be quite efficient. More so than a ClojureScript map lookup in this case.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I used a similar approach for other kinds of boolean tests for characters (whitespace?, linebreak? etc).&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_testing_characters_for_equality&quot;&gt;Testing characters for equality&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Tests like:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(when (= c &quot;\&quot;)
+  ... )&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Performs better using identical? (same object):&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(when (identical? c &quot;(&quot;)
+  ... )&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_still_far_from_satisfied_swanodette_to_the_rescue&quot;&gt;Still far from satisfied - swanodette to the rescue&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In the end of june/beginning of july I noticed that Davin Nolen was tweeting about promising performance improvments
+with regards to cljs-bootstrap. This made me curious and eventually I found some very inspiring commits on a cljs-bootstrap branch of a fork of tools.reader.
+Hey, surely this guy nows a thing or two about what really might help and still keep the code nice and clojury.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So I just started picking from relevant commits on this &lt;a href=&quot;https://github.com/swannodette/tools.reader/commits/cljs-bootstrap&quot;&gt;branch&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A few highlights:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_avoiding_protocol_indirection&quot;&gt;Avoiding protocol indirection&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn peek
+  &quot;Peek next char.&quot;
+  [^not-native reader]     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  (r/peek-char reader))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;not-native is a type hint that inline calls directly to protocol implementations&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_type_hinting&quot;&gt;Type hinting&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn ^boolean whitespace?   &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  [c]
+  (r/whitespace? c))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The boolean type hint allows/helps the closure compiler to perform optimizations&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_satisfies_implements&quot;&gt;satisfies? &amp;#8658; implements?&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Changing:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(if (satisfies? IWithMeta o)
+  ...)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(if (implements? IWithMeta o)
+  ...)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Helps quite a bit.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_2x_performance_increase_what_now&quot;&gt;2X+ performance increase, what now ?&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We&amp;#8217;ve achieve quite a bit, but it&amp;#8217;s still between 100-120 ms for my sample. I need more. More I tell you !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So back to the profiler to try and pick out some suspicious candidates.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2015/lt_profiler.png&quot; alt=&quot;lt profiler&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;I made various micro-improvements like changing&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;str&lt;/strong&gt; to &lt;strong&gt;goog.stringbuffer&lt;/strong&gt; for concatinating strings&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;aget&lt;/strong&gt; to &lt;strong&gt;.charAt&lt;/strong&gt; for getting a character at a position in a string&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Stringbuffer initialization to occur once and using clear inside functions (felt a bit like global variables (: )&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;count&lt;/strong&gt; to &lt;strong&gt;.length&lt;/strong&gt; for string length&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;etc&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;It all helped a bit, steadily shaving of a millisecond here and a millisecond there (even had some setbacks along the way !).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_do_s_and_don_ts&quot;&gt;Do&amp;#8217;s and Don&amp;#8217;ts&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A couple of function showed a lot of own-time in the profiler. I really couldn&amp;#8217;t figure out why though. They didn&amp;#8217;t
+seem to do much, but delegate to other functions.
+I tried a range of things until I stumbled accross this &lt;a href=&quot;http://stuartsierra.com/2015/06/01/clojure-donts-optional-arguments-with-varargs&quot;&gt;blogpost&lt;/a&gt; by Stuart Sierra.
+Both of the methods was using the following pattern for handling a single var-arg:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn token-node
+  &quot;Create node for an unspecified EDN token.&quot;
+  [value &amp;amp; [string-value]]                       &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  (-&amp;gt;TokenNode
+    value
+    (or string-value (pr-str value))))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;amp; [string-value]&lt;/code&gt; destructures the sequence of arguments&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This constructor method was called a lot. So not only was this perhaps not ideal stylewise, but it turns out
+it has some pretty bad performance characteristics as well. (Not knowing the details, I can only speculate on why&amp;#8230;)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So I changed the above code to:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defn token-node
+  &quot;Create node for an unspecified EDN token.&quot;
+  ([value]
+   (token-node value (pr-str value)))
+  ([value string-value]
+  (-&amp;gt;TokenNode value string-value)))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Yay! Changing two frequently called functions to use method overloading had a huge impact on performance.
+Not only that, but I noticed that the garbage collector was using substantially less time as well.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Performance tuning is fun, but really hard. Not knowing anything about the inner wokings of ClojureScript and the closure compiler doesn&amp;#8217;t help.
+There wasn&amp;#8217;t much to be found in terms of help using my normal search foo, and the book &quot;Performance tuning ClojureScript&quot; hasn&amp;#8217;t been seen quite yet.
+That beeing said, this is probably the first time in over a year and half playing/working with ClojureScript that I&amp;#8217;ve even thought about performance issues with ClojureScript. Mostly it&amp;#8217;s a non issue for
+my use cases.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Quite a few of the tweaks didn&amp;#8217;t really make the code that much less idiomatic, however there were a couple of cases where the host language
+seeps out.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Feel free to share you experiences with performance tuning ClojureScript. I&amp;#8217;d really like to learn more about it
+and hopefully make some additional shavings in rewrite-cljs !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;a href=&quot;https://github.com/rundis/rewrite-cljs&quot;&gt;rewrite-cljs&lt;/a&gt; 0.3.1 was just released. Snappier than ever &lt;span class=&quot;icon green&quot;&gt;&lt;i class=&quot;icon-smile-o&quot;&gt;&lt;/i&gt;&lt;/span&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Showcasing rewrite-cljs - Parembrace for Light Table</title>
       <link>http://rundis.github.io/blog/2015/parembrace.html</link>

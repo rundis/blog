@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>ClojureScript - Performance tuning rewrite-cljs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/blog/css/prettify.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse bs-navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/blog/archive.html">Archive</a></li>
+                <li><a href="/blog/about.html">About</a></li>
+                <li><a href="/blog/feed.xml">Subscribe</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="https://github.com/rundis/blog"><i class="fa fa-lg fa-github"></i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="container">
+
+	<div class="page-header">
+		<h1>ClojureScript - Performance tuning rewrite-cljs</h1>
+	</div>
+
+	<p><em>04 August 2015</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/clojure.html">clojure</a>
+  </em>
+    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+  </em>
+    <a href="/blog/tags/javascript.html"> javascript</a>
+  </em>
+    <a href="/blog/tags/performance.html"> performance</a>
+  </p>
+  <a href="https://twitter.com/share" class="twitter-share-button"
+    data-url="http://rundis.github.io/blog/2015/clojurescript_performance_tuning.html"
+    data-via="mrundberget"
+    data-lang="en">Tweet</a>
+  <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+	<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>How would you go about performance tuning a ClojureScript Library or a ClojureScript application ? Before I started
+my summer holidays I started to investigate how I should go about doing that for one of my ClojureScript libraries: <a href="https://github.com/rundis/rewrite-cljs">rewrite-cljs</a>
+I didn&#8217;t find a whole lot of info from my trusted old friend Google, so I thought I&#8217;d share some bits and bobs I&#8217;ve learned so far.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I&#8217;ve previously blogged about how I used rewrite-cljs for two of my Light Table plugins; <a href="https://github.com/rundis/clj-light-refactor/">clj-light-refactor</a> and  <a href="https://github.com/rundis/parembrace">parembrace</a>
+The library is a ClojureScript port of the awesome <a href="https://github.com/xsc/rewrite-clj/">rewrite-clj</a> library by Yannick Scherer.
+A lot of the porting was just plain sailing with a few adaptations here and there. It&#8217;s truly great that Clojure and ClojureScript are so much aligned.
+After the port I also made some changes and adaptations that I knew I needed in my plugins and that I though might be useful for other use cases as well.</p>
+</div>
+<div class="paragraph">
+<p>However one limitation that seriously nagged me was that rewrite-cljs wasn&#8217;t performant enough to be able to handle
+rewriting of medium to large sized files (as strings currently mind you) from Light Table.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-note" title="Note"></i>
+</td>
+<td class="content">
+One of my sample ClojureScript files (about 600 lines / 20K characters) took about 250 ms to parse and build a zip for before
+I started looking at performance tuning. At the time of writing this blog post it&#8217;s down to 50-60 ms. Pretty good, but
+still need shave it down a quite a bit further to do some of the things I have in mind !
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_opposing_forces">Opposing forces</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I guess I could have started blindly changing a lot of the implementation to be closer to native JavaScript. However for
+several reasons I&#8217;d like to keep it as Clojur&#8217;y as possible and ideally I don&#8217;t want to stray to far away from it origins (rewrite-clj).
+How to balance and where to begin ?</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_tools">Tools</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To get some idea of where to bottlenecks were and what/if any of my optimzations had any effect I really need some tools
+to help me out. Fortunately Light Table ships with the chrome developer tools. The profiler is quite helpful, in addition
+I used a small benchmark script to see how it perfomed over a slightly longer timespan.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_tuning">Tuning</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_first_quickwin_moving_away_from_multimethods">First quickwin - Moving away from multimethods</h3>
+<div class="paragraph">
+<p>Before I profiled anything I came accross a google group discussion about multimethod performance vs protocols for
+dispatching. The <a href="https://github.com/xsc/rewrite-clj/blob/master/src/rewrite_clj/parser/core.clj">core</a> of the parser in rewrite-cljs was pretty much a 1-1 port of the one from rewrite-clj.
+I decided to try to just dispatch using a cond or case.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn- dispatch
+  [c]
+  (cond (nil? c)                        parse-eof
+        (identical? c *delimiter*)      reader/ignore
+        (reader/whitespace? c)          parse-whitespace
+        (identical? c \^)               parse-meta
+        (identical? c \#)               parse-sharp
+        (identical? c \()               parse-list
+        (identical? c \[)               parse-vector
+        (identical? c \{)               parse-map
+        (identical? c \})               parse-unmatched
+        (identical? c \])               parse-unmatched
+        (identical? c \))               parse-unmatched
+        (identical? c \~)               parse-unquote
+        (identical? c \')               parse-quote
+        (identical? c \`)               parse-syntax-quote
+        (identical? c \;)               parse-comment
+        (identical? c \@)               parse-deref
+        (identical? c \")               parse-string
+        (identical? c \:)               parse-keyword
+        :else                           parse-token))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The result was that I shaved of somewhere between 30-50 ms. I can&#8217;t remember the exact number, but it was substantial.
+So eventhough multimethods are nice, for this use case I don&#8217;t think they added that much value and the performance overhead (due to indirection?) just wasn&#8217;t justified.
+I did tried using both a map and case for char tests, but found that a simple cond outperformed both (on my machine running on an old ClojureScript version in Light Table)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_some_random_pickings">Some random pickings</h3>
+<div class="paragraph">
+<p>When working with Light Table I&#8217;ve previously found that in some cases I could gain some nice performance improvements
+by changing from clojure datastructures to native js.
+I&#8217;ll show a couple of samples</p>
+</div>
+<div class="sect3">
+<h4 id="_checking_for_token_boundaries">Checking for token boundaries</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn boundary?
+  [c]
+  "Check whether a given char is a token boundary."
+  (contains?
+    #{\" \: \; \' \@ \^ \` \~
+      \( \) \[ \] \{ \} \\ nil}
+    c))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>was rewritten to:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(def js-boundaries                                     <i class="conum" data-value="1"></i><b>(1)</b>
+  #js [\" \: \; \' \@ \^ \` \~
+      \( \) \[ \] \{ \} \\ nil])
+
+
+(defn boundary?
+  [c]
+  "Check whether a given char is a token boundary."
+  (&lt; -1 (.indexOf js-boundaries c)))                   <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Figured the list of boundaries only needs to be defined once</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Using JavaScript Array.indexOf proved to be quite efficient. More so than a ClojureScript map lookup in this case.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>I used a similar approach for other kinds of boolean tests for characters (whitespace?, linebreak? etc).</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_testing_characters_for_equality">Testing characters for equality</h4>
+<div class="paragraph">
+<p>Tests like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(when (= c "\")
+  ... )</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Performs better using identical? (same object):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(when (identical? c "(")
+  ... )</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_still_far_from_satisfied_swanodette_to_the_rescue">Still far from satisfied - swanodette to the rescue</h3>
+<div class="paragraph">
+<p>In the end of june/beginning of july I noticed that Davin Nolen was tweeting about promising performance improvments
+with regards to cljs-bootstrap. This made me curious and eventually I found some very inspiring commits on a cljs-bootstrap branch of a fork of tools.reader.
+Hey, surely this guy nows a thing or two about what really might help and still keep the code nice and clojury.</p>
+</div>
+<div class="paragraph">
+<p>So I just started picking from relevant commits on this <a href="https://github.com/swannodette/tools.reader/commits/cljs-bootstrap">branch</a></p>
+</div>
+<div class="paragraph">
+<p>A few highlights:</p>
+</div>
+<div class="sect3">
+<h4 id="_avoiding_protocol_indirection">Avoiding protocol indirection</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn peek
+  "Peek next char."
+  [^not-native reader]     <i class="conum" data-value="1"></i><b>(1)</b>
+  (r/peek-char reader))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>not-native is a type hint that inline calls directly to protocol implementations</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_type_hinting">Type hinting</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn ^boolean whitespace?   <i class="conum" data-value="1"></i><b>(1)</b>
+  [c]
+  (r/whitespace? c))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The boolean type hint allows/helps the closure compiler to perform optimizations</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_satisfies_implements">satisfies? &#8658; implements?</h4>
+<div class="paragraph">
+<p>Changing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(if (satisfies? IWithMeta o)
+  ...)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(if (implements? IWithMeta o)
+  ...)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Helps quite a bit.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2x_performance_increase_what_now">2X+ performance increase, what now ?</h3>
+<div class="paragraph">
+<p>We&#8217;ve achieve quite a bit, but it&#8217;s still between 100-120 ms for my sample. I need more. More I tell you !</p>
+</div>
+<div class="paragraph">
+<p>So back to the profiler to try and pick out some suspicious candidates.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/blog/2015/lt_profiler.png" alt="lt profiler">
+</div>
+</div>
+<div class="ulist">
+<div class="title">I made various micro-improvements like changing</div>
+<ul>
+<li>
+<p><strong>str</strong> to <strong>goog.stringbuffer</strong> for concatinating strings</p>
+</li>
+<li>
+<p><strong>aget</strong> to <strong>.charAt</strong> for getting a character at a position in a string</p>
+</li>
+<li>
+<p>Stringbuffer initialization to occur once and using clear inside functions (felt a bit like global variables (: )</p>
+</li>
+<li>
+<p><strong>count</strong> to <strong>.length</strong> for string length</p>
+</li>
+<li>
+<p>etc</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>It all helped a bit, steadily shaving of a millisecond here and a millisecond there (even had some setbacks along the way !).</p>
+</div>
+<div class="sect3">
+<h4 id="_do_s_and_don_ts">Do&#8217;s and Don&#8217;ts</h4>
+<div class="paragraph">
+<p>A couple of function showed a lot of own-time in the profiler. I really couldn&#8217;t figure out why though. They didn&#8217;t
+seem to do much, but delegate to other functions.
+I tried a range of things until I stumbled accross this <a href="http://stuartsierra.com/2015/06/01/clojure-donts-optional-arguments-with-varargs">blogpost</a> by Stuart Sierra.
+Both of the methods was using the following pattern for handling a single var-arg:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn token-node
+  "Create node for an unspecified EDN token."
+  [value &amp; [string-value]]                       <i class="conum" data-value="1"></i><b>(1)</b>
+  (-&gt;TokenNode
+    value
+    (or string-value (pr-str value))))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>&amp; [string-value]</code> destructures the sequence of arguments</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This constructor method was called a lot. So not only was this perhaps not ideal stylewise, but it turns out
+it has some pretty bad performance characteristics as well. (Not knowing the details, I can only speculate on why&#8230;)</p>
+</div>
+<div class="paragraph">
+<p>So I changed the above code to:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint clojure language-clojure"><code>(defn token-node
+  "Create node for an unspecified EDN token."
+  ([value]
+   (token-node value (pr-str value)))
+  ([value string-value]
+  (-&gt;TokenNode value string-value)))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Yay! Changing two frequently called functions to use method overloading had a huge impact on performance.
+Not only that, but I noticed that the garbage collector was using substantially less time as well.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Performance tuning is fun, but really hard. Not knowing anything about the inner wokings of ClojureScript and the closure compiler doesn&#8217;t help.
+There wasn&#8217;t much to be found in terms of help using my normal search foo, and the book "Performance tuning ClojureScript" hasn&#8217;t been seen quite yet.
+That beeing said, this is probably the first time in over a year and half playing/working with ClojureScript that I&#8217;ve even thought about performance issues with ClojureScript. Mostly it&#8217;s a non issue for
+my use cases.</p>
+</div>
+<div class="paragraph">
+<p>Quite a few of the tweaks didn&#8217;t really make the code that much less idiomatic, however there were a couple of cases where the host language
+seeps out.</p>
+</div>
+<div class="paragraph">
+<p>Feel free to share you experiences with performance tuning ClojureScript. I&#8217;d really like to learn more about it
+and hopefully make some additional shavings in rewrite-cljs !</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<a href="https://github.com/rundis/rewrite-cljs">rewrite-cljs</a> 0.3.1 was just released. Snappier than ever <span class="icon green"><i class="icon-smile-o"></i></span>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div></p>
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'clojurescript_performance';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 Magnus Rundberget
+          <a class="pull-right btn btn-xs" href="https://twitter.com/mrundberget"><i class="fa fa-twitter"></i></a>
+          <a class="pull-right btn btn-xs" href="https://github.com/rundis"><i class="fa fa-github"></i></a>
+          <a class="pull-right btn btn-xs" href="http://no.linkedin.com/in/mrundberget"><i class="fa fa-linkedin"></i></a>
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+  </body>
+</html>
