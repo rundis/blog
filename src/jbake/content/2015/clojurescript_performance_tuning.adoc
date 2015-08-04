@@ -77,7 +77,7 @@ I decided to try to just dispatch using a cond or case.
 
 The result was that I shaved of somewhere between 30-50 ms. I can't remember the exact number, but it was substantial.
 So eventhough multimethods are nice, for this use case I don't think they added that much value and the performance overhead (due to indirection?) just wasn't justified.
-I did tried using both a map and case for char tests, but found that a simple cond outperformed both (on my machine running on an old ClojureScript version in Light Table)
+I did try using both a map and case for char tests, but found that a simple cond outperformed both (on my machine running on an old ClojureScript version in Light Table)
 
 
 
