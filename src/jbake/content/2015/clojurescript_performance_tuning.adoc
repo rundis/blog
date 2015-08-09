@@ -164,7 +164,9 @@ A few highlights:
   [c]
   (r/whitespace? c))
 ----
-<1> The boolean type hint allows/helps the closure compiler to perform optimizations
+<1> The boolean type hint allows the  cljs compiler to avoid emitting a call to cljs.core/truth_
+. The type hint is really for true boolean values (true/false), but if we know for sure that the value
+isn't one of `0, "" (empty-string) and NaN` we can coerce the compiler to do our bidding !
 
 
 ==== satisfies? => implements?
