@@ -307,7 +307,8 @@ Hey, surely this guy nows a thing or two about what really might help and still 
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The boolean type hint allows the  cljs compiler to avoid emitting a call to cljs.core/truth_</td>
+<td>The boolean type hint allows the  cljs compiler to avoid emitting a call to <code>cljs.core/truth_</code>. The type hint is really for true boolean values (true/false), but if we know for sure that the value
+isn&#8217;t one of <code>0, "" (empty-string) and NaN</code> we can coerce the compiler to do our bidding !</td>
 </tr>
 </table>
 </div>
