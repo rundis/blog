@@ -91,7 +91,7 @@ routes in the sample application.
 
 [source,clojure]
 ----
-defroutes public-routes
+(defroutes public-routes
   (route/resources "/")
   (GET "/" []       show-index)
   (GET "/login" []  sec/show-login)

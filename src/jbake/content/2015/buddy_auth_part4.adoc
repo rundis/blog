@@ -239,7 +239,7 @@ sure we pass on the token.
         resp (get-from-catalog "http://localhost:6003/products" auth-token)]
     (:body resp)))
 ----
-<1> We make sure we pass the token in the __Authoriazation__ header with the given token name
+<1> We make sure we pass the token in the __Authorization__ header with the given token name
 <2> The auth-token for the logged in user is found under the session key for the request
 
 The rest is just a matter of hooking up the appropriate route and view. I'll leave that part up to you !
