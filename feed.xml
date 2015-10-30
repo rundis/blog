@@ -6,9 +6,59 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sun, 9 Aug 2015 13:59:01 +0200</pubDate>
-    <lastBuildDate>Sun, 9 Aug 2015 13:59:01 +0200</lastBuildDate>
+    <pubDate>Fri, 30 Oct 2015 01:59:37 +0100</pubDate>
+    <lastBuildDate>Fri, 30 Oct 2015 01:59:37 +0100</lastBuildDate>
 
+    <item>
+      <title>Elm plugin for Light Table</title>
+      <link>http://rundis.github.io/blog/2015/elm_light.html</link>
+      <pubDate>Fri, 30 Oct 2015 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2015/elm_light.html</guid>
+      	<description>
+	&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_background&quot;&gt;Background&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;ve just started playing around a little bit with &lt;a href=&quot;http://elm-lang.org/&quot;&gt;elm&lt;/a&gt;.
+This weekend I&amp;#8217;m going to &lt;a href=&quot;http://www.codemesh.io/&quot;&gt;codemesh&lt;/a&gt; where I&amp;#8217;ll be attending an Elm workshop
+with the author of Elm, Evan Czaplicki.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To ensure I have an editor I&amp;#8217;m familiar with and to get me started a little, I figured I&amp;#8217;d create an Elm language plugin
+for Light Table. However lately I&amp;#8217;ve been a little busy helping out  getting &lt;a href=&quot;https://github.com/LightTable/LightTable&quot;&gt;https://github.com/LightTable/LightTable&lt;/a&gt; version 0.8
+released. Last weekend we got an 0.8 alpha out. I needed some of the features from Electron. So now with Light Table using
+Electron under the hoods I could finally complete an intial plugin release. It&amp;#8217;s rough, but it&amp;#8217;s an ok start I suppose !&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_demo&quot;&gt;Demo&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://youtu.be/B_eZw_GcM-4&quot;&gt;ScreenCast demo&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/B_eZw_GcM-4&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_the_plugin&quot;&gt;The plugin&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+You can find the plugin repo on github &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;https://github.com/rundis/elm-light&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>ClojureScript - Performance tuning rewrite-cljs</title>
       <link>http://rundis.github.io/blog/2015/clojurescript_performance_tuning.html</link>
