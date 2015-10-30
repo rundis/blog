@@ -1,0 +1,37 @@
+= Elm plugin for Light Table
+Magnus Rundberget
+2015-10-30
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: elm, clojurescript, lighttable
+:imagesdir: /blog/2015/
+:icons: font
+:id: elm_light
+
+
+== Background
+I've just started playing around a little bit with http://elm-lang.org/[elm].
+This weekend I'm going to http://www.codemesh.io/[codemesh] where I'll be attending an Elm workshop
+with the author of Elm, Evan Czaplicki.
+
+To ensure I have an editor I'm familiar with and to get me started a little, I figured I'd create an Elm language plugin
+for Light Table. However lately I've been a little busy helping out  getting https://github.com/LightTable/LightTable version 0.8
+released. Last weekend we got an 0.8 alpha out. I needed some of the features from Electron. So now with Light Table using
+Electron under the hoods I could finally complete an intial plugin release. It's rough, but it's an ok start I suppose !
+
+
+
+== Demo
+https://youtu.be/B_eZw_GcM-4[ScreenCast demo]
+
+++++
+<iframe width="420" height="315" src="https://www.youtube.com/embed/B_eZw_GcM-4" frameborder="0" allowfullscreen></iframe>
+++++
+
+
+== The plugin
+
+NOTE: You can find the plugin repo on github https://github.com/rundis/elm-light
+
+
+
