@@ -13,17 +13,17 @@ Magnus Rundberget
 
 After taken a keen interest to Elm lately I figured I needed to solve a real problem. Something a bit fun and achievable in a couple of evenings/nights.
 Not being awfully creative, piggiebacking on other peoples' work is sometimes a good option.
-In this post I'll take through some of my steps in porting/re-implementing https://github.com/cjohansen/react-sweeper (JavaScript and React) to an Elm implementation.
+In this post I'll take you through some of my steps in porting/re-implementing https://github.com/cjohansen/react-sweeper (JavaScript and React) to an Elm implementation.
 
 
 -- Insert game picture here !
 
-TIP: If you'd like to have a look at the complete implementation of the game you'll check out https://github.com/rundis/elm-sweeper.
+TIP: If you'd like to have a look at the complete implementation of the game, check out https://github.com/rundis/elm-sweeper.
 There you'll find instructions on how to get it running too.
 
 
 == A little background
-Right ! So I've taken an interest in http://elm-lang.org/[Elm] lately.  If you've read any of my previous posts you might have
+Right! So I've taken an interest in http://elm-lang.org/[Elm] lately.  If you've read any of my previous posts you might have
 noticed that I'm quite fond of Clojure and ClojureScript. I still very much am and I have tons to learn there still. But I wanted  to dip my toes
 into a strongly typed functional language. Elm seems quite approachable and I guess probably the talk https://www.youtube.com/watch?v=oYk8CKH7OhE["Let's be mainstream"]
 made my mind up to give it a go. After creating a language plugin for Light Table: http://rundis.github.io/blog/2015/elm_light.html[elm-light]
@@ -34,7 +34,7 @@ That seemed like a sufficiently interesting problem and I could shamelessly stea
 
 
 == First steps - The Game Logic
-So the obvious place to start was the game logic. I had the option of trying to set up https://github.com/deadfoxygrandpa/Elm-Test [Elm-Test]
+So the obvious place to start was the game logic. I had the option of trying to set up https://github.com/deadfoxygrandpa/Elm-Test[Elm-Test]
 to use a test-driven inspired approach. But heck I figured I had to try to put those types to the test, so I went for
 an all out repl driven approach. That gave me a chance to experience the good and bad with the https://github.com/rundis/elm-light#56-editor-repl[repl integration] of my own Light Table Elm plugin too.
 
@@ -74,12 +74,12 @@ the game logic later on.
 
 NOTE: What's that `Maybe` thing ? If someone told me it's a https://en.wikipedia.org/wiki/Monad_(functional_programming)[Monad] I wouldn't be any wiser. I think of it
 as a handy way of describing that something may have a value. A nifty way to eliminate the use of null basically.
-It also forces you to explicit about handling the fact it may not have a value.
-You won't get null pointer errors in a Elm program ! (or `Undefined is not a function`).
+It also forces you to be explicit about handling the fact that it may not have a value.
+You won't get null pointer errors in an Elm program! (nor `Undefined is not a function`).
 
 
 === Finding neighbours of a tile
-When revealing tiles in minesweeper you also reveal any adjacent tiles that isn't next to any mine.
+When revealing tiles in minesweeper you also reveal any adjacent tiles that aren't next to a mine.
 In addition you display the threat count (how many mines are adjacent to a tile) for tiles next to those
 you just revealed. So we need a way to find the neighbouring tiles of a given tile.
 
@@ -120,7 +120,7 @@ function neighbours(game, tile) {
 <1> Helper function to determine if a given tile is on the west edge of the board
 <2> Helper function to determine if a given tile is on the east edge of the board
 <3> Returns the the tile north-west of a given tile. Null if none exists to the north-west
-<4> Keep is a helper function that filters out null values and then maps over the remaining. So the function
+<4> Keep is a helper function that maps over the collection and filters out any resulting `null`s. So the function
 iterates all directions (invoking their respective function) and returns all possible tiles
 neighbouring the given tile.
 
@@ -212,7 +212,7 @@ function addThreatCount(game, tile) {                                           
 }
 ----
 
-<1> Gets the number of neighbouring tiles that are mines for a given tile. (prop is a helper function for retrieving a name property on a js object)
+<1> Gets the number of neighbouring tiles that are mines for a given tile. (prop is a helper function for retrieving a named property on a js object)
 <2> Set the threatCount property on a given tile in the game
 
 
@@ -238,9 +238,9 @@ I opted for a two in one function.
 
 [NOTE]
 ====
-.For mine count both implementations are potentially flawed.
-- For JavaScript you might get 0 for a not existing tile, which isn't to bad. But maybe you'll get
-a null pointer somewhere deeper down the call stack. To be sure you have to crawl through all function calls function calls this function makes and
+.For mine count, both implementations are potentially flawed.
+- For JavaScript you might get 0 for a non-existent tile, which isn't too bad. But maybe you'll get
+a null pointer somewhere deeper down the call stack. To be sure you have to crawl through all function calls this function makes and
 apply your JavaScript foo to know things like null < 1 is obviously true, but null < 0 is false. ... and so on.
 - The elm implementation won't have any null pointer exceptions, but really it should return Maybe Int to guard
 against giving 0 back for a Nothing tile !
@@ -293,7 +293,7 @@ revealAdjacentSafeTiles game tileId =
 ==== A brief comparison
 The most noteworthy difference is really the explicit handling of an illegal tile index in the Elm implementation.
 If I didn't have the JavaScript code to look at, I'm guessing the difference would have been more noticable. Not necessarily for the better.
-We'll never now.
+We'll never know.
 
 
 
@@ -348,8 +348,8 @@ export function createUI(channel) {                                            /
 }
 ----
 <1> This function returns a function for creating the react component tree for the game. It takes a channel
-param, which is an eventemmiter. So when components need to notify the "controller" about user actions they can just emit messages to this channel
-A neat way to avoid using callbacks !
+param, which is an event emitter. So when components need to notify the "controller" about user actions they can just emit messages to this channel
+A neat way to avoid using callbacks!
 <2> createComponent is a handy helper function that avoids some react boiler plate and provides an optimized shouldComponentUpdate function for each react component used.
 <3> When a user clicks on a tile a reveal message with the tile id is emitted
 <4> The game also supports undo previous move :)
@@ -465,7 +465,7 @@ channel.on('reveal', (tile) => {                                            // <
 Undo just gets the previous game state and rerenders. Nice and simple
 <3> Event listener for reveal messages. It invokes reveal tile, adds to history (and potentially ends the game).
 
-This is all very neat and tidy and works so great because the game state is managed one place and is passed through
+This is all very neat and tidy and works so great because the game state is managed in one place and is passed through
  the ui component tree as an immutable value. The fact that the state is immutable also makes the undo implementation a breeze.
  I really like this approach !
 
@@ -504,7 +504,7 @@ main =                                                           // <5>
 <1> Type describing the actions the game supports. Currently just revealing tiles, and you can see that
 we also specify that the RevealTile action expects an Int paramater. That would be the tile id.
 <2> The init function provides the initial state for our application. `createGame` is a helper function for creating
-a game with x cols and y rows. The 3.rd param is a seed for randomizing tiles. We'll return to that seed thing in the next chapter !
+a game with x cols and y rows. The 3.rd param is a seed for randomizing tiles. We'll return to that seed thing in the next chapter!
 <3> Update is the function that handles the actual update of state, or rather the transformation to the next state
 based on some action. It's quite simple in this case, just reveal a given tile and return the updated game
 <4> No point in revealing more tiles when the game is already over :)
@@ -515,9 +515,8 @@ based on some action. It's quite simple in this case, just reveal a given tile a
 
 
 ==== Trouble in paradise, we get the same board every time
-Do you remember the 3 param to createGame in the previous chapter. That is the initial seed to a to
-a random generator (http://package.elm-lang.org/packages/elm-lang/core/2.1.0/Random[Random]) to randomize the
-occurence of mines. The problem is that using the same seed produces the same result. Calling a elm random
+Do you remember the 3rd param to createGame in the previous chapter? That is the initial seed to a random generator (http://package.elm-lang.org/packages/elm-lang/core/2.1.0/Random[Random]) to randomize the
+occurence of mines. The problem is that using the same seed produces the same result. Calling an elm random
 generator will return a new seed, so of course I could/should have stored that and used that for the next game.
 But I still need an initial seed that's different every time I start the app. Current time would be a good candidate
 for an initial seed. But there is no getCurrentTime function in Elm. Why ? It's impure, and Elm doesn't like impure functions.
@@ -573,7 +572,7 @@ This is where we introduce the Time.timestamp function, which wraps our action s
 <7> Unfortunately I couldn't figure out how to get the timestamp passed to the init function. The creation
 step (4) of the mailbox doesn't actually cause the NewGame action to be executed either. So this is a little hack
 that fires off a task to execute the NewGame action. This is run after initialization so when you load the game you'll not see state 0 for the game, but actually state 1.
-If any elm'ers out there reads this, feel free to comment on how this could be done in a more idiomatic fashion !
+If any elm-ers out there reads this, feel free to comment on how this could be done in a more idiomatic fashion!
 
 
 
@@ -585,9 +584,9 @@ very illuminating for deconstructing start-app.
 
 ==== But what about undo ?
 
-There is an elm-package I think would helps us do that quite simply;
+There is an elm-package I think would help us do that quite simply;
 https://github.com/TheSeamau5/elm-undo-redo[elm-undo-redo]. However if you are using https://github.com/elm-lang/elm-reactor[elm-reactor]
-you pretty much get undo-redo and more out of the box. Great for development, but maybe not so much for production !
+you pretty much get undo-redo and more out of the box. Great for development, but maybe not so much for production!
 
 I made a quick (insert link) demo on using the elm-reactor with the debugger demonstrating undo/redo and tracing of our game state changes.
 
