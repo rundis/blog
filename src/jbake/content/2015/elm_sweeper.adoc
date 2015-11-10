@@ -3,7 +3,7 @@ Magnus Rundberget
 2015-11-10
 :jbake-type: post
 :jbake-status: published
-:jbake-tags: JavaScript, React, Elm
+:jbake-tags: javascript, react, elm
 :imagesdir: /blog/2015/
 :icons: font
 :id: elm_sweeper
@@ -56,7 +56,7 @@ type alias Tile               // <1>
 type GameStatus = IN_PROGRESS | SAFE | DEAD
 
 type alias Game =             // <3>
-  { status                    // <4>
+  { status: GameStatus        // <4>
   , rows: Int
   , cols: Int
   , tiles: List Tile}
