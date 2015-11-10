@@ -1,6 +1,6 @@
-= Minesweeper - a brief journey from JavaScript/React to Elm !
+= Minesweeper - a brief journey from JavaScript/React to Elm
 Magnus Rundberget
-2015-11-09
+2015-11-10
 :jbake-type: post
 :jbake-status: published
 :jbake-tags: JavaScript, React, Elm
@@ -217,7 +217,6 @@ function addThreatCount(game, tile) {                                           
 
 <1> Gets the number of neighbouring tiles that are mines for a given tile. (prop is a helper function for retrieving a named property on a js object)
 <2> Set the threatCount property on a given tile in the game
-
 
 
 
