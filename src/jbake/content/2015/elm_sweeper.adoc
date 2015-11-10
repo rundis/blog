@@ -16,7 +16,7 @@ Not being awfully creative, piggiebacking on other peoples' work is sometimes a 
 In this post I'll take you through some of my steps in porting/re-implementing https://github.com/cjohansen/react-sweeper (JavaScript and React) to an Elm implementation.
 
 
--- Insert game picture here !
+image::elm_sweeper.png[]
 
 TIP: If you'd like to have a look at the complete implementation of the game, check out https://github.com/rundis/elm-sweeper.
 There you'll find instructions on how to get it running too.
@@ -38,7 +38,7 @@ So the obvious place to start was the game logic. I had the option of trying to 
 to use a test-driven inspired approach. But heck I figured I had to try to put those types to the test, so I went for
 an all out repl driven approach. That gave me a chance to experience the good and bad with the https://github.com/rundis/elm-light#56-editor-repl[repl integration] of my own Light Table Elm plugin too.
 
---insert picture of editor with module defined with some evals
+image::elm_repl.png[]
 
 
 === Starting with records and type aliases
@@ -61,6 +61,7 @@ type alias Game =             // <3>
   , cols: Int
   , tiles: List Tile}
 ----
+
 
 <1> Type alias for records representing a tile in the game.
 <2> Threat count is a property on a tile that is not set until the game logic allows it.
@@ -191,11 +192,13 @@ really nice overview as well.
 
 TIP: Think of <| as one way to avoid parenthesis. It's actually a backwards function application
 
-NOTE: When testing this function I got my first runtime error in Elm complaining that my case wasn't
+[NOTE]
+====
+When testing this function I got my first runtime error in Elm complaining that my case wasn't
 exhaustive. Rumors has it that the next version of elm might handle this at compile time as well :-)
 
-<insert screenshot showing runtime error from repl>
-
+image::elm_case_error.png[]
+====
 
 === Threat count
 
@@ -588,7 +591,12 @@ There is an elm-package I think would help us do that quite simply;
 https://github.com/TheSeamau5/elm-undo-redo[elm-undo-redo]. However if you are using https://github.com/elm-lang/elm-reactor[elm-reactor]
 you pretty much get undo-redo and more out of the box. Great for development, but maybe not so much for production!
 
-I made a quick (insert link) demo on using the elm-reactor with the debugger demonstrating undo/redo and tracing of our game state changes.
+
+.Debugger demo
+++++
+<iframe width="420" height="315" src="https://www.youtube.com/embed/P3B4ldi1cmc" frameborder="0" allowfullscreen></iframe>
+++++
+
 
 
 == Summary
