@@ -6,9 +6,952 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Fri, 30 Oct 2015 01:59:37 +0100</pubDate>
-    <lastBuildDate>Fri, 30 Oct 2015 01:59:37 +0100</lastBuildDate>
+    <pubDate>Tue, 10 Nov 2015 17:29:05 +0100</pubDate>
+    <lastBuildDate>Tue, 10 Nov 2015 17:29:05 +0100</lastBuildDate>
 
+    <item>
+      <title>Minesweeper - a brief journey from JavaScript/React to Elm</title>
+      <link>http://rundis.github.io/blog/2015/elm_sweeper.html</link>
+      <pubDate>Tue, 10 Nov 2015 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2015/elm_sweeper.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;After taken a keen interest to Elm lately I figured I needed to solve a real problem. Something a bit fun and achievable in a couple of evenings/nights.
+Not being awfully creative, piggiebacking on other peoples&apos; work is sometimes a good option.
+In this post I&amp;#8217;ll take you through some of my steps in porting/re-implementing &lt;a href=&quot;https://github.com/cjohansen/react-sweeper&quot;&gt;https://github.com/cjohansen/react-sweeper&lt;/a&gt; (JavaScript and React) to an Elm implementation.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2015/elm_sweeper.png&quot; alt=&quot;elm sweeper&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+If you&amp;#8217;d like to have a look at the complete implementation of the game, check out &lt;a href=&quot;https://github.com/rundis/elm-sweeper&quot;&gt;https://github.com/rundis/elm-sweeper&lt;/a&gt;.
+There you&amp;#8217;ll find instructions on how to get it running too.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_a_little_background&quot;&gt;A little background&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Right! So I&amp;#8217;ve taken an interest in &lt;a href=&quot;http://elm-lang.org/&quot;&gt;Elm&lt;/a&gt; lately.  If you&amp;#8217;ve read any of my previous posts you might have
+noticed that I&amp;#8217;m quite fond of Clojure and ClojureScript. I still very much am and I have tons to learn there still. But I wanted  to dip my toes
+into a strongly typed functional language. Elm seems quite approachable and I guess probably the talk &lt;a href=&quot;https://www.youtube.com/watch?v=oYk8CKH7OhE&quot;&gt;&quot;Let&amp;#8217;s be mainstream&quot;&lt;/a&gt;
+made my mind up to give it a go. After creating a language plugin for Light Table: &lt;a href=&quot;http://rundis.github.io/blog/2015/elm_light.html&quot;&gt;elm-light&lt;/a&gt;
+ and attending an Elm workshop at CodeMesh, I needed something concrete to try it out on.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I remembered that a colleague of mine  &lt;a href=&quot;http://www.kodemaker.no&quot;&gt;at Kodemaker&lt;/a&gt;, Christian Johansen,  made a minesweeper implementation using JavaScript and React.
+That seemed like a sufficiently interesting problem and I could shamelessly steal most of the game logic :)&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_first_steps_the_game_logic&quot;&gt;First steps - The Game Logic&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So the obvious place to start was the game logic. I had the option of trying to set up &lt;a href=&quot;https://github.com/deadfoxygrandpa/Elm-Test&quot;&gt;Elm-Test&lt;/a&gt;
+to use a test-driven inspired approach. But heck I figured I had to try to put those types to the test, so I went for
+an all out repl driven approach. That gave me a chance to experience the good and bad with the &lt;a href=&quot;https://github.com/rundis/elm-light#56-editor-repl&quot;&gt;repl integration&lt;/a&gt; of my own Light Table Elm plugin too.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2015/elm_repl.png&quot; alt=&quot;elm repl&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_starting_with_records_and_type_aliases&quot;&gt;Starting with records and type aliases&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Reading the &lt;a href=&quot;https://github.com/cjohansen/react-sweeper/blob/master/immutable-es6/src/game.js&quot;&gt;game logic&lt;/a&gt; in react-sweeper I decided to
+define a couple of types&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;type alias Tile               &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { id: Int
+  , threatCount: Maybe Int    &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  , isRevealed: Bool
+  , isMine: Bool}
+
+
+type alias Game =             &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  { isDead: Bool              &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+  , isSafe: Bool              &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+  , rows: Int
+  , cols: Int
+  , tiles: List Tile}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Type alias for records representing a tile in the game.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Threat count is a property on a tile that is not set until the game logic allows it.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Type alias for a record representing a game&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Did you click on a mine? Found out later that this could easily be inferred, but kept it in&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Did you reveal all non-mine tiles i.e win the game ?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Describing these types proved to be valuable documentation as well as being very helpful when implementing
+the game logic later on.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+What&amp;#8217;s that &lt;code&gt;Maybe&lt;/code&gt; thing ? If someone told me it&amp;#8217;s a &lt;a href=&quot;https://en.wikipedia.org/wiki/Monad_(functional_programming)&quot;&gt;Monad&lt;/a&gt; I wouldn&amp;#8217;t be any wiser. I think of it
+as a handy way of describing that something may have a value. A nifty way to eliminate the use of null basically.
+It also forces you to be explicit about handling the fact that it may not have a value.
+You won&amp;#8217;t get null pointer errors in an Elm program! (nor &lt;code&gt;Undefined is not a function&lt;/code&gt;).
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_finding_neighbours_of_a_tile&quot;&gt;Finding neighbours of a tile&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;When revealing tiles in minesweeper you also reveal any adjacent tiles that aren&amp;#8217;t next to a mine.
+In addition you display the threat count (how many mines are adjacent to a tile) for tiles next to those
+you just revealed. So we need a way to find the neighbouring tiles of a given tile.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_javascript_implementation&quot;&gt;JavaScript implementation&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;function onWEdge(game, tile) {                                                 &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  return tile % game.get(&apos;cols&apos;) === 0;
+}
+
+function onEEdge(game, tile) {                                                 &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  return tile % game.get(&apos;cols&apos;) === game.get(&apos;cols&apos;) - 1;
+}
+
+
+function nw(game, tile) {                                                      &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  return onWEdge(game, tile) ? null : idx(game, tile - game.get(&apos;cols&apos;) - 1);
+}
+
+function n(game, tile) {
+  return idx(game, tile - game.get(&apos;cols&apos;));
+}
+
+// etc , ommitted other directions for brevity
+
+
+const directions = [nw, n, ne, e, se, s, sw, w];
+
+function neighbours(game, tile) {
+  return keep(directions, function (dir) {                                     &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+    return game.getIn([&apos;tiles&apos;, dir(game, tile)]);
+  });
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Helper function to determine if a given tile is on the west edge of the board&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Helper function to determine if a given tile is on the east edge of the board&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Returns the the tile north-west of a given tile. Null if none exists to the north-west&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Keep is a helper function that maps over the collection and filters out any resulting `null`s. So the function
+iterates all directions (invoking their respective function) and returns all possible tiles
+neighbouring the given tile.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_elm_implementation&quot;&gt;Elm implementation&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;
+type Direction = W | NW | N | NE | E | SE | S | SW                                 &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+
+onWEdge : Game -&amp;gt; Tile -&amp;gt; Bool                                                     &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+onWEdge game tile =
+  (tile.id % game.cols) == 0
+
+
+onEEdge : Game -&amp;gt; Tile -&amp;gt; Bool
+onEEdge game tile =
+  (tile.id % game.cols) == game.cols - 1
+
+
+neighbourByDir : Game -&amp;gt; Maybe Tile -&amp;gt; Direction -&amp;gt; Maybe Tile                     &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+neighbourByDir game tile dir =
+  let
+    tIdx = tileByIdx game                                                          &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+    isWOk = (\t -&amp;gt; not &amp;lt;| onWEdge game t)                                          &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+    isEOk = (\t -&amp;gt; not &amp;lt;| onEEdge game t)
+  in
+    case (tile, dir) of                                                            &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+      (Nothing, _) -&amp;gt; Nothing                                                      &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+      (Just t, N)  -&amp;gt; tIdx &amp;lt;| t.id - game.cols
+      (Just t, S)  -&amp;gt; tIdx &amp;lt;| t.id + game.cols
+      (Just t, W)  -&amp;gt; if isWOk t then tIdx &amp;lt;| t.id - 1             else Nothing
+      (Just t, NW) -&amp;gt; if isWOk t then tIdx &amp;lt;| t.id - game.cols - 1 else Nothing    &lt;i class=&quot;conum&quot; data-value=&quot;8&quot;&gt;&lt;/i&gt;&lt;b&gt;(8)&lt;/b&gt;
+      (Just t, SW) -&amp;gt; if isWOk t then tIdx &amp;lt;| t.id + game.cols - 1 else Nothing
+      (Just t, E)  -&amp;gt; if isEOk t then tIdx &amp;lt;| t.id + 1             else Nothing
+      (Just t, NE) -&amp;gt; if isEOk t then tIdx &amp;lt;| t.id - game.cols + 1 else Nothing
+      (Just t, SE) -&amp;gt; if isEOk t then tIdx &amp;lt;| t.id + game.cols + 1 else Nothing
+
+
+neighbours : Game -&amp;gt; Maybe Tile -&amp;gt; List Tile
+neighbours game tile =
+  let
+    n = neighbourByDir game tile                                                   &lt;i class=&quot;conum&quot; data-value=&quot;9&quot;&gt;&lt;/i&gt;&lt;b&gt;(9)&lt;/b&gt;
+  in
+    List.filterMap identity &amp;lt;| List.map n [W, NW, N, NE, E, SE, S, SW]             &lt;i class=&quot;conum&quot; data-value=&quot;10&quot;&gt;&lt;/i&gt;&lt;b&gt;(10)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;A type (actually a &lt;a href=&quot;https://en.wikipedia.org/wiki/Tagged_union&quot;&gt;tagged union&lt;/a&gt;) describing/enumerating the possible directions&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Pretty much the same as it&amp;#8217;s JavaScript counterpart. I&amp;#8217;ve been lazy and assumed the id of a tile
+is also the index in the tiles list of our game.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Find a neighbour by a given direction. The function takes 3 arguments; a game record, a tile (that may or may not have a value) and a direction. It returns a tile (that may or may not have a value)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;tileByIdx is a functions that finds a tile by its index. (it returns a tile, &amp;#8230; maybe). tIdx is a local function that just curries(/binds/partially applies) the first parameter - game&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;An anonymous function that checks if it&amp;#8217;s okay to retrieve a westward tile for a given tile&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Pattern match on tile and direction. You might consider it a switch statement on steroids.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If the tile doesn&amp;#8217;t have a value (then we don&amp;#8217;t care about the direction hence _) we return Nothing (Maybe.Nothing)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;8&quot;&gt;&lt;/i&gt;&lt;b&gt;8&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Just t, NW matches on a tile that has value (assigned t) and a given direction of NW. The logic is for this case the same as for it&amp;#8217;s JavaScript counterpart. Well except it returns Nothing if NW isn&amp;#8217;t possible&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;9&quot;&gt;&lt;/i&gt;&lt;b&gt;9&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;A partially applied version of neightBourByDir to make the mapping function in 10. a bit less verbose&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;10&quot;&gt;&lt;/i&gt;&lt;b&gt;10&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We map over all directions finding their neighbours, then &lt;code&gt;List.filterMap identity&lt;/code&gt; filters out all List entries with Nothing.
+Leaving us with a list of valid neighbours for the given tile.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We covered quite a bit of ground here. I could have implemented all the direction functions as in the JavaScript implementation,
+but opted for a more generic function using pattern matching. It&amp;#8217;s not that I dislike short functions, quite the contrary but
+in this case it felt like a good match (no pun intended). Once you get used to the syntax it gives a
+really nice overview as well.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Think of &amp;lt;| as one way to avoid parenthesis. It&amp;#8217;s actually a backwards function application
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;When testing this function I got my first runtime error in Elm complaining that my case wasn&amp;#8217;t
+exhaustive. Rumors has it that the next version of elm might handle this at compile time as well :-)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/blog/2015/elm_case_error.png&quot; alt=&quot;elm case error&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_threat_count&quot;&gt;Threat count&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_javascript&quot;&gt;JavaScript&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;function getMineCount(game, tile) {                                             &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  var nbs = neighbours(game, tile);
+  return nbs.filter(prop(&apos;isMine&apos;)).length;
+}
+
+function addThreatCount(game, tile) {                                           &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  return game.setIn([&apos;tiles&apos;, tile, &apos;threatCount&apos;], getMineCount(game, tile));
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Gets the number of neighbouring tiles that are mines for a given tile. (prop is a helper function for retrieving a named property on a js object)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Set the threatCount property on a given tile in the game&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_elm&quot;&gt;Elm&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;mineCount : Game -&amp;gt; Maybe Tile -&amp;gt; Int                                           &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+mineCount game tile =
+  List.length &amp;lt;| List.filter (\t -&amp;gt; t.isMine) &amp;lt;| neighbours game tile
+
+revealThreatCount : Game -&amp;gt; Tile -&amp;gt; Tile                                        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+revealThreatCount game tile =
+  {tile | threatCount &amp;lt;- Just (mineCount game &amp;lt;| Just tile)
+        , isRevealed  &amp;lt;- True}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Same as for it&amp;#8217;s JavaScript counterpart, but using a anonymous function because there is no dynamic
+property accessors in Elm&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Almoust the same as addThreatCount, but since once we add it the tile would also always be revealed
+I opted for a two in one function.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;For mine count, both implementations are potentially flawed.&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;For JavaScript you might get 0 for a non-existent tile, which isn&amp;#8217;t too bad. But maybe you&amp;#8217;ll get
+a null pointer somewhere deeper down the call stack. To be sure you have to crawl through all function calls this function makes and
+apply your JavaScript foo to know things like null &amp;lt; 1 is obviously true, but null &amp;lt; 0 is false. &amp;#8230; and so on.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The elm implementation won&amp;#8217;t have any null pointer exceptions, but really it should return Maybe Int to guard
+against giving 0 back for a Nothing tile !&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_revealing_safe_adjacent_tiles&quot;&gt;Revealing safe adjacent tiles&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_javascript_2&quot;&gt;JavaScript&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;function revealAdjacentSafeTiles(game, tile) {
+  if (isMine(game, tile)) {
+    return game;
+  }
+  game = addThreatCount(game, tile).setIn([&apos;tiles&apos;, tile, &apos;isRevealed&apos;], true);
+  if (game.getIn([&apos;tiles&apos;, tile, &apos;threatCount&apos;]) === 0) {
+    return keep(directions, function (dir) {
+      return dir(game, tile);
+    }).reduce(function (game, pos) {
+      return !game.getIn([&apos;tiles&apos;, pos, &apos;isRevealed&apos;]) ?
+        revealAdjacentSafeTiles(game, pos) : game;
+    }, game);
+  }
+  return game;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_elm_2&quot;&gt;Elm&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;revealAdjacentSafeTiles :  Game -&amp;gt; Int -&amp;gt; Game
+revealAdjacentSafeTiles game tileId =
+  case tileByIdx game tileId of
+    Nothing -&amp;gt; game
+    Just t -&amp;gt;
+      if t.isMine then game else
+        let
+          updT = revealThreatCount game t
+          updG = {game | tiles &amp;lt;- updateIn tileId (\_ -&amp;gt; updT) game.tiles}
+          f    = (\t g -&amp;gt; if not t.isRevealed then revealAdjacentSafeTiles g t.id else g)
+        in
+          if not (updT.threatCount == Just 0) then
+            updG
+          else
+            List.foldl f updG &amp;lt;| neighbours updG &amp;lt;| Just updT&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_a_brief_comparison&quot;&gt;A brief comparison&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The most noteworthy difference is really the explicit handling of an illegal tile index in the Elm implementation.
+If I didn&amp;#8217;t have the JavaScript code to look at, I&amp;#8217;m guessing the difference would have been more noticable. Not necessarily for the better.
+We&amp;#8217;ll never know.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Anyways, enough about the game logic. Let&amp;#8217;s move on to the view part.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_comparing_the_view_rendering&quot;&gt;Comparing the view rendering&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_javascript_3&quot;&gt;JavaScript&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The React part for rendering the UI is found in &lt;a href=&quot;https://github.com/cjohansen/react-sweeper/blob/master/immutable-es6/src/ui.js&quot;&gt;ui.js&lt;/a&gt;
+Below I&amp;#8217;ve picked out the most interesting parts&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;export function createUI(channel) {                                            &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  const Tile = createComponent((tile) =&amp;gt; {                                     &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    if (tile.get(&apos;isRevealed&apos;)) {
+      return div({className: &apos;tile&apos; + (tile.get(&apos;isMine&apos;) ? &apos; mine&apos; : &apos;&apos;)},
+                 tile.get(&apos;threatCount&apos;) &amp;gt; 0 ? tile.get(&apos;threatCount&apos;) : &apos;&apos;);
+    }
+    return div({
+      className: &apos;tile&apos;,
+      onClick: function () {
+        channel.emit(&apos;reveal&apos;, tile.get(&apos;id&apos;));                                &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+      }
+    }, div({className: &apos;lid&apos;}, &apos;&apos;));
+  });
+
+  const Row = createComponent((tiles) =&amp;gt; {
+    return div({className: &apos;row&apos;}, tiles.map(Tile).toJS());
+  });
+
+  const Board = createComponent((game) =&amp;gt; {
+    return div({
+      className: &apos;board&apos;
+    }, partition(game.get(&apos;cols&apos;), game.get(&apos;tiles&apos;)).map(Row).toJS());
+  });
+
+  const UndoButton = createComponent(() =&amp;gt; {                                  &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+    return button({
+      onClick: channel.emit.bind(channel, &apos;undo&apos;)
+    }, &apos;Undo&apos;);
+  });
+
+  const Game = createComponent((game) =&amp;gt; {
+    return div({}, [Board(game), UndoButton()]);
+  });
+
+  return (data, container) =&amp;gt; {                                               &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+    render(Game(data), container);
+  };
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This function returns a function for creating the react component tree for the game. It takes a channel
+param, which is an event emitter. So when components need to notify the &quot;controller&quot; about user actions they can just emit messages to this channel
+A neat way to avoid using callbacks!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;createComponent is a handy helper function that avoids some react boiler plate and provides an optimized shouldComponentUpdate function for each react component used.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When a user clicks on a tile a reveal message with the tile id is emitted&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The game also supports undo previous move :)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Returns a function that when called starts the react rendering of the game in the given container element&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_elm_3&quot;&gt;Elm&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;threatCount : Maybe Int -&amp;gt; List Html
+threatCount count =
+  case count of
+    Nothing -&amp;gt; []
+    Just t  -&amp;gt; [text (if t &amp;gt; 0 then toString t else &quot;&quot;)]
+
+
+tileView : Signal.Address Action -&amp;gt; Game.Tile -&amp;gt; Html                               &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+tileView address tile =
+  if tile.isRevealed then
+    div [class (&quot;tile&quot; ++ (if tile.isMine then &quot; mine&quot; else &quot;&quot;))]
+        &amp;lt;| threatCount tile.threatCount
+
+  else
+    div [class &quot;tile&quot;, onClick address (RevealTile tile.id)]                        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+        [div [class &quot;lid&quot;] []]                                                      &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+
+
+rowView : Signal.Address Action -&amp;gt; List Game.Tile -&amp;gt; Html
+rowView address tiles =
+  div [class &quot;row&quot;] (List.map (tileView address) tiles)
+
+
+statusView: Game -&amp;gt; Html
+statusView game =
+  let
+    (status, c) = case (game.isSafe, game.isDead) of
+                    (True, _)  -&amp;gt; (&quot; -  You won&quot;, &quot;status-won&quot;)
+                    (_, True) -&amp;gt;  (&quot; - You lost&quot;, &quot;status-lost&quot;)
+                    (_, _)     -&amp;gt; (&quot;&quot;, &quot;&quot;)
+  in
+    span [class c] [text status]
+
+
+view : Signal.Address Action -&amp;gt; Game -&amp;gt; Html                                       &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+view address game =
+  let
+    rows = Utils.partitionByN game.cols game.tiles
+  in
+    div [id &quot;main&quot;] [
+      h1 [] [text &quot;Minesweeper&quot;, statusView game],
+      div [class &quot;board&quot;] (List.map (rowView address) rows),
+      div [] [button [class &quot;button&quot;, onClick address NewGame] [text &quot;New game&quot;]]
+    ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The function responsible for rendering a single tile. Very much comparable to the React tile component
+in the JavaScript implementation. Similar to  React, we aren&amp;#8217;t returning actual dom elments, Elm also has
+a virtual dom implementation&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When a tile is clicked a message is sent to a given address (we&amp;#8217;ll get back to that a little bit later).
+Well actually it doesn&amp;#8217;t happen right away, rather think of it as creating an envelope with content and a known address. The Elm runtime receives a signal back
+that will take care of sending the message to it&amp;#8217;s rendering function when appropriate.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;div here is actually a function from the HTML module in Elm. It takes two lists as arguments, the first
+is a list of attributes and the second is a list of child elements&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Our main entry function for creating our view. It takes an address and game as parameter and returns a virtual dom node (Html)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;code&gt;Signal.Address Action&lt;/code&gt; : Address points to a particular type of Signal, in our case the Signal is an &lt;code&gt;Action&lt;/code&gt;
+we&amp;#8217;ll come back to that shortly. But the short story is that this is what enables us to talk back to the main application.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_wiring_it_all_together&quot;&gt;Wiring it all together&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_javascript_4&quot;&gt;JavaScript&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint javascript language-javascript&quot;&gt;&lt;code&gt;const channel = new EventEmitter();
+const renderMinesweeper = createUI(channel);
+let game = createGame({cols: 16, rows: 16, mines: 48});
+let history = List([game]);
+
+function render() {                                                         &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  renderMinesweeper(game, document.getElementById(&apos;board&apos;));
+}
+
+channel.on(&apos;undo&apos;, () =&amp;gt; {                                                  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  if (history.size &amp;gt; 1) {
+    history = history.pop();
+    game = history.last();
+    render();
+  }
+});
+
+channel.on(&apos;reveal&apos;, (tile) =&amp;gt; {                                            &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  if (isGameOver(game)) { return; }
+
+  const newGame = revealTile(game, tile);
+
+  if (newGame !== game) {
+    history = history.push(newGame);
+    game = newGame;
+  }
+
+  render();
+
+  if (isGameOver(game)) {
+    // Wait for the final render to complete before alerting the user
+    setTimeout(() =&amp;gt; { alert(&apos;GAME OVER!&apos;); }, 50);
+  }
+});&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The react render entry point for the game. Called whenever the game state is changed&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The JavaScript implementation keeps a history of all game states. I forgot to mention that &lt;a href=&quot;https://facebook.github.io/immutable-js/&quot;&gt;immutable-js&lt;/a&gt; is for collections.
+Undo just gets the previous game state and rerenders. Nice and simple&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Event listener for reveal messages. It invokes reveal tile, adds to history (and potentially ends the game).&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This is all very neat and tidy and works so great because the game state is managed in one place and is passed through
+ the ui component tree as an immutable value. The fact that the state is immutable also makes the undo implementation a breeze.
+ I really like this approach !&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_elm_4&quot;&gt;Elm&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;If you don&amp;#8217;t know Elm at all, this part might be the most tricky to grasp. To simplify things I&amp;#8217;ll split it into
+two parts.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_start_app_approach&quot;&gt;Start-app approach&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/evancz/start-app&quot;&gt;Start-app&lt;/a&gt; is a small elm package that makes it easy to get started
+with an elm Model-View-Update structure. This is a great place to start for your first elm app.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;type Action = RevealTile Int                                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+
+
+init : Game                                                      &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+init =
+  Game.createGame 15 15 5787345
+
+
+update : Action -&amp;gt; Game -&amp;gt; Game                                  &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+update Action game =
+  case action of
+    RevealTile id -&amp;gt; if Game.gameOver game then game else        &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+                      Game.revealTile game id
+
+main =                                                           &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+  StartApp.Simple.start                                          &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+    { model = init
+    , update = update
+    , view = view
+    }&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Type describing the actions the game supports. Currently just revealing tiles, and you can see that
+we also specify that the RevealTile action expects an Int paramater. That would be the tile id.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The init function provides the initial state for our application. &lt;code&gt;createGame&lt;/code&gt; is a helper function for creating
+a game with x cols and y rows. The 3.rd param is a seed for randomizing tiles. We&amp;#8217;ll return to that seed thing in the next chapter!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Update is the function that handles the actual update of state, or rather the transformation to the next state
+based on some action. It&amp;#8217;s quite simple in this case, just reveal a given tile and return the updated game&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;No point in revealing more tiles when the game is already over :)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;main&lt;/code&gt; is the entry point into our application. If you use elm-reactor this will be automatically invoked for you, which is handy for getting started quickly&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;StartApp.Simple.start&lt;/code&gt; takes care of wiring things up and start your application&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_trouble_in_paradise_we_get_the_same_board_every_time&quot;&gt;Trouble in paradise, we get the same board every time&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Do you remember the 3rd param to createGame in the previous chapter? That is the initial seed to a random generator (&lt;a href=&quot;http://package.elm-lang.org/packages/elm-lang/core/2.1.0/Random&quot;&gt;Random&lt;/a&gt;) to randomize the
+occurence of mines. The problem is that using the same seed produces the same result. Calling an elm random
+generator will return a new seed, so of course I could/should have stored that and used that for the next game.
+But I still need an initial seed that&amp;#8217;s different every time I start the app. Current time would be a good candidate
+for an initial seed. But there is no getCurrentTime function in Elm. Why ? It&amp;#8217;s impure, and Elm doesn&amp;#8217;t like impure functions.
+By &quot;pure&quot;, we mean that if you call a function with the same arguments, you get the same result.
+There are several reasons why pure functions is a great thing (testing is one), but I won&amp;#8217;t go into that, let&amp;#8217;s just accept the fact
+that this is the case, so how can we deal with it ?&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Well the elm-core package has a &lt;a href=&quot;http://package.elm-lang.org/packages/elm-lang/core/2.1.0/Time&quot;&gt;Time module&lt;/a&gt; with a timestamp function that looks useful.
+To use that we have to change a few things though, most notably we can&amp;#8217;t use the simple start app approach any more.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;
+type Action =
+  NewGame                                                             &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  | RevealTile Int
+
+
+
+update : (Float, Action) -&amp;gt; Game -&amp;gt; Game                              &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+update (time, action) game =
+  case action of
+    NewGame -&amp;gt; Game.createGame 15 15  (truncate time)                 &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+    RevealTile id -&amp;gt; if Game.gameOver game then game else
+                       Game.revealTile game id
+
+
+actions: Signal.Mailbox Action                                        &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+actions =
+  Signal.mailbox NewGame
+
+model: Signal Game                                                    &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+model =
+  Signal.foldp update init (Time.timestamp actions.signal)
+
+main : Signal Html                                                    &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+main =
+  Signal.map (view actions.address) model
+
+port initGame : Task.Task x ()                                        &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+port initGame =
+  Signal.send actions.address NewGame
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We introduce a new action &lt;code&gt;NewGame&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Our update function now takes a tuple of time and action + game as input parameters&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We use the elm core function &lt;code&gt;truncate&lt;/code&gt; to convert the time(stamp) float into an integer and use that as our seed to &lt;code&gt;createGame&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We construct a mailbox for our Action messages manually, with an initial value of NewGame&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Our model is a fold (reduce) of all state changes sent to our mailbox (from the app started to the current moment of time).
+This is where we introduce the Time.timestamp function, which wraps our action signal and produces a tuple of (timestamp, action)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;main is just a map over our view function with our current model. Since view also expects an (mailbox) address we curry/partially apply that to our view function&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Unfortunately I couldn&amp;#8217;t figure out how to get the timestamp passed to the init function. The creation
+step (4) of the mailbox doesn&amp;#8217;t actually cause the NewGame action to be executed either. So this is a little hack
+that fires off a task to execute the NewGame action. This is run after initialization so when you load the game you&amp;#8217;ll not see state 0 for the game, but actually state 1.
+If any elm-ers out there reads this, feel free to comment on how this could be done in a more idiomatic fashion!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+I found &lt;a href=&quot;https://yobriefca.se/blog/2015/08/02/deconstructing-your-first-elm-app/&quot;&gt;this&lt;/a&gt; blogpost
+very illuminating for deconstructing start-app.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_but_what_about_undo&quot;&gt;But what about undo ?&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There is an elm-package I think would help us do that quite simply;
+&lt;a href=&quot;https://github.com/TheSeamau5/elm-undo-redo&quot;&gt;elm-undo-redo&lt;/a&gt;. However if you are using &lt;a href=&quot;https://github.com/elm-lang/elm-reactor&quot;&gt;elm-reactor&lt;/a&gt;
+you pretty much get undo-redo and more out of the box. Great for development, but maybe not so much for production!&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/P3B4ldi1cmc&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Getting into Elm has been a really pleasurable experience so far. It&amp;#8217;s quite easy to get up and running without
+knowing all that much about the language. I&amp;#8217;ve found the elm compiler to be a really nice and friendly companion.
+The error messages I get are really impressive and I can truly say I&amp;#8217;ve never experienced anything quite like it.
+Working with types (at least for this simple application) hasn&amp;#8217;t felt like a burden at all. I still feel I should have
+had some tests, but I think I would feel more comfortable refactoring this app with a lot less tests than I would in say JavaScript.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;If my intention for this post had been to bash JavaScript I chose a poor example to compare with. But then again
+that was never my intention. I wanted to show how a well written JavaScript app might compare to an Elm implementation
+written by an Elm noob. Hopefully I&amp;#8217;ve also managed to demonstrate that it&amp;#8217;s not all that difficult getting started with Elm and perhaps
+peeked your interest enough to give it a try !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_resources&quot;&gt;Resources&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;These are some of the resources that have helped me getting up to speed:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://pragmaticstudio.com/elm&quot;&gt;Elm: Building Reactive Web Apps&lt;/a&gt; - A really nice step-by-step tutorial with videos and examples to get you up to speed. You get great value for $29 I think.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://pragmaticstudio.com/elm-signals&quot;&gt;Elm: Signals, Mailboxes &amp;amp; Ports&lt;/a&gt; - Elm signals in depth. Really useful for getting into more detail on what Signals are, how they work and how to use them.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/evancz/elm-architecture-tutorial/&quot;&gt;Elm Architecture Tutorial&lt;/a&gt; - Tutorial outlining &quot;the Elm Architecture&quot;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://elm-lang.org/&quot;&gt;elm-lang.org&lt;/a&gt; - The official site for the elm language&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;elm-light&lt;/a&gt; - My elm plugin for Light Table, or if you use another editor it might be listed &lt;a href=&quot;http://elm-lang.org/get-started#configure-your-editor&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_addendum_potential_improvements&quot;&gt;Addendum - Potential improvements&lt;/h3&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Initialize game with seed without adding an extra state&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Perhaps I should/could have used &lt;a href=&quot;http://elm-lang.org/docs/records#record-types&quot;&gt;extensible records&lt;/a&gt; to model the game&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Maybe Array would be a better choice than List for holding tiles ?&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Elm plugin for Light Table</title>
       <link>http://rundis.github.io/blog/2015/elm_light.html</link>
@@ -2324,7 +3267,7 @@ sure we pass on the token.&lt;/p&gt;
 &lt;table&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;We make sure we pass the token in the &lt;em&gt;Authoriazation&lt;/em&gt; header with the given token name&lt;/td&gt;
+&lt;td&gt;We make sure we pass the token in the &lt;em&gt;Authorization&lt;/em&gt; header with the given token name&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
@@ -3788,7 +4731,7 @@ routes in the sample application.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;defroutes public-routes
+&lt;pre class=&quot;prettyprint clojure language-clojure&quot;&gt;&lt;code&gt;(defroutes public-routes
   (route/resources &quot;/&quot;)
   (GET &quot;/&quot; []       show-index)
   (GET &quot;/login&quot; []  sec/show-login)

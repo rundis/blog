@@ -214,7 +214,7 @@ routes in the sample application.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>defroutes public-routes
+<pre class="prettyprint clojure language-clojure"><code>(defroutes public-routes
   (route/resources "/")
   (GET "/" []       show-index)
   (GET "/login" []  sec/show-login)
