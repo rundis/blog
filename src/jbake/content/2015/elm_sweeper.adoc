@@ -11,7 +11,7 @@ Magnus Rundberget
 
 
 
-After taken a keen interest to Elm lately I figured I needed to solve a real problem. Something a bit fun and achievable in a couple of evenings/nights.
+After taking a keen interest to Elm lately I figured I needed to solve a real problem. Something a bit fun and achievable in a couple of evenings/nights.
 Not being awfully creative, piggiebacking on other peoples' work is sometimes a good option.
 In this post I'll take you through some of my steps in porting/re-implementing https://github.com/cjohansen/react-sweeper (JavaScript and React) to an Elm implementation.
 
@@ -25,7 +25,7 @@ There you'll find instructions on how to get it running too.
 == A little background
 Right! So I've taken an interest in http://elm-lang.org/[Elm] lately.  If you've read any of my previous posts you might have
 noticed that I'm quite fond of Clojure and ClojureScript. I still very much am and I have tons to learn there still. But I wanted  to dip my toes
-into a strongly typed functional language. Elm seems quite approachable and I guess probably the talk https://www.youtube.com/watch?v=oYk8CKH7OhE["Let's be mainstream"]
+into a statically typed functional language. Elm seems quite approachable and I guess probably the talk https://www.youtube.com/watch?v=oYk8CKH7OhE["Let's be mainstream"]
 made my mind up to give it a go. After creating a language plugin for Light Table: http://rundis.github.io/blog/2015/elm_light.html[elm-light]
  and attending an Elm workshop at CodeMesh, I needed something concrete to try it out on.
 
@@ -53,10 +53,10 @@ type alias Tile               // <1>
   , isRevealed: Bool
   , isMine: Bool}
 
+type GameStatus = IN_PROGRESS | SAFE | DEAD
 
 type alias Game =             // <3>
-  { isDead: Bool              // <4>
-  , isSafe: Bool              // <5>
+  { status                    // <4>
   , rows: Int
   , cols: Int
   , tiles: List Tile}
@@ -66,8 +66,8 @@ type alias Game =             // <3>
 <1> Type alias for records representing a tile in the game.
 <2> Threat count is a property on a tile that is not set until the game logic allows it.
 <3> Type alias for a record representing a game
-<4> Did you click on a mine? Found out later that this could easily be inferred, but kept it in
-<5> Did you reveal all non-mine tiles i.e win the game ?
+<4> Status of the game, the possible states are defined by GameStatus. SAFE means you've won, DEAD... well
+
 
 Describing these types proved to be valuable documentation as well as being very helpful when implementing
 the game logic later on.
@@ -148,8 +148,8 @@ neighbourByDir : Game -> Maybe Tile -> Direction -> Maybe Tile                  
 neighbourByDir game tile dir =
   let
     tIdx = tileByIdx game                                                          // <4>
-    isWOk = (\t -> not <| onWEdge game t)                                          // <5>
-    isEOk = (\t -> not <| onEEdge game t)
+    isWOk t = not <| onWEdge game t                                                // <5>
+    isEOk t = not <| onEEdge game t
   in
     case (tile, dir) of                                                            // <6>
       (Nothing, _) -> Nothing                                                      // <7>
@@ -175,7 +175,7 @@ neighbours game tile =
 is also the index in the tiles list of our game.
 <3> Find a neighbour by a given direction. The function takes 3 arguments; a game record, a tile (that may or may not have a value) and a direction. It returns a tile (that may or may not have a value)
 <4> tileByIdx is a functions that finds a tile by its index. (it returns a tile, ... maybe). tIdx is a local function that just curries(/binds/partially applies) the first parameter - game
-<5> An anonymous function that checks if it's okay to retrieve a westward tile for a given tile
+<5> A local function that checks if it's okay to retrieve a westward tile for a given tile
 <6> Pattern match on tile and direction. You might consider it a switch statement on steroids.
 <7> If the tile doesn't have a value (then we don't care about the direction hence _) we return Nothing (Maybe.Nothing)
 <8> Just t, NW matches on a tile that has value (assigned t) and a given direction of NW. The logic is for this case the same as for it's JavaScript counterpart. Well except it returns Nothing if NW isn't possible
@@ -225,15 +225,14 @@ function addThreatCount(game, tile) {                                           
 ----
 mineCount : Game -> Maybe Tile -> Int                                           // <1>
 mineCount game tile =
-  List.length <| List.filter (\t -> t.isMine) <| neighbours game tile
+  List.length <| List.filter .isMine <| neighbours game tile
 
 revealThreatCount : Game -> Tile -> Tile                                        // <2>
 revealThreatCount game tile =
   {tile | threatCount <- Just (mineCount game <| Just tile)
         , isRevealed  <- True}
 ----
-<1> Same as for it's JavaScript counterpart, but using a anonymous function because there is no dynamic
-property accessors in Elm
+<1> Same as for it's JavaScript counterpart, but using a . syntax for dynamic property access
 <2> Almoust the same as addThreatCount, but since once we add it the tile would also always be revealed
 I opted for a two in one function.
 
@@ -282,14 +281,14 @@ revealAdjacentSafeTiles game tileId =
     Just t ->
       if t.isMine then game else
         let
-          updT = revealThreatCount game t
-          updG = {game | tiles <- updateIn tileId (\_ -> updT) game.tiles}
-          f    = (\t g -> if not t.isRevealed then revealAdjacentSafeTiles g t.id else g)
+          updT   = revealThreatCount game t
+          updG   = {game | tiles <- updateIn tileId (\_ -> updT) game.tiles}
+          fn t g = if not t.isRevealed then revealAdjacentSafeTiles g t.id else g
         in
           if not (updT.threatCount == Just 0) then
             updG
           else
-            List.foldl f updG <| neighbours updG <| Just updT
+            List.foldl fn updG <| neighbours updG <| Just updT
 ----
 
 ==== A brief comparison
@@ -386,10 +385,10 @@ rowView address tiles =
 statusView: Game -> Html
 statusView game =
   let
-    (status, c) = case (game.isSafe, game.isDead) of
-                    (True, _)  -> (" -  You won", "status-won")
-                    (_, True) ->  (" - You lost", "status-lost")
-                    (_, _)     -> ("", "")
+    (status, c) = case game.status of
+                    SAFE          -> (" -  You won", "status-won")
+                    DEAD          -> (" - You lost", "status-lost")
+                    IN_PROGRESS   -> ("", "")
   in
     span [class c] [text status]
 
@@ -482,22 +481,22 @@ with an elm Model-View-Update structure. This is a great place to start for your
 
 [source, elm]
 ----
-type Action = RevealTile Int                                     // <1>
+type Action = RevealTile Int                                             // <1>
 
 
-init : Game                                                      // <2>
+init : Game                                                              // <2>
 init =
   Game.createGame 15 15 5787345
 
 
-update : Action -> Game -> Game                                  // <3>
+update : Action -> Game -> Game                                          // <3>
 update Action game =
   case action of
-    RevealTile id -> if Game.gameOver game then game else        // <4>
+    RevealTile id -> if not (game.status == IN_PROGRESS) then game else  // <4>
                       Game.revealTile game id
 
-main =                                                           // <5>
-  StartApp.Simple.start                                          // <6>
+main =                                                                   // <5>
+  StartApp.Simple.start                                                  // <6>
     { model = init
     , update = update
     , view = view
@@ -534,32 +533,32 @@ To use that we have to change a few things though, most notably we can't use the
 ----
 
 type Action =
-  NewGame                                                             // <1>
+  NewGame                                                                 // <1>
   | RevealTile Int
 
 
 
-update : (Float, Action) -> Game -> Game                              // <2>
+update : (Float, Action) -> Game -> Game                                  // <2>
 update (time, action) game =
   case action of
-    NewGame -> Game.createGame 15 15  (truncate time)                 // <3>
-    RevealTile id -> if Game.gameOver game then game else
+    NewGame -> Game.createGame 15 15  (truncate time)                     // <3>
+    RevealTile id -> if not (game.status == IN_PROGRESS) then game else
                        Game.revealTile game id
 
 
-actions: Signal.Mailbox Action                                        // <4>
+actions: Signal.Mailbox Action                                            // <4>
 actions =
   Signal.mailbox NewGame
 
-model: Signal Game                                                    // <5>
+model: Signal Game                                                        // <5>
 model =
   Signal.foldp update init (Time.timestamp actions.signal)
 
-main : Signal Html                                                    // <6>
+main : Signal Html                                                        // <6>
 main =
   Signal.map (view actions.address) model
 
-port initGame : Task.Task x ()                                        // <7>
+port initGame : Task.Task x ()                                            // <7>
 port initGame =
   Signal.send actions.address NewGame
 
