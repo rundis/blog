@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Tue, 10 Nov 2015 22:38:35 +0100</pubDate>
-    <lastBuildDate>Tue, 10 Nov 2015 22:38:35 +0100</lastBuildDate>
+    <pubDate>Wed, 11 Nov 2015 00:01:43 +0100</pubDate>
+    <lastBuildDate>Wed, 11 Nov 2015 00:01:43 +0100</lastBuildDate>
 
     <item>
       <title>Minesweeper - a brief journey from JavaScript/React to Elm</title>
@@ -88,7 +88,7 @@ define a couple of types&lt;/p&gt;
 type GameStatus = IN_PROGRESS | SAFE | DEAD
 
 type alias Game =             &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
-  { status                    &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+  { status: GameStatus        &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
   , rows: Int
   , cols: Int
   , tiles: List Tile}&lt;/code&gt;&lt;/pre&gt;
