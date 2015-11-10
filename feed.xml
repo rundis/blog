@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Tue, 10 Nov 2015 17:29:05 +0100</pubDate>
-    <lastBuildDate>Tue, 10 Nov 2015 17:29:05 +0100</lastBuildDate>
+    <pubDate>Tue, 10 Nov 2015 22:38:35 +0100</pubDate>
+    <lastBuildDate>Tue, 10 Nov 2015 22:38:35 +0100</lastBuildDate>
 
     <item>
       <title>Minesweeper - a brief journey from JavaScript/React to Elm</title>
@@ -18,7 +18,7 @@
 	&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;After taken a keen interest to Elm lately I figured I needed to solve a real problem. Something a bit fun and achievable in a couple of evenings/nights.
+&lt;p&gt;After taking a keen interest to Elm lately I figured I needed to solve a real problem. Something a bit fun and achievable in a couple of evenings/nights.
 Not being awfully creative, piggiebacking on other peoples&apos; work is sometimes a good option.
 In this post I&amp;#8217;ll take you through some of my steps in porting/re-implementing &lt;a href=&quot;https://github.com/cjohansen/react-sweeper&quot;&gt;https://github.com/cjohansen/react-sweeper&lt;/a&gt; (JavaScript and React) to an Elm implementation.&lt;/p&gt;
 &lt;/div&gt;
@@ -48,7 +48,7 @@ There you&amp;#8217;ll find instructions on how to get it running too.
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;Right! So I&amp;#8217;ve taken an interest in &lt;a href=&quot;http://elm-lang.org/&quot;&gt;Elm&lt;/a&gt; lately.  If you&amp;#8217;ve read any of my previous posts you might have
 noticed that I&amp;#8217;m quite fond of Clojure and ClojureScript. I still very much am and I have tons to learn there still. But I wanted  to dip my toes
-into a strongly typed functional language. Elm seems quite approachable and I guess probably the talk &lt;a href=&quot;https://www.youtube.com/watch?v=oYk8CKH7OhE&quot;&gt;&quot;Let&amp;#8217;s be mainstream&quot;&lt;/a&gt;
+into a statically typed functional language. Elm seems quite approachable and I guess probably the talk &lt;a href=&quot;https://www.youtube.com/watch?v=oYk8CKH7OhE&quot;&gt;&quot;Let&amp;#8217;s be mainstream&quot;&lt;/a&gt;
 made my mind up to give it a go. After creating a language plugin for Light Table: &lt;a href=&quot;http://rundis.github.io/blog/2015/elm_light.html&quot;&gt;elm-light&lt;/a&gt;
  and attending an Elm workshop at CodeMesh, I needed something concrete to try it out on.&lt;/p&gt;
 &lt;/div&gt;
@@ -85,10 +85,10 @@ define a couple of types&lt;/p&gt;
   , isRevealed: Bool
   , isMine: Bool}
 
+type GameStatus = IN_PROGRESS | SAFE | DEAD
 
 type alias Game =             &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
-  { isDead: Bool              &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
-  , isSafe: Bool              &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+  { status                    &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
   , rows: Int
   , cols: Int
   , tiles: List Tile}&lt;/code&gt;&lt;/pre&gt;
@@ -110,11 +110,7 @@ type alias Game =             &lt;i class=&quot;conum&quot; data-value=&quot;3&q
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Did you click on a mine? Found out later that this could easily be inferred, but kept it in&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Did you reveal all non-mine tiles i.e win the game ?&lt;/td&gt;
+&lt;td&gt;Status of the game, the possible states are defined by GameStatus. SAFE means you&amp;#8217;ve won, DEAD&amp;#8230; well&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;
@@ -222,8 +218,8 @@ neighbourByDir : Game -&amp;gt; Maybe Tile -&amp;gt; Direction -&amp;gt; Maybe T
 neighbourByDir game tile dir =
   let
     tIdx = tileByIdx game                                                          &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
-    isWOk = (\t -&amp;gt; not &amp;lt;| onWEdge game t)                                          &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
-    isEOk = (\t -&amp;gt; not &amp;lt;| onEEdge game t)
+    isWOk t = not &amp;lt;| onWEdge game t                                                &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+    isEOk t = not &amp;lt;| onEEdge game t
   in
     case (tile, dir) of                                                            &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
       (Nothing, _) -&amp;gt; Nothing                                                      &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
@@ -266,7 +262,7 @@ is also the index in the tiles list of our game.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;An anonymous function that checks if it&amp;#8217;s okay to retrieve a westward tile for a given tile&lt;/td&gt;
+&lt;td&gt;A local function that checks if it&amp;#8217;s okay to retrieve a westward tile for a given tile&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
@@ -366,7 +362,7 @@ function addThreatCount(game, tile) {                                           
 &lt;div class=&quot;content&quot;&gt;
 &lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;mineCount : Game -&amp;gt; Maybe Tile -&amp;gt; Int                                           &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
 mineCount game tile =
-  List.length &amp;lt;| List.filter (\t -&amp;gt; t.isMine) &amp;lt;| neighbours game tile
+  List.length &amp;lt;| List.filter .isMine &amp;lt;| neighbours game tile
 
 revealThreatCount : Game -&amp;gt; Tile -&amp;gt; Tile                                        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
 revealThreatCount game tile =
@@ -378,8 +374,7 @@ revealThreatCount game tile =
 &lt;table&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Same as for it&amp;#8217;s JavaScript counterpart, but using a anonymous function because there is no dynamic
-property accessors in Elm&lt;/td&gt;
+&lt;td&gt;Same as for it&amp;#8217;s JavaScript counterpart, but using a . syntax for dynamic property access&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
@@ -450,14 +445,14 @@ revealAdjacentSafeTiles game tileId =
     Just t -&amp;gt;
       if t.isMine then game else
         let
-          updT = revealThreatCount game t
-          updG = {game | tiles &amp;lt;- updateIn tileId (\_ -&amp;gt; updT) game.tiles}
-          f    = (\t g -&amp;gt; if not t.isRevealed then revealAdjacentSafeTiles g t.id else g)
+          updT   = revealThreatCount game t
+          updG   = {game | tiles &amp;lt;- updateIn tileId (\_ -&amp;gt; updT) game.tiles}
+          fn t g = if not t.isRevealed then revealAdjacentSafeTiles g t.id else g
         in
           if not (updT.threatCount == Just 0) then
             updG
           else
-            List.foldl f updG &amp;lt;| neighbours updG &amp;lt;| Just updT&lt;/code&gt;&lt;/pre&gt;
+            List.foldl fn updG &amp;lt;| neighbours updG &amp;lt;| Just updT&lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -583,10 +578,10 @@ rowView address tiles =
 statusView: Game -&amp;gt; Html
 statusView game =
   let
-    (status, c) = case (game.isSafe, game.isDead) of
-                    (True, _)  -&amp;gt; (&quot; -  You won&quot;, &quot;status-won&quot;)
-                    (_, True) -&amp;gt;  (&quot; - You lost&quot;, &quot;status-lost&quot;)
-                    (_, _)     -&amp;gt; (&quot;&quot;, &quot;&quot;)
+    (status, c) = case game.status of
+                    SAFE          -&amp;gt; (&quot; -  You won&quot;, &quot;status-won&quot;)
+                    DEAD          -&amp;gt; (&quot; - You lost&quot;, &quot;status-lost&quot;)
+                    IN_PROGRESS   -&amp;gt; (&quot;&quot;, &quot;&quot;)
   in
     span [class c] [text status]
 
@@ -724,22 +719,22 @@ with an elm Model-View-Update structure. This is a great place to start for your
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;type Action = RevealTile Int                                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+&lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;type Action = RevealTile Int                                             &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
 
 
-init : Game                                                      &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+init : Game                                                              &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
 init =
   Game.createGame 15 15 5787345
 
 
-update : Action -&amp;gt; Game -&amp;gt; Game                                  &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+update : Action -&amp;gt; Game -&amp;gt; Game                                          &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
 update Action game =
   case action of
-    RevealTile id -&amp;gt; if Game.gameOver game then game else        &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+    RevealTile id -&amp;gt; if not (game.status == IN_PROGRESS) then game else  &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
                       Game.revealTile game id
 
-main =                                                           &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
-  StartApp.Simple.start                                          &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+main =                                                                   &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+  StartApp.Simple.start                                                  &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
     { model = init
     , update = update
     , view = view
@@ -798,32 +793,32 @@ To use that we have to change a few things though, most notably we can&amp;#8217
 &lt;div class=&quot;content&quot;&gt;
 &lt;pre class=&quot;prettyprint elm language-elm&quot;&gt;&lt;code&gt;
 type Action =
-  NewGame                                                             &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  NewGame                                                                 &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
   | RevealTile Int
 
 
 
-update : (Float, Action) -&amp;gt; Game -&amp;gt; Game                              &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+update : (Float, Action) -&amp;gt; Game -&amp;gt; Game                                  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
 update (time, action) game =
   case action of
-    NewGame -&amp;gt; Game.createGame 15 15  (truncate time)                 &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
-    RevealTile id -&amp;gt; if Game.gameOver game then game else
+    NewGame -&amp;gt; Game.createGame 15 15  (truncate time)                     &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+    RevealTile id -&amp;gt; if not (game.status == IN_PROGRESS) then game else
                        Game.revealTile game id
 
 
-actions: Signal.Mailbox Action                                        &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+actions: Signal.Mailbox Action                                            &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
 actions =
   Signal.mailbox NewGame
 
-model: Signal Game                                                    &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+model: Signal Game                                                        &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
 model =
   Signal.foldp update init (Time.timestamp actions.signal)
 
-main : Signal Html                                                    &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+main : Signal Html                                                        &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
 main =
   Signal.map (view actions.address) model
 
-port initGame : Task.Task x ()                                        &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+port initGame : Task.Task x ()                                            &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
 port initGame =
   Signal.send actions.address NewGame
 &lt;/code&gt;&lt;/pre&gt;
