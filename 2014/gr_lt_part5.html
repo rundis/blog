@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/lighttable.html">lighttable</a>
   </em>
-    <a href="/blog/tags/groovy.html"> groovy</a>
+    <a href="/blog/tags/groovy.html">groovy</a>
   </em>
-    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
   </em>
     <a href="/blog/tags/gradle.html">gradle</a>
   </p>
@@ -127,7 +127,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>class GenericGradleModelPlugin implements Plugin {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">class GenericGradleModelPlugin implements Plugin {
     final ToolingModelBuilderRegistry registry;
 
     @Inject
@@ -147,7 +147,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>private static class CustomToolingModelBuilder implements ToolingModelBuilder {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">private static class CustomToolingModelBuilder implements ToolingModelBuilder {
 
 // .. other private methods left out for brevity
 
@@ -198,11 +198,11 @@ Map confDiGraph(Configuration conf) {
 <h3 id="_applying_the_plugin_to_gradle_projects_we_connect_to">Applying the plugin to gradle projects we connect to</h3>
 <div class="paragraph">
 <p>Before we can retrieve our custom gradle model, we need to apply the plugin to the project in question. I could ask the users to do it themselves, but that wouldn&#8217;t be particularly user friendly.
-Luckily Gradle provides init scripts that you can apply to projects and the tooling api supports doing so. Init scripts allows you to do&#8230; well &#8230; init stuff for your projects. Applying a plugin from the outside falls into that category.</p>
+Luckily Gradle provides init scripts that you can apply to projects and the tooling api supports doing so. Init scripts allows you to do&#8230;&#8203; well &#8230;&#8203; init stuff for your projects. Applying a plugin from the outside falls into that category.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>initscript {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">initscript {
   repositories {
     maven { url 'http://dl.bintray.com/rundis/maven' }
   }
@@ -219,7 +219,7 @@ allprojects {
 <h3 id="_retrieving_the_model">Retrieving the model</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>def genericModel = con.action(new GetGenericModelAction())
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">def genericModel = con.action(new GetGenericModelAction())
                             .withArguments("--init-script", new File("lib/lt-project-init.gradle").absolutePath)
                             .addProgressListener(listener)
                             .run()
@@ -252,7 +252,7 @@ We&#8217;ll quickly run through some of the highlights of the LightTable clojure
 <h3 id="_graph_object">Graph object</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defui dependency-graph-ui [this]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defui dependency-graph-ui [this]
   [:div.graph
    [:div.dependency-graph
     [:svg:svg {:width "650" :height "680"}
@@ -276,7 +276,7 @@ We&#8217;ll quickly run through some of the highlights of the LightTable clojure
 <h3 id="_some_behaviours">Some behaviours</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-dependencies-loaded
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-dependencies-loaded
           :desc "Gradle dependencies loaded for selected project"
           :triggers #{:graph.set.dependencies}
           :reaction (fn [this rootDeps subDeps]
@@ -306,7 +306,7 @@ We&#8217;ll quickly run through some of the highlights of the LightTable clojure
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn create-multiproject-graph [this]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn create-multiproject-graph [this]
   (let [g (new dagreD3/Digraph)]
     (doseq [x (:nodes (multi-proj-deps this))]
       (.addNode g (dep-id x) #js {:label (str "&lt;div class='graph-label clickable' data-proj-name='"
@@ -342,13 +342,13 @@ We&#8217;ll quickly run through some of the highlights of the LightTable clojure
 <h3 id="_end_results">End results</h3>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2014/ratpack_multi.png" alt="ratpack multi">
+<img src="/blog/2014//ratpack_multi.png" alt="ratpack multi">
 </div>
 <div class="title">Figure 1. Multiproject sample : Ratpack</div>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2014/ratpack_reactor.png" alt="ratpack reactor">
+<img src="/blog/2014//ratpack_reactor.png" alt="ratpack reactor">
 </div>
 <div class="title">Figure 2. Project configuration dependencies</div>
 </div>

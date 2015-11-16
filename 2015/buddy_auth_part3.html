@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/clojure.html">clojure</a>
   </em>
-    <a href="/blog/tags/buddy.html"> buddy</a>
+    <a href="/blog/tags/buddy.html">buddy</a>
   </em>
-    <a href="/blog/tags/security.html"> security</a>
+    <a href="/blog/tags/security.html">security</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/buddy_auth_part3.html"
@@ -112,7 +112,7 @@ In this episode we&#8217;ll be looking at how we might handle revocation of prev
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Sample code (tagged for each blog post) can be found on <a href="https://github.com/rundis/acme-buddy">github</a>
@@ -186,7 +186,7 @@ The sole purpose of refresh tokens is to be able to request new auth tokens.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/refresh-token.png" alt="refresh token">
+<img src="/blog/2015//refresh-token.png" alt="refresh token">
 </div>
 </div>
 <div class="olist arabic">
@@ -265,7 +265,7 @@ are needed from part 1 and 2.</p>
 <h3 id="_changing_token_creation_in_acme_auth">Changing token creation in acme-auth</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint cloure language-cloure"><code>(defn- unsign-token [auth-conf token]
+<pre class="prettyprint highlight"><code class="language-cloure" data-lang="cloure">(defn- unsign-token [auth-conf token]
   (jws/unsign token (pub-key auth-conf)))
 
 (defn- make-auth-token [auth-conf user]                                        <i class="conum" data-value="1"></i><b>(1)</b>
@@ -295,8 +295,7 @@ are needed from part 1 and 2.</p>
     (let [[ok? res] (auth-user conn credentials)]
       (if ok?
         [true (make-token-pair! conn auth-conf (:user res))]
-        [false res]))))
-</code></pre>
+        [false res]))))</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -329,7 +328,7 @@ contains only user-id and issued at time (iat). This allows us retrieval of the 
 <h3 id="_refreshing_tokens">Refreshing tokens</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn refresh-auth-token [ds auth-conf refresh-token]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn refresh-auth-token [ds auth-conf refresh-token]
   (if-let [unsigned (unsign-token auth-conf refresh-token)]                                               <i class="conum" data-value="1"></i><b>(1)</b>
     (jdbc/with-db-transaction [conn ds]
       (let [db-token-rec (store/find-token-by-unq-key conn (:user-id unsigned) (:iat unsigned))           <i class="conum" data-value="2"></i><b>(2)</b>
@@ -370,7 +369,7 @@ contains only user-id and issued at time (iat). This allows us retrieval of the 
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="title">Why creating a new refresh token every time ?</div>
@@ -389,7 +388,7 @@ In the code above we can&#8217;t tell the diffence between why a refresh token i
 <h3 id="_middleware_changes_in_the_acme_webstore">Middleware changes in the acme-webstore</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn wrap-auth-cookie [handler cookie-secret]                                    <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn wrap-auth-cookie [handler cookie-secret]                                    <i class="conum" data-value="1"></i><b>(1)</b>
   (-&gt; handler
       (wrap-session
        {:store (cookie-store {:key cookie-secret})
@@ -462,7 +461,7 @@ In the code above we can&#8217;t tell the diffence between why a refresh token i
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 It might not be a great ideat to store the auth token and the refresh token in the same cookie. Haven&#8217;t really

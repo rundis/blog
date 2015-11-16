@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/lighttable.html">lighttable</a>
   </em>
-    <a href="/blog/tags/groovy.html"> groovy</a>
+    <a href="/blog/tags/groovy.html">groovy</a>
   </em>
-    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2014/gr_lt_part2.html"
@@ -97,7 +97,7 @@
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2014/lt_groovy_eval.png" alt="lt groovy eval">
+<img src="/blog/2014//lt_groovy_eval.png" alt="lt groovy eval">
 </div>
 </div>
 </div>
@@ -109,7 +109,7 @@
 <h3 id="_evaluate_contents_of_editor_cmd_ctrl_shift_enter">Evaluate contents of editor (cmd/ctrl + shift + enter)</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-eval
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-eval
           :desc "Groovy: Eval current editor"
           :triggers #{:eval}
           :reaction (fn [editor]
@@ -127,7 +127,7 @@
 <h3 id="_evaluate_current_line_selection">Evaluate current line/selection</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-eval.one
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-eval.one
           :desc "Groovy: Eval current selection"
           :triggers #{:eval.one}
           :reaction (fn [editor]
@@ -148,7 +148,7 @@
 <h3 id="_our_groovy_eval">Our groovy Eval!</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::eval!
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::eval!
           :triggers #{:eval!}
           :reaction (fn [this event]
                       (let [{:keys [info origin]} event
@@ -173,7 +173,7 @@ Once connected it will jsonify our parameters and send them off to our groovy cl
 <div class="listingblock">
 <div class="title">The JSON might look something like:</div>
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>[89,
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">[89,
 "editor.eval.groovy",
   {"line-ending":"\n",
    "name":"sample.groovy",
@@ -206,7 +206,7 @@ Once connected it will jsonify our parameters and send them off to our groovy cl
 <h4 id="_command_dispatch">Command dispatch</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>ltClient.withStreams { input, output -&gt;
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">ltClient.withStreams { input, output -&gt;
   try {
     input.eachLine { line -&gt;
     def (currentClientId, command, data) = new JsonSlurper().parseText(line)
@@ -231,7 +231,7 @@ Once connected it will jsonify our parameters and send them off to our groovy cl
 <h4 id="_eval_groovy">Eval groovy</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>private void evalGroovy(data, currentClientId) {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">private void evalGroovy(data, currentClientId) {
   def evalResult = scriptExecutor.execute(data.code)
 
   def resultParams = [meta: data.meta]
@@ -283,7 +283,7 @@ We run the script (capturing system.out and system.err).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>[89,
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">[89,
  "groovy.res",
  {"meta":{"start":22,"end":23},"out":"hello\nmama\n","result":[{"line":1,"values":["null"]},{"line":2,"values":["null"]}]}]</code></pre>
 </div>
@@ -294,7 +294,7 @@ We run the script (capturing system.out and system.err).</p>
 <h3 id="_handling_the_evaluation_results_in_light_table">Handling the evaluation results in Light Table</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn notify-of-results [editor res]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn notify-of-results [editor res]
   (doseq [ln (:result res)]
     (let [lineNo (+ (:line ln) (-&gt; res :meta :start) -1)]
       (object/raise editor :editor.result (clojure.string/join " " (:values ln)) {:line lineNo :start-line lineNo}))))
@@ -330,7 +330,7 @@ If the behavior is to handle an error, we show evaluation results up until the s
 <h4 id="_groovy_behaviors">groovy.behaviors</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
      :clients []
      :editor.groovy [:lt.plugins.groovy/on-eval
                      :lt.plugins.groovy/on-eval.one
@@ -358,7 +358,7 @@ The ":eval!" behavior is defined for the :groovy.lang tag. Its tied to our groov
 <p>A little bit of plumbing was needed to get this set up. But the hard parts was really coming up with the groovy AST transformation stuff. I guess by now you might have started getting an inkling that Light Table is fairly composable ? It really is super flexible. You don&#8217;t like the behavior for handling inline results for the groovy plugin ? You could easily write your own and wire it up in your user.behaviors file in Light Table. It&#8217;s wicked cool, actually it really is your editor !</p>
 </div>
 <div class="paragraph">
-<p>Yesterday I released version 0.0.2 of the Groovy LightTable plugin. Its available through the Light Table plugin manager, or if you wish to play with the code or maybe feel like contributing feel free to fork the repo at : <a href="https://github.com/rundis/LightTable-Groovy">https://github.com/rundis/LightTable-Groovy</a>. Pull requests are welcome.</p>
+<p>Yesterday I released version 0.0.2 of the Groovy LightTable plugin. Its available through the Light Table plugin manager, or if you wish to play with the code or maybe feel like contributing feel free to fork the repo at : <a href="https://github.com/rundis/LightTable-Groovy" class="bare">https://github.com/rundis/LightTable-Groovy</a>. Pull requests are welcome.</p>
 </div>
 <div class="paragraph">
 <p>So where to next ? I&#8217;d really like to try and create an InstaRepl editor for the plugin. A groovy script editor that evaluates code as you type. There&#8217;s gotta be one or two challenges related to that. A quick win might be to provide groovy api documentation from inside Light Table. I&#8217;ll let you know what happens in the next post.</p>

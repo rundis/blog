@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/clojure.html">clojure</a>
   </em>
-    <a href="/blog/tags/buddy.html"> buddy</a>
+    <a href="/blog/tags/buddy.html">buddy</a>
   </em>
-    <a href="/blog/tags/security.html"> security</a>
+    <a href="/blog/tags/security.html">security</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/buddy_auth_part2.html"
@@ -104,7 +104,7 @@ The app will implement a simple login and logout flow and demonstrate how you ma
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -141,7 +141,7 @@ makes a contribution to buddy-auth to save us from some of the steps here !</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/acme_login.png" alt="acme login">
+<img src="/blog/2015//acme_login.png" alt="acme login">
 </div>
 <div class="title">Figure 1. Sample login screen</div>
 </div>
@@ -152,7 +152,7 @@ makes a contribution to buddy-auth to save us from some of the steps here !</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn create-token [req]                                                           <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn create-token [req]                                                           <i class="conum" data-value="1"></i><b>(1)</b>
   (http/post "http://localhost:6001/create-auth-token"
              {:content-type :json
               :accept :json
@@ -190,14 +190,14 @@ is set it will redirect to the url provided in m. Redirection will be covered ex
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>Lazy error handling&#8230;</td>
+<td>Lazy error handling&#8230;&#8203;</td>
 </tr>
 </table>
 </div>
 <div class="listingblock">
 <div class="title">Logging out</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn logout [req]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn logout [req]
   (assoc (response/redirect "/") :session nil))</code></pre>
 </div>
 </div>
@@ -214,7 +214,7 @@ routes in the sample application.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defroutes public-routes
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defroutes public-routes
   (route/resources "/")
   (GET "/" []       show-index)
   (GET "/login" []  sec/show-login)
@@ -306,7 +306,7 @@ there had to be measures to mitigate some of the additional risks involved.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -328,7 +328,7 @@ Also revocation of a token is definitely an interesting scenario we will need to
 <h4 id="_cookie_store">Cookie store</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn wrap-auth-cookie [handler cookie-secret]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn wrap-auth-cookie [handler cookie-secret]
   (-&gt; handler
       (wrap-session
        {:store (cookie-store {:key cookie-secret})  <i class="conum" data-value="1"></i><b>(1)</b>
@@ -352,7 +352,7 @@ Also revocation of a token is definitely an interesting scenario we will need to
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 A big win with the cookie approach is that a server restart is no big deal. The user stays logged in. If you are using staged deploys, no session synchronization is needed.
@@ -366,7 +366,7 @@ A big win with the cookie approach is that a server restart is no big deal. The 
 <h3 id="_unsigning_the_token">Unsigning the token</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn unsign-token [token]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn unsign-token [token]
   (jws/unsign token (ks/public-key (io/resource "auth_pubkey.pem")) {:alg :rs256}))     <i class="conum" data-value="1"></i><b>(1)</b>
 
 
@@ -398,7 +398,7 @@ A big win with the cookie approach is that a server restart is no big deal. The 
 <h3 id="_ensuring_that_the_user_is_logged_in_for_a_given_route">Ensuring that the user is logged in for a given route</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn wrap-authentication [handler]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn wrap-authentication [handler]
   (fn [req]
     (if (:auth-user req)
       (handler req)
@@ -423,8 +423,7 @@ various other mechanisms for authorization.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>
-(def acme-store-roles                                                     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(def acme-store-roles                                                     <i class="conum" data-value="1"></i><b>(1)</b>
   {:customer 10 :store-admin 11})
 
 (defn any-granted? [req roles]                                            <i class="conum" data-value="2"></i><b>(2)</b>
@@ -461,7 +460,7 @@ various other mechanisms for authorization.</p>
 <h3 id="_showing_elements_based_on_role_privileges">Showing elements based on role privileges</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn- render-menu [req]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn- render-menu [req]
   (let [user (:auth-user req)]
     [:nav.menu
      [:div {:class "collapse navbar-collapse bs-navbar-collapse navbar-inverse"}
@@ -479,7 +478,7 @@ various other mechanisms for authorization.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/acme_admin_dash.png" alt="acme admin dash">
+<img src="/blog/2015//acme_admin_dash.png" alt="acme admin dash">
 </div>
 <div class="title">Figure 2. Sample Dashboard screen with the Account listing menu option for admins</div>
 </div>
@@ -500,17 +499,17 @@ We don&#8217;t want to open up for redirect attacks so we added a simple middlew
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-Lets say someone sends you a link like this <a href="http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot">http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot</a> You probably don&#8217;t want your users to end up there upon successfully login.
+Lets say someone sends you a link like this <a href="http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot" class="bare">http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot</a> You probably don&#8217;t want your users to end up there upon successfully login.
 </td>
 </tr>
 </table>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(def redirect-whitelist
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(def redirect-whitelist
   [#"http://localhost:6002/.*"])
 
 (defn wrap-authorized-redirects [handler]

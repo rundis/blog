@@ -76,7 +76,7 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/clojure.html">clojure</a>
   </em>
-    <a href="/blog/tags/boot.clj.html"> boot.clj</a>
+    <a href="/blog/tags/boot.clj.html">boot.clj</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/bootify-ring.html"
@@ -132,7 +132,7 @@ TBH I&#8217;d love to see gradle get some serious clojure love, but it doesn&#82
 <p>Great repl and commandline support.</p>
 </li>
 <li>
-<p>&#8230; and surely a lots more</p>
+<p>&#8230;&#8203; and surely a lots more</p>
 </li>
 </ul>
 </div>
@@ -148,7 +148,7 @@ TBH I&#8217;d love to see gradle get some serious clojure love, but it doesn&#82
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defproject boot-sample "0.1.0"
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defproject boot-sample "0.1.0"
   :description "Boot sample application"
   :url "https://github.com/rundis/boot-sample"
   :min-lein-version "2.0.0"
@@ -159,16 +159,14 @@ TBH I&#8217;d love to see gradle get some serious clojure love, but it doesn&#82
                  [ring/ring-json "0.3.1"]
                  [bouncer "0.3.1"]
                  [io.aviso/pretty "0.1.14"]]
-  :ring {:handler boot-sample.core/app                       <b>(1)</b>
+  :ring {:handler boot-sample.core/app                       <b class="conum">(1)</b>
          :port 3360}
   :profiles {:dev {:plugins [[lein-ring "0.8.13"]]
                    :test-paths ^:replace []}
              :test {:dependencies [[midje "1.6.3"]]
                     :plugins [[lein-midje "3.1.3"]]
                     :test-paths ["test"]
-                    :resource-paths ["test/resources"]}})
-
-</code></pre>
+                    :resource-paths ["test/resources"]}})</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -183,7 +181,7 @@ TBH I&#8217;d love to see gradle get some serious clojure love, but it doesn&#82
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>lein ring uberjar
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">lein ring uberjar
 java -jar target/boot-sample-0.1.0-standalone.jar</code></pre>
 </div>
 </div>
@@ -192,7 +190,7 @@ java -jar target/boot-sample-0.1.0-standalone.jar</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns boot-sample.core
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns boot-sample.core
   (:require [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.json :refer [wrap-json-params]]
@@ -224,7 +222,7 @@ Well, because the ring plugin creates one for us.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>cat target classes/boot_sample/core/main.clj</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">cat target classes/boot_sample/core/main.clj</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -232,7 +230,7 @@ Well, because the ring plugin creates one for us.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(do
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(do
   (clojure.core/ns boot-sample.core.main
    (:require ring.server.leiningen)
                    (:gen-class))
@@ -263,8 +261,8 @@ I&#8217;ll focus on getting that uberjar up and running.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(set-env!
- :resource-paths #{"src"}                                <b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(set-env!
+ :resource-paths #{"src"}                                <b class="conum">(1)</b>
  :dependencies '[[org.clojure/clojure "1.6.0"]
                  [compojure "1.2.1"]
                  [liberator "0.12.2"]
@@ -276,8 +274,8 @@ I&#8217;ll focus on getting that uberjar up and running.</p>
 (task-options!
  pom {:project 'boot-Sample
       :version "0.1.0"}
- aot {:namespace '#{boot-sample.core}}                  <b>(2)</b>
- jar {:main 'boot_sample.core                           <b>(3)</b>
+ aot {:namespace '#{boot-sample.core}}                  <b class="conum">(2)</b>
+ jar {:main 'boot_sample.core                           <b class="conum">(3)</b>
       :manifest {"Description" "Sample boot app"
                  "Url" "https://github.com/rundis/boot-sample"}})
 
@@ -307,21 +305,20 @@ So the last piece of the puzzle is to add one. It&#8217;t not that hard.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns boot-sample.core
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns boot-sample.core
   (:require [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.json :refer [wrap-json-params]]
             [compojure.core :refer [defroutes ANY GET]]
             [liberator.core :refer [defresource resource]]
-            [ring.adapter.jetty :as jetty])                                <b>(1)</b>
-  (:gen-class))                                                            <b>(2)</b>
+            [ring.adapter.jetty :as jetty])                                <b class="conum">(1)</b>
+  (:gen-class))                                                            <b class="conum">(2)</b>
 
 
 ;; ... the other stuff
 
 (defn -main []
-  (jetty/run-jetty app {:port 3360}))                                     <b>(3)</b>
-</code></pre>
+  (jetty/run-jetty app {:port 3360}))                                     <b class="conum">(3)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -351,7 +348,7 @@ I needed to build boot from source, should be fixed in the next release though.<
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>git clone git@github.com:boot-clj/boot.git
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">git clone git@github.com:boot-clj/boot.git
 cd boot/boot/core
 lein install</code></pre>
 </div>
@@ -365,7 +362,7 @@ lein install</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>boot build
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">boot build
 java -jar target/boot-sample-0.1.0.jar</code></pre>
 </div>
 </div>

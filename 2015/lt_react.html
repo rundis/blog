@@ -76,11 +76,11 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/clojure.html">clojure</a>
   </em>
-    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
   </em>
-    <a href="/blog/tags/lighttable.html"> lighttable</a>
+    <a href="/blog/tags/lighttable.html">lighttable</a>
   </em>
-    <a href="/blog/tags/react.html"> react</a>
+    <a href="/blog/tags/react.html">react</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/lt_react.html"
@@ -122,13 +122,13 @@ Let&#8217;s have a look at how I did it !</p>
 <div class="content">
 <div class="imageblock left">
 <div class="content">
-<img src="/blog/2015/ns_list.png" alt="ns list" width="400">
+<img src="/blog/2015//ns_list.png" alt="ns list" width="400">
 </div>
 <div class="title">Figure 1. Namespace list</div>
 </div>
 <div class="imageblock left">
 <div class="content">
-<img src="/blog/2015/ns_vars.png" alt="ns vars" width="400">
+<img src="/blog/2015//ns_vars.png" alt="ns vars" width="400">
 </div>
 <div class="title">Figure 2. Public vars for selected namespace</div>
 </div>
@@ -146,7 +146,7 @@ Let&#8217;s have a look at how I did it !</p>
 <h3 id="_quiescent_dependency_project_clj">Quiescent dependency - project.clj</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defproject clj-light-refactor "0.1.5"
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defproject clj-light-refactor "0.1.5"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [quiescent "0.1.4"]])               <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
@@ -164,7 +164,7 @@ Let&#8217;s have a look at how I did it !</p>
 <h3 id="_react_dependency_plugin_behaviours_file">React dependency - plugin behaviours file</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>[:app :lt.objs.plugins/load-js ["react.min.js"                       <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">[:app :lt.objs.plugins/load-js ["react.min.js"                       <i class="conum" data-value="1"></i><b>(1)</b>
                                 "clj-light-refactor_compiled.js"]]</code></pre>
 </div>
 </div>
@@ -191,7 +191,7 @@ State in Light Table is typically stored in objects. Objects are basically a map
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 To learn more about BOT (Behaviors, Objects and Tags), check out <a href="http://www.chris-granger.com/2013/01/24/the-ide-as-data/">The IDE as a value</a> by Chris Granger.
@@ -204,8 +204,7 @@ To learn more about BOT (Behaviors, Objects and Tags), check out <a href="http:/
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>
-(defui wrapper [this]                                             <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defui wrapper [this]                                             <i class="conum" data-value="1"></i><b>(1)</b>
   [:div.outer
    [:div {:id "nsbrowser-wrapper"} "Retrieving namespaces..."]])
 
@@ -246,7 +245,7 @@ To learn more about BOT (Behaviors, Objects and Tags), check out <a href="http:/
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(declare render)
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(declare render)
 
 (defn handle-keypress [props ev]                                           <i class="conum" data-value="6"></i><b>(6)</b>
   (let [kk (.-which ev)]
@@ -287,8 +286,7 @@ To learn more about BOT (Behaviors, Objects and Tags), check out <a href="http:/
                               :on-change (fn [search-for]
                                            (object/raise ns-bar :search! search-for))}
                              props))
-            (.getElementById js/document "nsbrowser-wrapper")))
-</code></pre>
+            (.getElementById js/document "nsbrowser-wrapper")))</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -325,7 +323,7 @@ for handling events we wish to handle in our ui. More on that later.</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 If you are not familiar with react, it might seem inefficient to render the entire UI everytime. But
@@ -354,7 +352,7 @@ in the dom, but rather in data structures somewhere else (like in an atom).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn move-down [items]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn move-down [items]
   (let [curr-idx (selected-idx items)]
     (if-not (&lt; curr-idx (dec (count items)))
       items
@@ -374,7 +372,7 @@ is dead easy using the inbuild repl with inline results.</p>
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::move-up!                                                     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::move-up!                                                     <i class="conum" data-value="1"></i><b>(1)</b>
           :triggers #{:move-up!}
           :reaction (fn [this]
                       (let [moved (move-up (:filtered-items @this))]
@@ -445,7 +443,7 @@ It stores that filtered list in our object and rerenders the ui.</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 The <em>this</em> argument for our behavior reaction function is the ns-bar object instance we defined earlier.
@@ -455,7 +453,7 @@ The <em>this</em> argument for our behavior reaction function is the ns-bar obje
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code> [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/move-up!]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure"> [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/move-up!]
  [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/select!]
  [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/search!]</code></pre>
 </div>
@@ -477,7 +475,7 @@ in your Light Table user plugin (everyone has one !).</p>
 <h4 id="_providing_your_own_behavior">Providing your own behavior</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns lt.plugins.user                                                    <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns lt.plugins.user                                                    <i class="conum" data-value="1"></i><b>(1)</b>
   (:require [lt.object :as object]
             [lt.plugins.nsrefactor.nsbrowser :as nsbrowser])           <i class="conum" data-value="2"></i><b>(2)</b>
   (:require-macros [lt.macros :refer [behavior]]))
@@ -515,7 +513,7 @@ when an event is triggered (through <em>object/raise</em>)</td>
 <h4 id="_replacing_the_default_behavior_with_our_own">Replacing the default behavior with our own</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code> [:clojure.nsbrowser :-lt.plugins.cljrefactor.nsbrowser/move-up!]   <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure"> [:clojure.nsbrowser :-lt.plugins.cljrefactor.nsbrowser/move-up!]   <i class="conum" data-value="1"></i><b>(1)</b>
  [:clojure.nsbrowser :lt.plugins.user/user-move-up!]                <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
@@ -555,12 +553,12 @@ You could do this on a project level, or you could do it globally for all your p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>  :user {:plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]]}}</code></pre>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">  :user {:plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]]}}</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::list-ns
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::list-ns
           :triggers #{:list-ns}
           :reaction (fn [ed]
                       (object/raise ed
@@ -588,8 +586,7 @@ You could do this on a project level, or you could do it globally for all your p
                                           :update-ns-list!                       <i class="conum" data-value="7"></i><b>(7)</b>
                                           (-&gt;&gt; (:ns-list ret)
                                                (maybe-exclude (:exclusions @ns-bar))
-                                               (map #(hash-map :name %)))))))))
-</code></pre>
+                                               (map #(hash-map :name %)))))))))</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -629,7 +626,7 @@ the operation completes in will trigger a behavior named as defined in <strong>4
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The code eval behavior is triggered on an ed object. This is an LT editor object. This means that
@@ -652,7 +649,7 @@ in the Light Table command browser (open by pressing ctrl + space).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(cmd/command {:command :show-nsbrowser                          <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(cmd/command {:command :show-nsbrowser                          <i class="conum" data-value="1"></i><b>(1)</b>
               :desc "Clojure refactor: Show ns-browser"         <i class="conum" data-value="2"></i><b>(2)</b>
               :exec (fn []
                       (when-let [ed (pool/last-active)]         <i class="conum" data-value="3"></i><b>(3)</b>
@@ -686,7 +683,7 @@ in the Light Table command browser (open by pressing ctrl + space).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code> [:editor.clj "ctrl-alt-n" :show-nsbrowser]</code></pre>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure"> [:editor.clj "ctrl-alt-n" :show-nsbrowser]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -704,7 +701,7 @@ for that purpose. Currently you can define a list of regex&#8217;s for namespace
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::set-nsbrowser-filters
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::set-nsbrowser-filters
           :triggers #{:object.instant}                                   <i class="conum" data-value="1"></i><b>(1)</b>
           :desc "Clojure Refactor: Configure filter for nsbrowser"
           :type :user
@@ -732,7 +729,7 @@ for that purpose. Currently you can define a list of regex&#8217;s for namespace
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/nsconfig_beh.png" alt="nsconfig beh">
+<img src="/blog/2015//nsconfig_beh.png" alt="nsconfig beh">
 </div>
 </div>
 <div class="paragraph">
@@ -760,7 +757,7 @@ as a great Open Source IDE alternative.</em></p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 For improved Clojure support in Light Table, you really should try out the <a href="https://github.com/rundis/clj-light-refactor">clj-light-refactor</a> plugin !

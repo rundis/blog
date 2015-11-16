@@ -108,4 +108,8 @@
         <loc>http://rundis.github.io/blog2013/buster-plugin.html</loc>
         <lastmod>2013-08-19</lastmod>
     </url>
+    <url>
+        <loc>http://rundis.github.io/blogelmfeed.xml</loc>
+        <lastmod>2015-11-10</lastmod>
+    </url>
 </urlset>

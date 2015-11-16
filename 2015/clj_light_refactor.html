@@ -76,7 +76,7 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/clojure.html">clojure</a>
   </em>
-    <a href="/blog/tags/lighttable.html"> lighttable</a>
+    <a href="/blog/tags/lighttable.html">lighttable</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/clj_light_refactor.html"
@@ -126,10 +126,10 @@ nREPL middleware to support refactorings in an editor agnostic way.
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-You can find the plugin repo on github <a href="https://github.com/rundis/clj-light-refactor">https://github.com/rundis/clj-light-refactor</a>
+You can find the plugin repo on github <a href="https://github.com/rundis/clj-light-refactor" class="bare">https://github.com/rundis/clj-light-refactor</a>
 </td>
 </tr>
 </table>
@@ -148,7 +148,7 @@ So getting started wasn&#8217;t really that difficult.</p>
 <h3 id="_middleware_invocation">Middleware invocation</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn artifact-list-op []
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn artifact-list-op []
   (str "(do (require 'refactor-nrepl.client) (require 'clojure.tools.nrepl)"
        "(def tr (refactor-nrepl.client/connect))"
        "(clojure.tools.nrepl/message (clojure.tools.nrepl/client tr 10000) {:op \"artifact-list\"}))"))</code></pre>
@@ -163,7 +163,7 @@ middleware for listing clojare artifacts.</p>
 <h3 id="_behaviour_in_light_table">Behaviour in Light Table</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::trigger-artifact-hints
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::trigger-artifact-hints
           :triggers #{:artifact.hints.update!}
           :debounce 500
           :reaction (fn [editor res]
@@ -198,7 +198,7 @@ to handle the results</td>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::finish-artifact-hints
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::finish-artifact-hints
           :triggers #{:editor.eval.clj.result.refactor.artifacts}                                 <i class="conum" data-value="1"></i><b>(1)</b>
           :reaction (fn [editor res]
                       (let [artifacts (-&gt; res :results first :result first :value (s/split #" "))
@@ -235,7 +235,7 @@ the middleware like crazy</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The autocomplete part is skimpily explained here, but the important bit I&#8217;m trying to get across is how to
@@ -253,7 +253,7 @@ So you need to add something like this to your ~/.lein/profiles.clj</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>:plugins [[refactor-nrepl "X.Y.Z"]       <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">:plugins [[refactor-nrepl "X.Y.Z"]       <i class="conum" data-value="1"></i><b>(1)</b>
           [cider/cider-nrepl "A.B.C"]]   <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
@@ -274,7 +274,7 @@ features that might come handy to the clj-light-refactor plugin in the near futu
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 The version indentifiers are intentionally left out, because it&#8217;s currently a little in flux.

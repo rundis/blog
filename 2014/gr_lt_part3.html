@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/lighttable.html">lighttable</a>
   </em>
-    <a href="/blog/tags/groovy.html"> groovy</a>
+    <a href="/blog/tags/groovy.html">groovy</a>
   </em>
-    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2014/gr_lt_part3.html"
@@ -112,7 +112,7 @@
 <h2 id="_a_small_step_towards_a_groovy_repl">A (small) step towards a Groovy REPL</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>After working with Light Table and the Clojure/ClojureScript REPL I have grown very fond of that exploratory nature of working. Is there anything I could do with the plugin to give a more REPL like feel ? Well a small but helpful step would be to be able to remember what I previously have evaluated &#8230;</p>
+<p>After working with Light Table and the Clojure/ClojureScript REPL I have grown very fond of that exploratory nature of working. Is there anything I could do with the plugin to give a more REPL like feel ? Well a small but helpful step would be to be able to remember what I previously have evaluated &#8230;&#8203;</p>
 </div>
 <div class="sect2">
 <h3 id="_groovy_bindings">Groovy Bindings</h3>
@@ -121,7 +121,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>// from the evalGroovy method
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">// from the evalGroovy method
 def evalResult = scriptExecutor.execute(data.code, clientSessions.get(currentClientId))
 clientSessions.put(currentClientId, evalResult.bindings)</code></pre>
 </div>
@@ -137,7 +137,7 @@ clientSessions.put(currentClientId, evalResult.bindings)</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>;; Behavior for clearing bindings
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">;; Behavior for clearing bindings
 (behavior ::on-clear-bindings
           :desc "Clear cached bindings for this editor"
           :triggers #{:on.clear.bindings}
@@ -164,7 +164,7 @@ clientSessions.put(currentClientId, evalResult.bindings)</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>// Wiring up the behaviour in groovy.behaviors
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">// Wiring up the behaviour in groovy.behaviors
 :editor.groovy [:lt.plugins.groovy/on-eval
                      :lt.plugins.groovy/on-eval.one
                      :lt.plugins.groovy/on-clear-bindings
@@ -181,7 +181,7 @@ clientSessions.put(currentClientId, evalResult.bindings)</code></pre>
 <h3 id="_clearing_bindings_groovy">Clearing bindings - Groovy</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>// The command dispatch got a new command
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">// The command dispatch got a new command
 case "editor.clear.groovy":
    clientSessions.clear(currentClientId)
    break;</code></pre>

@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/lighttable.html">lighttable</a>
   </em>
-    <a href="/blog/tags/groovy.html"> groovy</a>
+    <a href="/blog/tags/groovy.html">groovy</a>
   </em>
-    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2014/gr_lt_part1.html"
@@ -182,7 +182,7 @@ It becomes evident that our plugin needs to provide some kind of process that re
 <h3 id="_behaviors_for_connecting_from_groovy_cljs">Behaviors for connecting (from groovy.cljs):</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn run-groovy[{:keys [path name client] :as info}]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn run-groovy[{:keys [path name client] :as info}]
   (let [obj (object/create ::connecting-notifier info)
         client-id (clients/-&gt;id client)
         project-dir (files/parent path)]
@@ -247,8 +247,7 @@ It becomes evident that our plugin needs to provide some kind of process that re
 (behavior ::connect
                   :triggers #{:connect}
                   :reaction (fn [this path]
-                              (try-connect {:info {:path path}})))
-</code></pre>
+                              (try-connect {:info {:path path}})))</code></pre>
 </div>
 </div>
 <div class="ulist">
@@ -273,7 +272,7 @@ It becomes evident that our plugin needs to provide some kind of process that re
 <h3 id="_the_server_part_ltserver_groovy">The server part (LTServer.groovy)</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>import groovy.json.*
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">import groovy.json.*
 
 params = [
   ltPort:   args[0].toInteger(),
@@ -321,7 +320,7 @@ client.withStreams {input, output -&gt;
 <h3 id="_notification_of_successful_connection">Notification of successful connection</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-out
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-out
           :triggers #{:proc.out}
           :reaction (fn [this data]
                       (let [out (.toString data)]
@@ -372,7 +371,7 @@ client.withStreams {input, output -&gt;
 <h3 id="_wiring_up_behaviors_behaviors_groovy">Wiring up behaviors (behaviors.groovy)</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
      :clients []
      :editor.groovy []
      :files [(:lt.objs.files/file-types

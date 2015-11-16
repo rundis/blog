@@ -76,11 +76,11 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/lighttable.html">lighttable</a>
   </em>
-    <a href="/blog/tags/groovy.html"> groovy</a>
+    <a href="/blog/tags/groovy.html">groovy</a>
   </em>
-    <a href="/blog/tags/gradle.html"> gradle</a>
+    <a href="/blog/tags/gradle.html">gradle</a>
   </em>
-    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2014/gr_lt_part4.html"
@@ -118,7 +118,7 @@ Before anyone potentially asking; I will not bother with maven or ant at any poi
 <h3 id="_retrieving_the_class_path_as_a_list_from_a_gradle_project">Retrieving the class path as a list from a Gradle project</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>// Step 1: Connecting to project
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">// Step 1: Connecting to project
 def con = GradleConnector.newConnector()
   .forProjectDirectory(projectDir)
   .connect()
@@ -151,12 +151,12 @@ def classpathList = deps.file + [new File(projectDir, "build/classes/main").path
 <p>The above code is actually wrapped in a class. Connection and model instances are cached for performance reasons.
 We connect to our gradle project. If the project ships with a gradle wrapper (which it should IMO), the gradle connector will use that version (download the distribution even if need be). Otherwise it will use the gradle version of the tooling-api. At the time of writing that&#8217;s 1.12
 The tooling api doesn&#8217;t really expose as much information by default as you might wish. However it ships with an IdeaModel and an EclipseModel that provides what we need for the purposes of creating a class path. As an Idea user the IdeaModel seemed the right choice ! There is also added a progress listener, which is a callback from the api reporting progress. The progress listener returns each progress event as a string to Light Table so that we can display progress information
-We basically navigate the model and extract information about dependencies and put it in a list of maps for ease of jsonifying (useful later !). The location of our projects custom compiled classes are added manually to the class path list (ideally should have been retrieved from the model as well&#8230;)
+We basically navigate the model and extract information about dependencies and put it in a list of maps for ease of jsonifying (useful later !). The location of our projects custom compiled classes are added manually to the class path list (ideally should have been retrieved from the model as well&#8230;&#8203;)
 Adding the class path list to our groovy shell before code invocation</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>private GroovyShell createShell(Map params) {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">private GroovyShell createShell(Map params) {
 def transform = new ScriptTransform()
 def conf = new CompilerConfiguration()
   conf.addCompilationCustomizers(new ASTTransformationCustomizer(transform))
@@ -187,7 +187,7 @@ Voila your groovy scripts can invoke any class in your project´s class path.</p
 <h3 id="_groovy">Groovy</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>class ProgressReporter implements LTProgressReporter {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">class ProgressReporter implements LTProgressReporter {
     final LTConnection ltCon
 
     ProgressReporter(LTConnection ltCon) { this.ltCon = ltCon }
@@ -221,7 +221,7 @@ Voila your groovy scripts can invoke any class in your project´s class path.</p
 <h3 id="_light_table">Light Table</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-gradle-progress
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-gradle-progress
   :desc "Reporting of progress from gradle related tasks"
   :triggers #{:gradle.progress}
   :reaction (fn [this info]
@@ -240,7 +240,7 @@ Listing tasks Groovy/Server</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code> // Step 1: Retrieve generic Gradle model
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy"> // Step 1: Retrieve generic Gradle model
 def gradleProject = con.model(GradleProject)
   .addProgressListener(listener)
   .get()
@@ -266,13 +266,12 @@ gradleProject.tasks.collect{
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-gradle-projectinfo
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-gradle-projectinfo
   :desc "Gradle project model information"
   :triggers #{:gradle.projectinfo}
   :reaction (fn [this info]
               (object/merge! groovy {::gradle-project-info info})
-              (object/assoc-in! cmd/manager [:commands :gradle.task.select :options] (add-selector))))
-</code></pre>
+              (object/assoc-in! cmd/manager [:commands :gradle.task.select :options] (add-selector))))</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -284,7 +283,7 @@ We also update the command for selecting tasks with the new list of tasks. See t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::set-selected
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::set-selected
   :triggers #{:select}
   :reaction (fn [this v]
               (scmd/exec-active! v)))
@@ -306,8 +305,7 @@ We also update the command for selecting tasks with the new list of tasks. See t
               :desc "Groovy: Select Gradle task"
               :options (add-selector)
               :exec (fn [item]
-                      (object/raise groovy :gradle.execute item))})
-</code></pre>
+                      (object/raise groovy :gradle.execute item))})</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -315,12 +313,12 @@ We also update the command for selecting tasks with the new list of tasks. See t
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2014/lt_gr_tasks.png" alt="lt gr tasks">
+<img src="/blog/2014//lt_gr_tasks.png" alt="lt gr tasks">
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>;; Behavior to actually trigger execution of a selected task from the list above
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">;; Behavior to actually trigger execution of a selected task from the list above
 (behavior ::on-gradle-execute
   :desc "Gradle execute task(s)"
   :triggers #{:gradle.execute}
@@ -339,7 +337,7 @@ We also update the command for selecting tasks with the new list of tasks. See t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>// Generic execute task function
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">// Generic execute task function
 def execute(Map params, Closure onComplete) {
     def resultHandler = [
         onComplete: {Object result -&gt;
@@ -363,7 +361,7 @@ def execute(Map params, Closure onComplete) {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>projectConnection.execute(params) {Map result -&gt;
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">projectConnection.execute(params) {Map result -&gt;
     ltConnection.sendData([
         null,
         result.status == "ERROR" ? "gradle.execute.err" : "gradle.execute.success",
@@ -389,7 +387,7 @@ def execute(Map params, Closure onComplete) {
 We&#8217;ve added decent progress reporting and performance seems to be pretty good too. Looks like we have something we can build further upon !</p>
 </div>
 <div class="paragraph">
-<p>I have lots of ideas; Infinitesting,  single test with inline results, compile single file, grails integration ? etc etc. I also really want to show project dependencies in a graph. However before I can do any of those things I need to extend the tooling api with custom models &#8230; and/or maybe I should see if I can contribute to the gradle project in extending the tooling-api with a richer generic project model.</p>
+<p>I have lots of ideas; Infinitesting,  single test with inline results, compile single file, grails integration ? etc etc. I also really want to show project dependencies in a graph. However before I can do any of those things I need to extend the tooling api with custom models &#8230;&#8203; and/or maybe I should see if I can contribute to the gradle project in extending the tooling-api with a richer generic project model.</p>
 </div>
 <div class="paragraph">
 <p>We&#8217;ll have to wait and see. Next week I&#8217;m off to gr8conf.eu in Copenhagen. Really looking forward to meeting up with all the great Groovy dudes/dudettes.  And who knows maybe the hackergarten evening will result in something new and exciting !</p>

@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/clojure.html">clojure</a>
   </em>
-    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
   </em>
-    <a href="/blog/tags/date.html"> date</a>
+    <a href="/blog/tags/date.html">date</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/clojure_dates.html"
@@ -113,7 +113,7 @@ Timezones is another issue we didn&#8217;t worry to much about either.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 You will probably not regret using an UTC timezone for your Servers and Database. This <a href="http://yellerapp.com/posts/2015-01-12-the-worst-server-setup-you-can-make.html">post</a> puts it succinctly.
@@ -136,7 +136,7 @@ simplify reading and writing dates/datetimes.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme.helpers.db
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme.helpers.db
   (:import [java.sql PreparedStatement])
   (:require [acme.util.date :as du]
             [clj-time.coerce :as c]
@@ -184,7 +184,7 @@ In our case we chose to treat java.sql.Date and java.sql.Timestamp in the same m
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 It&#8217;s vital that you require the namespace you have the above incantations, before doing any db interactions. Might be evident, but it&#8217;s worth emphasizing.
@@ -196,7 +196,7 @@ It&#8217;s vital that you require the namespace you have the above incantations,
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Clojure <a href="http://clojure.org/protocols">protocols</a> are pretty powerful stuff. It&#8217;s deffo on my list of clojure things I need
@@ -218,7 +218,7 @@ it makes sence to use that. It so happens this is the standard format for DateTi
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 You might want to look into <a href="https://github.com/cognitect/transit-format">transit</a>. It would probably have been very useful for us :)
@@ -230,7 +230,7 @@ You might want to look into <a href="https://github.com/cognitect/transit-format
 <h3 id="_outbound_dates">Outbound dates</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme.core
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme.core
   (:require [clojure.data.json :as json]
             [clj-time.coerce :as c]))
 
@@ -258,7 +258,7 @@ You might want to look into <a href="https://github.com/cognitect/transit-format
 <h3 id="_inbound_dates">Inbound dates</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme.util.date
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme.util.date
   (:require [clj-time.core :as t]
             [clj-time.format :as f]
             [clj-time.coerce :as c]))
@@ -306,8 +306,7 @@ we settled for atleast a minimum of YYYY-MM-DD</td>
 <div class="listingblock">
 <div class="title">Hook up middleware</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>
-(defn wrap-date [handler]                                     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn wrap-date [handler]                                     <i class="conum" data-value="1"></i><b>(1)</b>
   (fn [req]
     (handler (update-in req [:params] (datetimeify %)))))
 
@@ -351,7 +350,7 @@ It&#8217;s very much inspired by clj-time, but there are some differences. The m
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>;; require similar to the ones on the server side. cljs-time. rather than clj-time.
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">;; require similar to the ones on the server side. cljs-time. rather than clj-time.
 
 
 (defn datetimes-&gt;json [m]                                                       <i class="conum" data-value="1"></i><b>(1)</b>
@@ -407,7 +406,7 @@ with a backend server. If you are using something like <a href="https://github.c
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 What about timezones on the client ? The default for the datetime constructor in cljs-time is to use UTC. So when displaying
@@ -418,7 +417,7 @@ time and/or accepting date with time input from the client you need to convert t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme.client
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme.client
   (:require [cljs-time.format :as f]
             [cljs-time.core :as t]))
 
@@ -428,8 +427,7 @@ time and/or accepting date with time input from the client you need to convert t
 
 (-&gt;&gt; sample
      t/to-default-time-zone                          ; UTC+1 for me
-     (f/unparse (f/formatter "dd.MM.yyyy hh:mm")))   ; =&gt; 27.03.2015 01:53
-</code></pre>
+     (f/unparse (f/formatter "dd.MM.yyyy hh:mm")))   ; =&gt; 27.03.2015 01:53</code></pre>
 </div>
 </div>
 </div>

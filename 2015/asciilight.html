@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/clojurescript.html">clojurescript</a>
   </em>
-    <a href="/blog/tags/node.html"> node</a>
+    <a href="/blog/tags/node.html">node</a>
   </em>
-    <a href="/blog/tags/javascript.html"> javascript</a>
+    <a href="/blog/tags/javascript.html">javascript</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/asciilight.html"
@@ -97,7 +97,7 @@ had to start a separate browser window (with a AsciiDoc browser plugin) or I had
 use something like SimpleHttpServer to serve my "baked" site locally.</p>
 </div>
 <div class="paragraph">
-<p>I&#8217;m probably still going to test my site locally, but I really felt a need for something similar to the <a href="https://github.com/MarcoPolo/lt-markdown">https://github.com/MarcoPolo/lt-markdown</a>
+<p>I&#8217;m probably still going to test my site locally, but I really felt a need for something similar to the <a href="https://github.com/MarcoPolo/lt-markdown" class="bare">https://github.com/MarcoPolo/lt-markdown</a>
 plugin.</p>
 </div>
 <div class="quoteblock">
@@ -105,8 +105,8 @@ plugin.</p>
 I wish I had an editor where I could easily program my own extensions.
 </blockquote>
 <div class="attribution">
-<cite>A few years back</cite><br>
-&#8212; Magnus Rundberget
+&#8212; Magnus Rundberget<br>
+<cite>A few years back</cite>
 </div>
 </div>
 <div class="paragraph">
@@ -133,17 +133,17 @@ node modules from a Light Table is no big deal.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/asciilight_preview.png" alt="asciilight preview">
+<img src="/blog/2015//asciilight_preview.png" alt="asciilight preview">
 </div>
 </div>
 <div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-I pretty much nicked most of the ClojureScript code from <a href="https://github.com/MarcoPolo/lt-markdown">https://github.com/MarcoPolo/lt-markdown</a>. Cheers Marco Polo !
+I pretty much nicked most of the ClojureScript code from <a href="https://github.com/MarcoPolo/lt-markdown" class="bare">https://github.com/MarcoPolo/lt-markdown</a>. Cheers Marco Polo !
 </td>
 </tr>
 </table>
@@ -157,7 +157,7 @@ I&#8217;d be interested to find out why it croaked.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>var asciidoctor = require('asciidoctor.js')();
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">var asciidoctor = require('asciidoctor.js')();
 var processor = asciidoctor.Asciidoctor(true);     <i class="conum" data-value="1"></i><b>(1)</b>
 var opal = asciidoctor.Opal;
 
@@ -176,8 +176,7 @@ module.exports = {
   convert: function(content, baseDir) {
     return doConvert(content, baseDir);
   }
-}
-</code></pre>
+}</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -196,14 +195,14 @@ module.exports = {
 <p>There was a lot of trial and error to figure out what to call the options and how to pass
 these options to asciidoctor. Some seemed to work others seemed to have no effect. To be improved
 in a future release for sure. The most painful part here was that I couldn&#8217;t figure out how to reload
-my custom node module &#8230; hence a lot of Light Table restarts. Surely there must be a better way.</p>
+my custom node module &#8230;&#8203; hence a lot of Light Table restarts. Surely there must be a better way.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_plugin_code">Plugin code</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>defn setAdocHTML! [ed obj]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">defn setAdocHTML! [ed obj]
   (let [html (-&gt;
               (adoc-&gt;html (.getValue (editor/-&gt;cm-ed ed))
                           (files/parent (-&gt; @ed :info :path)))                     <i class="conum" data-value="1"></i><b>(1)</b>
@@ -290,7 +289,7 @@ is responsible for adding a new tab and setting up the link between the editor t
 <h3 id="_behaviors_and_a_note_on_css">Behaviors and a note on CSS</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>[[:app :lt.objs.plugins/load-js "asciilight_compiled.js"]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">[[:app :lt.objs.plugins/load-js "asciilight_compiled.js"]
  [:app :lt.objs.plugins/load-css "css/font-awesome.css"]
  [:app :lt.objs.plugins/load-css "css/adoc.css"]]</code></pre>
 </div>

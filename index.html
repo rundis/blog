@@ -76,9 +76,9 @@
         <p><em>Tags: </em>
 		      <a href="/blog/tags/javascript.html">javascript</a>
 	      
-		      <a href="/blog/tags/react.html"> react</a>
+		      <a href="/blog/tags/react.html">react</a>
 	      
-		      <a href="/blog/tags/elm.html"> elm</a>
+		      <a href="/blog/tags/elm.html">elm</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -92,21 +92,21 @@
 <div class="paragraph">
 <p>After taking a keen interest to Elm lately I figured I needed to solve a real problem. Something a bit fun and achievable in a couple of evenings/nights.
 Not being awfully creative, piggiebacking on other peoples' work is sometimes a good option.
-In this post I&#8217;ll take you through some of my steps in porting/re-implementing <a href="https://github.com/cjohansen/react-sweeper">https://github.com/cjohansen/react-sweeper</a> (JavaScript and React) to an Elm implementation.</p>
+In this post I&#8217;ll take you through some of my steps in porting/re-implementing <a href="https://github.com/cjohansen/react-sweeper" class="bare">https://github.com/cjohansen/react-sweeper</a> (JavaScript and React) to an Elm implementation.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/elm_sweeper.png" alt="elm sweeper">
+<img src="/blog/2015//elm_sweeper.png" alt="elm sweeper">
 </div>
 </div>
 <div class="admonitionblock tip">
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-If you&#8217;d like to have a look at the complete implementation of the game, check out <a href="https://github.com/rundis/elm-sweeper">https://github.com/rundis/elm-sweeper</a>.
+If you&#8217;d like to have a look at the complete implementation of the game, check out <a href="https://github.com/rundis/elm-sweeper" class="bare">https://github.com/rundis/elm-sweeper</a>.
 There you&#8217;ll find instructions on how to get it running too.
 </td>
 </tr>
@@ -140,7 +140,7 @@ an all out repl driven approach. That gave me a chance to experience the good an
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/elm_repl.png" alt="elm repl">
+<img src="/blog/2015//elm_repl.png" alt="elm repl">
 </div>
 </div>
 <div class="sect2">
@@ -151,7 +151,7 @@ define a couple of types</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>type alias Tile               <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type alias Tile               <i class="conum" data-value="1"></i><b>(1)</b>
   { id: Int
   , threatCount: Maybe Int    <i class="conum" data-value="2"></i><b>(2)</b>
   , isRevealed: Bool
@@ -182,7 +182,7 @@ type alias Game =             <i class="conum" data-value="3"></i><b>(3)</b>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Status of the game, the possible states are defined by GameStatus. SAFE means you&#8217;ve won, DEAD&#8230; well</td>
+<td>Status of the game, the possible states are defined by GameStatus. SAFE means you&#8217;ve won, DEAD&#8230;&#8203; well</td>
 </tr>
 </table>
 </div>
@@ -194,7 +194,7 @@ the game logic later on.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 What&#8217;s that <code>Maybe</code> thing ? If someone told me it&#8217;s a <a href="https://en.wikipedia.org/wiki/Monad_(functional_programming)">Monad</a> I wouldn&#8217;t be any wiser. I think of it
@@ -217,7 +217,7 @@ you just revealed. So we need a way to find the neighbouring tiles of a given ti
 <h4 id="_javascript_implementation">JavaScript implementation</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>function onWEdge(game, tile) {                                                 <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">function onWEdge(game, tile) {                                                 <i class="conum" data-value="1"></i><b>(1)</b>
   return tile % game.get('cols') === 0;
 }
 
@@ -273,8 +273,7 @@ neighbouring the given tile.</td>
 <h4 id="_elm_implementation">Elm implementation</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>
-type Direction = W | NW | N | NE | E | SE | S | SW                                 <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Direction = W | NW | N | NE | E | SE | S | SW                                 <i class="conum" data-value="1"></i><b>(1)</b>
 
 onWEdge : Game -&gt; Tile -&gt; Bool                                                     <i class="conum" data-value="2"></i><b>(2)</b>
 onWEdge game tile =
@@ -330,7 +329,7 @@ is also the index in the tiles list of our game.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>tileByIdx is a functions that finds a tile by its index. (it returns a tile, &#8230; maybe). tIdx is a local function that just curries(/binds/partially applies) the first parameter - game</td>
+<td>tileByIdx is a functions that finds a tile by its index. (it returns a tile, &#8230;&#8203; maybe). tIdx is a local function that just curries(/binds/partially applies) the first parameter - game</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
@@ -369,7 +368,7 @@ really nice overview as well.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 Think of &lt;| as one way to avoid parenthesis. It&#8217;s actually a backwards function application
@@ -381,7 +380,7 @@ Think of &lt;| as one way to avoid parenthesis. It&#8217;s actually a backwards 
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -390,7 +389,7 @@ exhaustive. Rumors has it that the next version of elm might handle this at comp
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/elm_case_error.png" alt="elm case error">
+<img src="/blog/2015//elm_case_error.png" alt="elm case error">
 </div>
 </div>
 </td>
@@ -405,7 +404,7 @@ exhaustive. Rumors has it that the next version of elm might handle this at comp
 <h4 id="_javascript">JavaScript</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>function getMineCount(game, tile) {                                             <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">function getMineCount(game, tile) {                                             <i class="conum" data-value="1"></i><b>(1)</b>
   var nbs = neighbours(game, tile);
   return nbs.filter(prop('isMine')).length;
 }
@@ -432,7 +431,7 @@ function addThreatCount(game, tile) {                                           
 <h4 id="_elm">Elm</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>mineCount : Game -&gt; Maybe Tile -&gt; Int                                           <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">mineCount : Game -&gt; Maybe Tile -&gt; Int                                           <i class="conum" data-value="1"></i><b>(1)</b>
 mineCount game tile =
   List.length &lt;| List.filter .isMine &lt;| neighbours game tile
 
@@ -459,7 +458,7 @@ I opted for a two in one function.</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="ulist">
@@ -468,7 +467,7 @@ I opted for a two in one function.</td>
 <li>
 <p>For JavaScript you might get 0 for a non-existent tile, which isn&#8217;t too bad. But maybe you&#8217;ll get
 a null pointer somewhere deeper down the call stack. To be sure you have to crawl through all function calls this function makes and
-apply your JavaScript foo to know things like null &lt; 1 is obviously true, but null &lt; 0 is false. &#8230; and so on.</p>
+apply your JavaScript foo to know things like null &lt; 1 is obviously true, but null &lt; 0 is false. &#8230;&#8203; and so on.</p>
 </li>
 <li>
 <p>The elm implementation won&#8217;t have any null pointer exceptions, but really it should return Maybe Int to guard
@@ -488,7 +487,7 @@ against giving 0 back for a Nothing tile !</p>
 <h4 id="_javascript_2">JavaScript</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>function revealAdjacentSafeTiles(game, tile) {
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">function revealAdjacentSafeTiles(game, tile) {
   if (isMine(game, tile)) {
     return game;
   }
@@ -510,7 +509,7 @@ against giving 0 back for a Nothing tile !</p>
 <h4 id="_elm_2">Elm</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>revealAdjacentSafeTiles :  Game -&gt; Int -&gt; Game
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">revealAdjacentSafeTiles :  Game -&gt; Int -&gt; Game
 revealAdjacentSafeTiles game tileId =
   case tileByIdx game tileId of
     Nothing -&gt; game
@@ -553,7 +552,7 @@ Below I&#8217;ve picked out the most interesting parts</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>export function createUI(channel) {                                            <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">export function createUI(channel) {                                            <i class="conum" data-value="1"></i><b>(1)</b>
   const Tile = createComponent((tile) =&gt; {                                     <i class="conum" data-value="2"></i><b>(2)</b>
     if (tile.get('isRevealed')) {
       return div({className: 'tile' + (tile.get('isMine') ? ' mine' : '')},
@@ -624,7 +623,7 @@ A neat way to avoid using callbacks!</td>
 <h3 id="_elm_3">Elm</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>threatCount : Maybe Int -&gt; List Html
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">threatCount : Maybe Int -&gt; List Html
 threatCount count =
   case count of
     Nothing -&gt; []
@@ -699,7 +698,7 @@ is a list of attributes and the second is a list of child elements</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <code>Signal.Address Action</code> : Address points to a particular type of Signal, in our case the Signal is an <code>Action</code>
@@ -718,7 +717,7 @@ we&#8217;ll come back to that shortly. But the short story is that this is what 
 <h3 id="_javascript_4">JavaScript</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>const channel = new EventEmitter();
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">const channel = new EventEmitter();
 const renderMinesweeper = createUI(channel);
 let game = createGame({cols: 16, rows: 16, mines: 48});
 let history = List([game]);
@@ -791,7 +790,7 @@ with an elm Model-View-Update structure. This is a great place to start for your
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>type Action = RevealTile Int                                             <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Action = RevealTile Int                                             <i class="conum" data-value="1"></i><b>(1)</b>
 
 
 init : Game                                                              <i class="conum" data-value="2"></i><b>(2)</b>
@@ -863,8 +862,7 @@ To use that we have to change a few things though, most notably we can&#8217;t u
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>
-type Action =
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Action =
   NewGame                                                                 <i class="conum" data-value="1"></i><b>(1)</b>
   | RevealTile Int
 
@@ -892,8 +890,7 @@ main =
 
 port initGame : Task.Task x ()                                            <i class="conum" data-value="7"></i><b>(7)</b>
 port initGame =
-  Signal.send actions.address NewGame
-</code></pre>
+  Signal.send actions.address NewGame</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -936,7 +933,7 @@ If any elm-ers out there reads this, feel free to comment on how this could be d
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 I found <a href="https://yobriefca.se/blog/2015/08/02/deconstructing-your-first-elm-app/">this</a> blogpost
@@ -1022,9 +1019,9 @@ peeked your interest enough to give it a try !</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/elm.html">elm</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/lighttable.html"> lighttable</a>
+		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -1043,7 +1040,7 @@ with the author of Elm, Evan Czaplicki.</p>
 </div>
 <div class="paragraph">
 <p>To ensure I have an editor I&#8217;m familiar with and to get me started a little, I figured I&#8217;d create an Elm language plugin
-for Light Table. However lately I&#8217;ve been a little busy helping out  getting <a href="https://github.com/LightTable/LightTable">https://github.com/LightTable/LightTable</a> version 0.8
+for Light Table. However lately I&#8217;ve been a little busy helping out  getting <a href="https://github.com/LightTable/LightTable" class="bare">https://github.com/LightTable/LightTable</a> version 0.8
 released. Last weekend we got an 0.8 alpha out. I needed some of the features from Electron. So now with Light Table using
 Electron under the hoods I could finally complete an intial plugin release. It&#8217;s rough, but it&#8217;s an ok start I suppose !</p>
 </div>
@@ -1065,10 +1062,10 @@ Electron under the hoods I could finally complete an intial plugin release. It&#
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-You can find the plugin repo on github <a href="https://github.com/rundis/elm-light">https://github.com/rundis/elm-light</a>
+You can find the plugin repo on github <a href="https://github.com/rundis/elm-light" class="bare">https://github.com/rundis/elm-light</a>
 </td>
 </tr>
 </table>
@@ -1080,11 +1077,11 @@ You can find the plugin repo on github <a href="https://github.com/rundis/elm-li
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/javascript.html"> javascript</a>
+		      <a href="/blog/tags/javascript.html">javascript</a>
 	      
-		      <a href="/blog/tags/performance.html"> performance</a>
+		      <a href="/blog/tags/performance.html">performance</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -1119,7 +1116,7 @@ rewriting of medium to large sized files (as strings currently mind you) from Li
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 One of my sample ClojureScript files (about 600 lines / 20K characters) took about 250 ms to parse and build a zip for before
@@ -1163,7 +1160,7 @@ I decided to try to just dispatch using a cond or case.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn- dispatch
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn- dispatch
   [c]
   (cond (nil? c)                        parse-eof
         (identical? c *delimiter*)      reader/ignore
@@ -1203,7 +1200,7 @@ I&#8217;ll show a couple of samples</p>
 <h4 id="_checking_for_token_boundaries">Checking for token boundaries</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn boundary?
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn boundary?
   [c]
   "Check whether a given char is a token boundary."
   (contains?
@@ -1217,7 +1214,7 @@ I&#8217;ll show a couple of samples</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(def js-boundaries                                     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(def js-boundaries                                     <i class="conum" data-value="1"></i><b>(1)</b>
   #js [\" \: \; \' \@ \^ \` \~
       \( \) \[ \] \{ \} \\ nil])
 
@@ -1251,7 +1248,7 @@ I&#8217;ll show a couple of samples</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(when (= c "\")
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(when (= c "\")
   ... )</code></pre>
 </div>
 </div>
@@ -1260,7 +1257,7 @@ I&#8217;ll show a couple of samples</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(when (identical? c "(")
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(when (identical? c "(")
   ... )</code></pre>
 </div>
 </div>
@@ -1283,7 +1280,7 @@ Hey, surely this guy nows a thing or two about what really might help and still 
 <h4 id="_avoiding_protocol_indirection">Avoiding protocol indirection</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn peek
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn peek
   "Peek next char."
   [^not-native reader]     <i class="conum" data-value="1"></i><b>(1)</b>
   (r/peek-char reader))</code></pre>
@@ -1302,7 +1299,7 @@ Hey, surely this guy nows a thing or two about what really might help and still 
 <h4 id="_type_hinting">Type hinting</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn ^boolean whitespace?   <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn ^boolean whitespace?   <i class="conum" data-value="1"></i><b>(1)</b>
   [c]
   (r/whitespace? c))</code></pre>
 </div>
@@ -1324,7 +1321,7 @@ isn&#8217;t one of <code>0, "" (empty-string) and NaN</code> we can coerce the c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(if (satisfies? IWithMeta o)
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(if (satisfies? IWithMeta o)
   ...)</code></pre>
 </div>
 </div>
@@ -1333,7 +1330,7 @@ isn&#8217;t one of <code>0, "" (empty-string) and NaN</code> we can coerce the c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(if (implements? IWithMeta o)
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(if (implements? IWithMeta o)
   ...)</code></pre>
 </div>
 </div>
@@ -1352,7 +1349,7 @@ isn&#8217;t one of <code>0, "" (empty-string) and NaN</code> we can coerce the c
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/lt_profiler.png" alt="lt profiler">
+<img src="/blog/2015//lt_profiler.png" alt="lt profiler">
 </div>
 </div>
 <div class="ulist">
@@ -1388,7 +1385,7 @@ Both of the methods was using the following pattern for handling a single var-ar
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn token-node
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn token-node
   "Create node for an unspecified EDN token."
   [value &amp; [string-value]]                       <i class="conum" data-value="1"></i><b>(1)</b>
   (-&gt;TokenNode
@@ -1406,14 +1403,14 @@ Both of the methods was using the following pattern for handling a single var-ar
 </div>
 <div class="paragraph">
 <p>This constructor method was called a lot. So not only was this perhaps not ideal stylewise, but it turns out
-it has some pretty bad performance characteristics as well. (Not knowing the details, I can only speculate on why&#8230;)</p>
+it has some pretty bad performance characteristics as well. (Not knowing the details, I can only speculate on why&#8230;&#8203;)</p>
 </div>
 <div class="paragraph">
 <p>So I changed the above code to:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn token-node
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn token-node
   "Create node for an unspecified EDN token."
   ([value]
    (token-node value (pr-str value)))
@@ -1450,10 +1447,10 @@ and hopefully make some additional shavings in rewrite-cljs !</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<a href="https://github.com/rundis/rewrite-cljs">rewrite-cljs</a> 0.3.1 was just released. Snappier than ever <span class="icon green"><i class="icon-smile-o"></i></span>
+<a href="https://github.com/rundis/rewrite-cljs">rewrite-cljs</a> 0.3.1 was just released. Snappier than ever <span class="icon green"><i class="fa fa-smile-o"></i></span>
 </td>
 </tr>
 </table>
@@ -1465,9 +1462,9 @@ and hopefully make some additional shavings in rewrite-cljs !</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/lighttable.html"> lighttable</a>
+		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -1512,7 +1509,7 @@ If Light Table falls over and dies, will all my efforts have been in vain ?</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 Well I present to you <a href="https://github.com/rundis/parembrace"><strong>parembrace</strong></a> a slightly different take on implementing
@@ -1523,7 +1520,7 @@ a paredit plugin for Light Table using rewrite-cljs for most of it&#8217;s heavy
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/wrap_slurping.gif" alt="wrap slurping">
+<img src="/blog/2015//wrap_slurping.gif" alt="wrap slurping">
 </div>
 <div class="title">Figure 1. Wrap forward slurping</div>
 </div>
@@ -1548,7 +1545,7 @@ I had to hack around it a little bit, but nearly everything I needed was in plac
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 I ended up bundling the modded reader in rewrite-cljs btw.
@@ -1580,7 +1577,7 @@ for extending its' features somewhat:</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The paredit namespace should probably be factored out to a separate lib. I really shouldn&#8217;t  bloat rewrite-cljs unnecessarily.
@@ -1617,7 +1614,7 @@ Having used the plugin during it&#8217;s development for a couple of weeks now, 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(dynamic-wind in (lambda () |body) out) ; -&gt;
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(dynamic-wind in (lambda () |body) out) ; -&gt;
 (dynamic-wind in |body out) ; -&gt;
 body</code></pre>
 </div>
@@ -1626,7 +1623,7 @@ body</code></pre>
 <h3 id="_rewrite_cljs">rewrite-cljs</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn raise [zloc]                               <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn raise [zloc]                               <i class="conum" data-value="1"></i><b>(1)</b>
   (if-let [containing (z/up zloc)]
     (z/replace containing (z/node zloc))         <i class="conum" data-value="2"></i><b>(2)</b>
     zloc))                                       <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
@@ -1651,7 +1648,7 @@ body</code></pre>
 <div class="listingblock">
 <div class="title">Trying it out</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns foo-bar
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns foo-bar
   (:require [rewrite-clj.zip :as z]
             [rewrite-clj.paredit :as pe])
 
@@ -1690,15 +1687,14 @@ body</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn paredit-cmd [ed f]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn paredit-cmd [ed f]
   (let [pos (editor/-&gt;cursor ed)
         form (u/get-top-level-form ed)                                         <i class="conum" data-value="1"></i><b>(1)</b>
         zloc (positioned-zip pos form)]                                        <i class="conum" data-value="2"></i><b>(2)</b>
     (when zloc
       (editor/replace ed (:start form) (:end form) (-&gt; zloc f z/root-string))  <i class="conum" data-value="3"></i><b>(3)</b>
       (editor/move-cursor ed pos)                                              <i class="conum" data-value="4"></i><b>(4)</b>
-      (format-keep-pos ed))))                                                  <i class="conum" data-value="5"></i><b>(5)</b>
-</code></pre>
+      (format-keep-pos ed))))                                                  <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1729,7 +1725,7 @@ body</code></pre>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -1738,7 +1734,7 @@ something really whacky like :</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>#(-&gt; % pe/raise pe/kill z/leftmost)</code></pre>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">#(-&gt; % pe/raise pe/kill z/leftmost)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1746,11 +1742,11 @@ something really whacky like :</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(|dynamic-wind in)</code></pre>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(|dynamic-wind in)</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Let me know if that is something you would find useful <span class="icon green"><i class="icon-smile-o"></i></span></p>
+<p>Let me know if that is something you would find useful <span class="icon green"><i class="fa fa-smile-o"></i></span></p>
 </div>
 </td>
 </tr>
@@ -1759,7 +1755,7 @@ something really whacky like :</p>
 <div class="listingblock">
 <div class="title">Behaviors and commands</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::raise!                                                   <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::raise!                                                   <i class="conum" data-value="1"></i><b>(1)</b>
           :triggers #{:parembrace.raise!}
           :reaction (fn [ed]
                       (paredit-cmd ed pe/raise)))
@@ -1811,13 +1807,13 @@ to allow you to customize parembrace to your liking.</p>
 <p>I believe rewrite-cljs already has paid off multiple times. I can&#8217;t thank <a href="https://github.com/xsc">xsc</a> enough
 for writing <a href="https://github.com/xsc/rewrite-clj/">rewrite-clj</a>. It&#8217;s really awesome and without it I&#8217;d still be fumbling around with parsers and what-not.
 I can reuse rewrite-cljs from both parembrace and clj-light-refactor. In the latter not only can I start implementing cool code refactoring features, but
-I can do things like structurally traverse and  rewrite the project.clj file. I can&#8217;t wait to get started&#8230; well I have to wait because I&#8217;m moving to a new house, but after that&#8230;</p>
+I can do things like structurally traverse and  rewrite the project.clj file. I can&#8217;t wait to get started&#8230;&#8203; well I have to wait because I&#8217;m moving to a new house, but after that&#8230;&#8203;</p>
 </div>
 <div class="admonitionblock tip">
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 If you are a Light Table user, do take <a href="https://github.com/rundis/parembrace">Parembrace</a> for a spin and let me know what you think !
@@ -1832,11 +1828,11 @@ If you are a Light Table user, do take <a href="https://github.com/rundis/paremb
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/lighttable.html"> lighttable</a>
+		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/react.html"> react</a>
+		      <a href="/blog/tags/react.html">react</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -1879,13 +1875,13 @@ Let&#8217;s have a look at how I did it !</p>
 <div class="content">
 <div class="imageblock left">
 <div class="content">
-<img src="/blog/2015/ns_list.png" alt="ns list" width="400">
+<img src="/blog/2015//ns_list.png" alt="ns list" width="400">
 </div>
 <div class="title">Figure 1. Namespace list</div>
 </div>
 <div class="imageblock left">
 <div class="content">
-<img src="/blog/2015/ns_vars.png" alt="ns vars" width="400">
+<img src="/blog/2015//ns_vars.png" alt="ns vars" width="400">
 </div>
 <div class="title">Figure 2. Public vars for selected namespace</div>
 </div>
@@ -1903,7 +1899,7 @@ Let&#8217;s have a look at how I did it !</p>
 <h3 id="_quiescent_dependency_project_clj">Quiescent dependency - project.clj</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defproject clj-light-refactor "0.1.5"
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defproject clj-light-refactor "0.1.5"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [quiescent "0.1.4"]])               <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
@@ -1921,7 +1917,7 @@ Let&#8217;s have a look at how I did it !</p>
 <h3 id="_react_dependency_plugin_behaviours_file">React dependency - plugin behaviours file</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>[:app :lt.objs.plugins/load-js ["react.min.js"                       <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">[:app :lt.objs.plugins/load-js ["react.min.js"                       <i class="conum" data-value="1"></i><b>(1)</b>
                                 "clj-light-refactor_compiled.js"]]</code></pre>
 </div>
 </div>
@@ -1948,7 +1944,7 @@ State in Light Table is typically stored in objects. Objects are basically a map
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 To learn more about BOT (Behaviors, Objects and Tags), check out <a href="http://www.chris-granger.com/2013/01/24/the-ide-as-data/">The IDE as a value</a> by Chris Granger.
@@ -1961,8 +1957,7 @@ To learn more about BOT (Behaviors, Objects and Tags), check out <a href="http:/
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>
-(defui wrapper [this]                                             <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defui wrapper [this]                                             <i class="conum" data-value="1"></i><b>(1)</b>
   [:div.outer
    [:div {:id "nsbrowser-wrapper"} "Retrieving namespaces..."]])
 
@@ -2003,7 +1998,7 @@ To learn more about BOT (Behaviors, Objects and Tags), check out <a href="http:/
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(declare render)
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(declare render)
 
 (defn handle-keypress [props ev]                                           <i class="conum" data-value="6"></i><b>(6)</b>
   (let [kk (.-which ev)]
@@ -2044,8 +2039,7 @@ To learn more about BOT (Behaviors, Objects and Tags), check out <a href="http:/
                               :on-change (fn [search-for]
                                            (object/raise ns-bar :search! search-for))}
                              props))
-            (.getElementById js/document "nsbrowser-wrapper")))
-</code></pre>
+            (.getElementById js/document "nsbrowser-wrapper")))</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2082,7 +2076,7 @@ for handling events we wish to handle in our ui. More on that later.</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 If you are not familiar with react, it might seem inefficient to render the entire UI everytime. But
@@ -2111,7 +2105,7 @@ in the dom, but rather in data structures somewhere else (like in an atom).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn move-down [items]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn move-down [items]
   (let [curr-idx (selected-idx items)]
     (if-not (&lt; curr-idx (dec (count items)))
       items
@@ -2131,7 +2125,7 @@ is dead easy using the inbuild repl with inline results.</p>
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::move-up!                                                     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::move-up!                                                     <i class="conum" data-value="1"></i><b>(1)</b>
           :triggers #{:move-up!}
           :reaction (fn [this]
                       (let [moved (move-up (:filtered-items @this))]
@@ -2202,7 +2196,7 @@ It stores that filtered list in our object and rerenders the ui.</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 The <em>this</em> argument for our behavior reaction function is the ns-bar object instance we defined earlier.
@@ -2212,7 +2206,7 @@ The <em>this</em> argument for our behavior reaction function is the ns-bar obje
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code> [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/move-up!]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure"> [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/move-up!]
  [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/select!]
  [:clojure.nsbrowser :lt.plugins.cljrefactor.nsbrowser/search!]</code></pre>
 </div>
@@ -2234,7 +2228,7 @@ in your Light Table user plugin (everyone has one !).</p>
 <h4 id="_providing_your_own_behavior">Providing your own behavior</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns lt.plugins.user                                                    <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns lt.plugins.user                                                    <i class="conum" data-value="1"></i><b>(1)</b>
   (:require [lt.object :as object]
             [lt.plugins.nsrefactor.nsbrowser :as nsbrowser])           <i class="conum" data-value="2"></i><b>(2)</b>
   (:require-macros [lt.macros :refer [behavior]]))
@@ -2272,7 +2266,7 @@ when an event is triggered (through <em>object/raise</em>)</td>
 <h4 id="_replacing_the_default_behavior_with_our_own">Replacing the default behavior with our own</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code> [:clojure.nsbrowser :-lt.plugins.cljrefactor.nsbrowser/move-up!]   <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure"> [:clojure.nsbrowser :-lt.plugins.cljrefactor.nsbrowser/move-up!]   <i class="conum" data-value="1"></i><b>(1)</b>
  [:clojure.nsbrowser :lt.plugins.user/user-move-up!]                <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
@@ -2312,12 +2306,12 @@ You could do this on a project level, or you could do it globally for all your p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>  :user {:plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]]}}</code></pre>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">  :user {:plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]]}}</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::list-ns
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::list-ns
           :triggers #{:list-ns}
           :reaction (fn [ed]
                       (object/raise ed
@@ -2345,8 +2339,7 @@ You could do this on a project level, or you could do it globally for all your p
                                           :update-ns-list!                       <i class="conum" data-value="7"></i><b>(7)</b>
                                           (-&gt;&gt; (:ns-list ret)
                                                (maybe-exclude (:exclusions @ns-bar))
-                                               (map #(hash-map :name %)))))))))
-</code></pre>
+                                               (map #(hash-map :name %)))))))))</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2386,7 +2379,7 @@ the operation completes in will trigger a behavior named as defined in <strong>4
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The code eval behavior is triggered on an ed object. This is an LT editor object. This means that
@@ -2409,7 +2402,7 @@ in the Light Table command browser (open by pressing ctrl + space).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(cmd/command {:command :show-nsbrowser                          <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(cmd/command {:command :show-nsbrowser                          <i class="conum" data-value="1"></i><b>(1)</b>
               :desc "Clojure refactor: Show ns-browser"         <i class="conum" data-value="2"></i><b>(2)</b>
               :exec (fn []
                       (when-let [ed (pool/last-active)]         <i class="conum" data-value="3"></i><b>(3)</b>
@@ -2443,7 +2436,7 @@ in the Light Table command browser (open by pressing ctrl + space).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code> [:editor.clj "ctrl-alt-n" :show-nsbrowser]</code></pre>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure"> [:editor.clj "ctrl-alt-n" :show-nsbrowser]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2461,7 +2454,7 @@ for that purpose. Currently you can define a list of regex&#8217;s for namespace
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::set-nsbrowser-filters
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::set-nsbrowser-filters
           :triggers #{:object.instant}                                   <i class="conum" data-value="1"></i><b>(1)</b>
           :desc "Clojure Refactor: Configure filter for nsbrowser"
           :type :user
@@ -2489,7 +2482,7 @@ for that purpose. Currently you can define a list of regex&#8217;s for namespace
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/nsconfig_beh.png" alt="nsconfig beh">
+<img src="/blog/2015//nsconfig_beh.png" alt="nsconfig beh">
 </div>
 </div>
 <div class="paragraph">
@@ -2517,7 +2510,7 @@ as a great Open Source IDE alternative.</em></p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 For improved Clojure support in Light Table, you really should try out the <a href="https://github.com/rundis/clj-light-refactor">clj-light-refactor</a> plugin !
@@ -2532,9 +2525,9 @@ For improved Clojure support in Light Table, you really should try out the <a hr
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/lighttable.html"> lighttable</a>
+		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -2554,10 +2547,10 @@ can clone the repo to the plugin folder of LIght Table if you know what you are 
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-You will need to check out the readme <a href="https://github.com/rundis/clj-light-refactor">https://github.com/rundis/clj-light-refactor</a>
+You will need to check out the readme <a href="https://github.com/rundis/clj-light-refactor" class="bare">https://github.com/rundis/clj-light-refactor</a>
 </td>
 </tr>
 </table>
@@ -2616,10 +2609,10 @@ You might also be interrested in the pre-release <a href="http://rundis.github.i
 <div class="ulist">
 <ul>
 <li>
-<p>Pre release demo: <a href="http://rundis.github.io/blog/2015/clj_light_refactor.html">http://rundis.github.io/blog/2015/clj_light_refactor.html</a></p>
+<p>Pre release demo: <a href="http://rundis.github.io/blog/2015/clj_light_refactor.html" class="bare">http://rundis.github.io/blog/2015/clj_light_refactor.html</a></p>
 </li>
 <li>
-<p>Plugin repo: <a href="https://github.com/rundis/clj-light-refactor">https://github.com/rundis/clj-light-refactor</a></p>
+<p>Plugin repo: <a href="https://github.com/rundis/clj-light-refactor" class="bare">https://github.com/rundis/clj-light-refactor</a></p>
 </li>
 </ul>
 </div>
@@ -2651,9 +2644,9 @@ It provides a long list of really cool refactoring features for emacs users.</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/date.html"> date</a>
+		      <a href="/blog/tags/date.html">date</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -2689,7 +2682,7 @@ Timezones is another issue we didn&#8217;t worry to much about either.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 You will probably not regret using an UTC timezone for your Servers and Database. This <a href="http://yellerapp.com/posts/2015-01-12-the-worst-server-setup-you-can-make.html">post</a> puts it succinctly.
@@ -2712,7 +2705,7 @@ simplify reading and writing dates/datetimes.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme.helpers.db
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme.helpers.db
   (:import [java.sql PreparedStatement])
   (:require [acme.util.date :as du]
             [clj-time.coerce :as c]
@@ -2760,7 +2753,7 @@ In our case we chose to treat java.sql.Date and java.sql.Timestamp in the same m
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 It&#8217;s vital that you require the namespace you have the above incantations, before doing any db interactions. Might be evident, but it&#8217;s worth emphasizing.
@@ -2772,7 +2765,7 @@ It&#8217;s vital that you require the namespace you have the above incantations,
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Clojure <a href="http://clojure.org/protocols">protocols</a> are pretty powerful stuff. It&#8217;s deffo on my list of clojure things I need
@@ -2794,7 +2787,7 @@ it makes sence to use that. It so happens this is the standard format for DateTi
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 You might want to look into <a href="https://github.com/cognitect/transit-format">transit</a>. It would probably have been very useful for us :)
@@ -2806,7 +2799,7 @@ You might want to look into <a href="https://github.com/cognitect/transit-format
 <h3 id="_outbound_dates">Outbound dates</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme.core
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme.core
   (:require [clojure.data.json :as json]
             [clj-time.coerce :as c]))
 
@@ -2834,7 +2827,7 @@ You might want to look into <a href="https://github.com/cognitect/transit-format
 <h3 id="_inbound_dates">Inbound dates</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme.util.date
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme.util.date
   (:require [clj-time.core :as t]
             [clj-time.format :as f]
             [clj-time.coerce :as c]))
@@ -2882,8 +2875,7 @@ we settled for atleast a minimum of YYYY-MM-DD</td>
 <div class="listingblock">
 <div class="title">Hook up middleware</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>
-(defn wrap-date [handler]                                     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn wrap-date [handler]                                     <i class="conum" data-value="1"></i><b>(1)</b>
   (fn [req]
     (handler (update-in req [:params] (datetimeify %)))))
 
@@ -2927,7 +2919,7 @@ It&#8217;s very much inspired by clj-time, but there are some differences. The m
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>;; require similar to the ones on the server side. cljs-time. rather than clj-time.
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">;; require similar to the ones on the server side. cljs-time. rather than clj-time.
 
 
 (defn datetimes-&gt;json [m]                                                       <i class="conum" data-value="1"></i><b>(1)</b>
@@ -2983,7 +2975,7 @@ with a backend server. If you are using something like <a href="https://github.c
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 What about timezones on the client ? The default for the datetime constructor in cljs-time is to use UTC. So when displaying
@@ -2994,7 +2986,7 @@ time and/or accepting date with time input from the client you need to convert t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme.client
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme.client
   (:require [cljs-time.format :as f]
             [cljs-time.core :as t]))
 
@@ -3004,8 +2996,7 @@ time and/or accepting date with time input from the client you need to convert t
 
 (-&gt;&gt; sample
      t/to-default-time-zone                          ; UTC+1 for me
-     (f/unparse (f/formatter "dd.MM.yyyy hh:mm")))   ; =&gt; 27.03.2015 01:53
-</code></pre>
+     (f/unparse (f/formatter "dd.MM.yyyy hh:mm")))   ; =&gt; 27.03.2015 01:53</code></pre>
 </div>
 </div>
 </div>
@@ -3026,9 +3017,9 @@ Most importantly though, our server-side and client-side logic can work consiste
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/buddy.html"> buddy</a>
+		      <a href="/blog/tags/buddy.html">buddy</a>
 	      
-		      <a href="/blog/tags/security.html"> security</a>
+		      <a href="/blog/tags/security.html">security</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -3066,7 +3057,7 @@ The time has finally come to demonstrate how you may secure a REST based microse
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Sample code (tagged for each blog post) can be found on <a href="https://github.com/rundis/acme-buddy">github</a>
@@ -3107,7 +3098,7 @@ I submitted a pull request. My first clojure lib contribution got accepted. Yay 
 <h3 id="_wrap_authentication_middleware">Wrap authentication middleware</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme-catalog.core
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme-catalog.core
   (:require [compojure.core :refer [defroutes ANY]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
@@ -3150,7 +3141,7 @@ acme-auth to create our tokens. In addition we can optionally provide a custom n
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="olist arabic">
@@ -3177,7 +3168,7 @@ acme-auth to create our tokens. In addition we can optionally provide a custom n
 <div class="listingblock">
 <div class="title">Sample request map</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>{:identity
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">{:identity
   {:user
     {:user-roles [{:role-id 10, :application-id 10}
                   {:role-id 41, :application-id 40}],
@@ -3194,7 +3185,7 @@ acme-auth to create our tokens. In addition we can optionally provide a custom n
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Liberator routes your request through a graph of decisions and actions. <a href="http://clojure-liberator.github.io/liberator/assets/img/decision-graph.svg">This graph</a>
@@ -3211,7 +3202,7 @@ provides a pretty clear explanation.</p>
 <h4 id="_helper_functions_for_role_access">Helper functions for role access</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(def acme-catalog-roles
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(def acme-catalog-roles
   {:customer 41 :catalog-admin 40})                                       <i class="conum" data-value="1"></i><b>(1)</b>
 
 (defn any-granted? [ctx roles]                                            <i class="conum" data-value="2"></i><b>(2)</b>
@@ -3243,7 +3234,7 @@ authentication and authorization checks.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn secured-resource [m]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn secured-resource [m]
   {:authorized?    #(authenticated? (:request %))                                       <i class="conum" data-value="1"></i><b>(1)</b>
    :allowed?       (fn [ctx]
                      (let [default-auth? (any-granted? ctx (keys acme-catalog-roles))]  <i class="conum" data-value="2"></i><b>(2)</b>
@@ -3275,8 +3266,7 @@ one of the acme-catalog roles to be authorized to access a secured resource</td>
 <h4 id="_securing_products_resources">Securing products resources</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>
-(defresource product-categories
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defresource product-categories
   (secured-resource {})                                                                   <i class="conum" data-value="1"></i><b>(1)</b>
   :available-media-types ["application/json"]
   :allowed-methods       [:get]
@@ -3329,7 +3319,7 @@ further down in the liberator decision chain.</td>
 <div class="listingblock">
 <div class="title">Get a valid token</div>
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>acme-auth: lein ring server-headless
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">acme-auth: lein ring server-headless
 
 # In another terminal
 curl -i -X POST -d '{"username": "test", "password":"secret"}' -H "Content-type: application/json" http://localhost:6001/create-auth-token
@@ -3347,7 +3337,7 @@ Server: Jetty(7.6.13.v20130916)
 <div class="listingblock">
 <div class="title">Calling acme-catalog</div>
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>acme-catalog: lein ring server-headless
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">acme-catalog: lein ring server-headless
 
 #in another terminal
 curl -i -H "Authorization: Acme-Token eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6NDEsImFwcGxpY2F0aW9uLWlkIjo0MH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyNzI4NTk3OX0.eNTNG8Hu8a4OD9xWSoEZgwGUd15Oytj-GQZY4RgmTEdx9OjkLDRBefU89GNlEEq19Bsd3ciuWzTXKg3B0qvAk4F4-najY_erPGypSlBvRUI0Fa1_wA2PRYxT-zCTiSIxD-oM0oq_3Z61QlN0k-Sf7shel42-x9z7r8RQeNMr-iMk-hOI_v7moQogN08FiZnctcQdE8qKg_DEhwO3l780eBta_vr3tGSd174IRthz59G61P-XqV8wC4HZymbe8TCMc-3uniIvQeoG_rC3oRqNfjkxZlTB_h6mOjs1p3h_cUmrsOhSk0mQe5mrwSzuCiunMcKQ1jsb88daWkvjMrwRUg" http//localhost:6003/products/1
@@ -3377,7 +3367,7 @@ sure we pass on the token.</p>
 <h3 id="_calling_acme_catalog">Calling acme-catalog</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme-webstore.catalog
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme-webstore.catalog
   (:require [clj-http.client :as http]))
 
 
@@ -3432,9 +3422,9 @@ Feel free to leave suggestions in the commenting section though.</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/lighttable.html"> lighttable</a>
+		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -3455,10 +3445,10 @@ working on. In this post I thought I&#8217;d walk you through a feature I&#8217;
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Clj-Light-Refactor plugin on github <a href="https://github.com/rundis/clj-light-refactor">https://github.com/rundis/clj-light-refactor</a>
+Clj-Light-Refactor plugin on github <a href="https://github.com/rundis/clj-light-refactor" class="bare">https://github.com/rundis/clj-light-refactor</a>
 </td>
 </tr>
 </table>
@@ -3471,7 +3461,7 @@ for Light Table on a daily basis.</p>
 <div class="listingblock">
 <div class="title">Goal</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>; Turn something like this;
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">; Turn something like this;
 (map #(+ % 1) (filter even? [1 2 3 4 5]))
 
 ;into
@@ -3509,7 +3499,7 @@ for Light Table on a daily basis.</p>
 <div class="paragraph">
 <p>Before I could get started on the implementation I had to do a bit of research. I tried to find
 a clojurescript compatible lib that would make it easy to read/"parse" clojure and clojurescript code
-and make it easy to navigate and manipulate it. I looked at parser libs like <a href="https://github.com/lbradstreet/instaparse-cljs">Instaparse-cljs</a> and <a href="https://github.com/cgrand/parsley">https://github.com/cgrand/parsley</a> [parsley]
+and make it easy to navigate and manipulate it. I looked at parser libs like <a href="https://github.com/lbradstreet/instaparse-cljs">Instaparse-cljs</a> and <a href="https://github.com/cgrand/parsley" class="bare">https://github.com/cgrand/parsley</a> [parsley]
 but both seemed like a little bit to much effort to get me started. <a href="https://github.com/xsc/rewrite-clj">rewrite-clj</a> seemed
 very promising, but unfortunately no ClojureScript port (feel free to vote for or contribute to this <a href="https://github.com/xsc/rewrite-clj/issues/4">issue</a>)</p>
 </div>
@@ -3524,7 +3514,7 @@ Good job there is a <a href="https://github.com/clojure/clojurescript/blob/maste
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 There are many resources out there on zippers in clojure. <a href="http://www.ibm.com/developerworks/library/j-treevisit/">This article</a> is pretty thorough
@@ -3543,7 +3533,7 @@ below. Quite helpful when your in-brain tree visualizer has gotten somewhat rust
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/thread_first.png" alt="thread first">
+<img src="/blog/2015//thread_first.png" alt="thread first">
 </div>
 </div>
 <div class="olist arabic">
@@ -3571,7 +3561,7 @@ to become the first argument to the threading ("function/"macro)</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -3580,7 +3570,7 @@ We&#8217;ll get back to that later, but I&#8217;ll give you a hint :</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>Could not find tag parser for (+ in ("inst" "uuid" "queue" "js")</code></pre>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">Could not find tag parser for (+ in ("inst" "uuid" "queue" "js")</code></pre>
 </div>
 </div>
 </td>
@@ -3596,7 +3586,7 @@ We&#8217;ll get back to that later, but I&#8217;ll give you a hint :</p>
 <h3 id="_reading_code_from_a_string">Reading code from a string</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn str-&gt;seq-zip [form-str]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn str-&gt;seq-zip [form-str]
   (when (seq form-str)
     (-&gt; form-str
         rdr/read-string        <i class="conum" data-value="1"></i><b>(1)</b>
@@ -3619,7 +3609,7 @@ We&#8217;ll get back to that later, but I&#8217;ll give you a hint :</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Please note that cljs.reader only a subset (edn) of clojure. That means that several reader macros like #(), '() etc will croak
@@ -3632,7 +3622,7 @@ Please note that cljs.reader only a subset (edn) of clojure. That means that sev
 <h3 id="_thread_one_promote_one_pass">Thread one / promote one pass</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn do-thread-one [cand cand-fn]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn do-thread-one [cand cand-fn]
   (if-not (further-threadable? cand)                         <i class="conum" data-value="1"></i><b>(1)</b>
     cand
     (let [promote (-&gt; cand cand-fn z/node)                   <i class="conum" data-value="2"></i><b>(2)</b>
@@ -3677,7 +3667,7 @@ Please note that cljs.reader only a subset (edn) of clojure. That means that sev
 <h3 id="_thread_fully">Thread fully</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn- do-thread [orig cand-fn t]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn- do-thread [orig cand-fn t]
   (when (seq orig)
     (let [root (if (threaded? orig) orig (wrap-in-thread orig t))]  <i class="conum" data-value="1"></i><b>(1)</b>
       (loop [cand root]
@@ -3703,7 +3693,7 @@ Please note that cljs.reader only a subset (edn) of clojure. That means that sev
 <h3 id="_zip_it_up">Zip it up</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn zip-&gt;str [zipnode]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn zip-&gt;str [zipnode]
   (-&gt; zipnode
       z/root
       pr-str))</code></pre>
@@ -3714,7 +3704,7 @@ Please note that cljs.reader only a subset (edn) of clojure. That means that sev
 <h3 id="_orchestration">Orchestration</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn thread [form-str]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn thread [form-str]
   (let [node (str-&gt;seq-zip form-str)
         threading (when node (threaded? node))]
     (when (and node threading)
@@ -3733,7 +3723,7 @@ Please note that cljs.reader only a subset (edn) of clojure. That means that sev
 <h4 id="_replace_helper_function">Replace helper function</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>defn replace-cmd [ed replace-fn]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">defn replace-cmd [ed replace-fn]
   (cmd/exec! :paredit.select.parent)                                       <i class="conum" data-value="1"></i><b>(1)</b>
   (when-let [candidate  (editor/selection ed)]
     (let [bounds (editor/selection-bounds ed)]
@@ -3763,7 +3753,7 @@ Please note that cljs.reader only a subset (edn) of clojure. That means that sev
 <h4 id="_behavior_and_commands">Behavior and commands</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::thread-fully!                                           <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::thread-fully!                                           <i class="conum" data-value="1"></i><b>(1)</b>
           :triggers #{:refactor.thread-fully!}
           :reaction (fn [ed]
                       (replace-cmd ed thread)))
@@ -3772,8 +3762,7 @@ Please note that cljs.reader only a subset (edn) of clojure. That means that sev
               :desc "Clojure refactor: Thread fully"
               :exec (fn []
                       (when-let [ed (pool/last-active)]
-                        (object/raise ed :refactor.thread-fully!)))})
-</code></pre>
+                        (object/raise ed :refactor.thread-fully!)))})</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3793,7 +3782,7 @@ Please note that cljs.reader only a subset (edn) of clojure. That means that sev
 <h4 id="_configuring_behaviors">Configuring behaviors</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>  [:editor.clj :lt.plugins.cljrefactor.threading/thread-fully!]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">  [:editor.clj :lt.plugins.cljrefactor.threading/thread-fully!]
   [:editor.cljs :lt.plugins.cljrefactor.threading/thread-fully!]</code></pre>
 </div>
 </div>
@@ -3818,7 +3807,7 @@ inside an anonymous function literal block.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 Actually I also had some issues using clojure.zip from Light Table, but a restart seemed to solve it
@@ -3852,7 +3841,7 @@ new nifty features for my current editor of choice !</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/lighttable.html"> lighttable</a>
+		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -3903,10 +3892,10 @@ nREPL middleware to support refactorings in an editor agnostic way.
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-You can find the plugin repo on github <a href="https://github.com/rundis/clj-light-refactor">https://github.com/rundis/clj-light-refactor</a>
+You can find the plugin repo on github <a href="https://github.com/rundis/clj-light-refactor" class="bare">https://github.com/rundis/clj-light-refactor</a>
 </td>
 </tr>
 </table>
@@ -3925,7 +3914,7 @@ So getting started wasn&#8217;t really that difficult.</p>
 <h3 id="_middleware_invocation">Middleware invocation</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn artifact-list-op []
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn artifact-list-op []
   (str "(do (require 'refactor-nrepl.client) (require 'clojure.tools.nrepl)"
        "(def tr (refactor-nrepl.client/connect))"
        "(clojure.tools.nrepl/message (clojure.tools.nrepl/client tr 10000) {:op \"artifact-list\"}))"))</code></pre>
@@ -3940,7 +3929,7 @@ middleware for listing clojare artifacts.</p>
 <h3 id="_behaviour_in_light_table">Behaviour in Light Table</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::trigger-artifact-hints
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::trigger-artifact-hints
           :triggers #{:artifact.hints.update!}
           :debounce 500
           :reaction (fn [editor res]
@@ -3975,7 +3964,7 @@ to handle the results</td>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::finish-artifact-hints
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::finish-artifact-hints
           :triggers #{:editor.eval.clj.result.refactor.artifacts}                                 <i class="conum" data-value="1"></i><b>(1)</b>
           :reaction (fn [editor res]
                       (let [artifacts (-&gt; res :results first :result first :value (s/split #" "))
@@ -4012,7 +4001,7 @@ the middleware like crazy</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The autocomplete part is skimpily explained here, but the important bit I&#8217;m trying to get across is how to
@@ -4030,7 +4019,7 @@ So you need to add something like this to your ~/.lein/profiles.clj</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>:plugins [[refactor-nrepl "X.Y.Z"]       <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">:plugins [[refactor-nrepl "X.Y.Z"]       <i class="conum" data-value="1"></i><b>(1)</b>
           [cider/cider-nrepl "A.B.C"]]   <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
@@ -4051,7 +4040,7 @@ features that might come handy to the clj-light-refactor plugin in the near futu
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 The version indentifiers are intentionally left out, because it&#8217;s currently a little in flux.
@@ -4082,9 +4071,9 @@ of this plugin will be ported to the official Light Table Clojure plugin. Who kn
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/buddy.html"> buddy</a>
+		      <a href="/blog/tags/buddy.html">buddy</a>
 	      
-		      <a href="/blog/tags/security.html"> security</a>
+		      <a href="/blog/tags/security.html">security</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -4119,7 +4108,7 @@ In this episode we&#8217;ll be looking at how we might handle revocation of prev
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Sample code (tagged for each blog post) can be found on <a href="https://github.com/rundis/acme-buddy">github</a>
@@ -4193,7 +4182,7 @@ The sole purpose of refresh tokens is to be able to request new auth tokens.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/refresh-token.png" alt="refresh token">
+<img src="/blog/2015//refresh-token.png" alt="refresh token">
 </div>
 </div>
 <div class="olist arabic">
@@ -4272,7 +4261,7 @@ are needed from part 1 and 2.</p>
 <h3 id="_changing_token_creation_in_acme_auth">Changing token creation in acme-auth</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint cloure language-cloure"><code>(defn- unsign-token [auth-conf token]
+<pre class="prettyprint highlight"><code class="language-cloure" data-lang="cloure">(defn- unsign-token [auth-conf token]
   (jws/unsign token (pub-key auth-conf)))
 
 (defn- make-auth-token [auth-conf user]                                        <i class="conum" data-value="1"></i><b>(1)</b>
@@ -4302,8 +4291,7 @@ are needed from part 1 and 2.</p>
     (let [[ok? res] (auth-user conn credentials)]
       (if ok?
         [true (make-token-pair! conn auth-conf (:user res))]
-        [false res]))))
-</code></pre>
+        [false res]))))</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4336,7 +4324,7 @@ contains only user-id and issued at time (iat). This allows us retrieval of the 
 <h3 id="_refreshing_tokens">Refreshing tokens</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn refresh-auth-token [ds auth-conf refresh-token]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn refresh-auth-token [ds auth-conf refresh-token]
   (if-let [unsigned (unsign-token auth-conf refresh-token)]                                               <i class="conum" data-value="1"></i><b>(1)</b>
     (jdbc/with-db-transaction [conn ds]
       (let [db-token-rec (store/find-token-by-unq-key conn (:user-id unsigned) (:iat unsigned))           <i class="conum" data-value="2"></i><b>(2)</b>
@@ -4377,7 +4365,7 @@ contains only user-id and issued at time (iat). This allows us retrieval of the 
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="title">Why creating a new refresh token every time ?</div>
@@ -4396,7 +4384,7 @@ In the code above we can&#8217;t tell the diffence between why a refresh token i
 <h3 id="_middleware_changes_in_the_acme_webstore">Middleware changes in the acme-webstore</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn wrap-auth-cookie [handler cookie-secret]                                    <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn wrap-auth-cookie [handler cookie-secret]                                    <i class="conum" data-value="1"></i><b>(1)</b>
   (-&gt; handler
       (wrap-session
        {:store (cookie-store {:key cookie-secret})
@@ -4469,7 +4457,7 @@ In the code above we can&#8217;t tell the diffence between why a refresh token i
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 It might not be a great ideat to store the auth token and the refresh token in the same cookie. Haven&#8217;t really
@@ -4500,9 +4488,9 @@ is obviously still an issue, but we have taken some small steps to detect when t
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/node.html"> node</a>
+		      <a href="/blog/tags/node.html">node</a>
 	      
-		      <a href="/blog/tags/javascript.html"> javascript</a>
+		      <a href="/blog/tags/javascript.html">javascript</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -4522,7 +4510,7 @@ had to start a separate browser window (with a AsciiDoc browser plugin) or I had
 use something like SimpleHttpServer to serve my "baked" site locally.</p>
 </div>
 <div class="paragraph">
-<p>I&#8217;m probably still going to test my site locally, but I really felt a need for something similar to the <a href="https://github.com/MarcoPolo/lt-markdown">https://github.com/MarcoPolo/lt-markdown</a>
+<p>I&#8217;m probably still going to test my site locally, but I really felt a need for something similar to the <a href="https://github.com/MarcoPolo/lt-markdown" class="bare">https://github.com/MarcoPolo/lt-markdown</a>
 plugin.</p>
 </div>
 <div class="quoteblock">
@@ -4530,8 +4518,8 @@ plugin.</p>
 I wish I had an editor where I could easily program my own extensions.
 </blockquote>
 <div class="attribution">
-<cite>A few years back</cite><br>
-&#8212; Magnus Rundberget
+&#8212; Magnus Rundberget<br>
+<cite>A few years back</cite>
 </div>
 </div>
 <div class="paragraph">
@@ -4558,17 +4546,17 @@ node modules from a Light Table is no big deal.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/asciilight_preview.png" alt="asciilight preview">
+<img src="/blog/2015//asciilight_preview.png" alt="asciilight preview">
 </div>
 </div>
 <div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-I pretty much nicked most of the ClojureScript code from <a href="https://github.com/MarcoPolo/lt-markdown">https://github.com/MarcoPolo/lt-markdown</a>. Cheers Marco Polo !
+I pretty much nicked most of the ClojureScript code from <a href="https://github.com/MarcoPolo/lt-markdown" class="bare">https://github.com/MarcoPolo/lt-markdown</a>. Cheers Marco Polo !
 </td>
 </tr>
 </table>
@@ -4582,7 +4570,7 @@ I&#8217;d be interested to find out why it croaked.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>var asciidoctor = require('asciidoctor.js')();
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">var asciidoctor = require('asciidoctor.js')();
 var processor = asciidoctor.Asciidoctor(true);     <i class="conum" data-value="1"></i><b>(1)</b>
 var opal = asciidoctor.Opal;
 
@@ -4601,8 +4589,7 @@ module.exports = {
   convert: function(content, baseDir) {
     return doConvert(content, baseDir);
   }
-}
-</code></pre>
+}</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4621,14 +4608,14 @@ module.exports = {
 <p>There was a lot of trial and error to figure out what to call the options and how to pass
 these options to asciidoctor. Some seemed to work others seemed to have no effect. To be improved
 in a future release for sure. The most painful part here was that I couldn&#8217;t figure out how to reload
-my custom node module &#8230; hence a lot of Light Table restarts. Surely there must be a better way.</p>
+my custom node module &#8230;&#8203; hence a lot of Light Table restarts. Surely there must be a better way.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_plugin_code">Plugin code</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>defn setAdocHTML! [ed obj]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">defn setAdocHTML! [ed obj]
   (let [html (-&gt;
               (adoc-&gt;html (.getValue (editor/-&gt;cm-ed ed))
                           (files/parent (-&gt; @ed :info :path)))                     <i class="conum" data-value="1"></i><b>(1)</b>
@@ -4715,7 +4702,7 @@ is responsible for adding a new tab and setting up the link between the editor t
 <h3 id="_behaviors_and_a_note_on_css">Behaviors and a note on CSS</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>[[:app :lt.objs.plugins/load-js "asciilight_compiled.js"]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">[[:app :lt.objs.plugins/load-js "asciilight_compiled.js"]
  [:app :lt.objs.plugins/load-css "css/font-awesome.css"]
  [:app :lt.objs.plugins/load-css "css/adoc.css"]]</code></pre>
 </div>
@@ -4757,9 +4744,9 @@ great writing this blogpost with a preview of what I&#8217;m writing using a plu
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/buddy.html"> buddy</a>
+		      <a href="/blog/tags/buddy.html">buddy</a>
 	      
-		      <a href="/blog/tags/security.html"> security</a>
+		      <a href="/blog/tags/security.html">security</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -4786,7 +4773,7 @@ The app will implement a simple login and logout flow and demonstrate how you ma
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -4823,7 +4810,7 @@ makes a contribution to buddy-auth to save us from some of the steps here !</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/acme_login.png" alt="acme login">
+<img src="/blog/2015//acme_login.png" alt="acme login">
 </div>
 <div class="title">Figure 1. Sample login screen</div>
 </div>
@@ -4834,7 +4821,7 @@ makes a contribution to buddy-auth to save us from some of the steps here !</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn create-token [req]                                                           <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn create-token [req]                                                           <i class="conum" data-value="1"></i><b>(1)</b>
   (http/post "http://localhost:6001/create-auth-token"
              {:content-type :json
               :accept :json
@@ -4872,14 +4859,14 @@ is set it will redirect to the url provided in m. Redirection will be covered ex
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>Lazy error handling&#8230;</td>
+<td>Lazy error handling&#8230;&#8203;</td>
 </tr>
 </table>
 </div>
 <div class="listingblock">
 <div class="title">Logging out</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn logout [req]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn logout [req]
   (assoc (response/redirect "/") :session nil))</code></pre>
 </div>
 </div>
@@ -4896,7 +4883,7 @@ routes in the sample application.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defroutes public-routes
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defroutes public-routes
   (route/resources "/")
   (GET "/" []       show-index)
   (GET "/login" []  sec/show-login)
@@ -4988,7 +4975,7 @@ there had to be measures to mitigate some of the additional risks involved.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -5010,7 +4997,7 @@ Also revocation of a token is definitely an interesting scenario we will need to
 <h4 id="_cookie_store">Cookie store</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn wrap-auth-cookie [handler cookie-secret]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn wrap-auth-cookie [handler cookie-secret]
   (-&gt; handler
       (wrap-session
        {:store (cookie-store {:key cookie-secret})  <i class="conum" data-value="1"></i><b>(1)</b>
@@ -5034,7 +5021,7 @@ Also revocation of a token is definitely an interesting scenario we will need to
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 A big win with the cookie approach is that a server restart is no big deal. The user stays logged in. If you are using staged deploys, no session synchronization is needed.
@@ -5048,7 +5035,7 @@ A big win with the cookie approach is that a server restart is no big deal. The 
 <h3 id="_unsigning_the_token">Unsigning the token</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn unsign-token [token]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn unsign-token [token]
   (jws/unsign token (ks/public-key (io/resource "auth_pubkey.pem")) {:alg :rs256}))     <i class="conum" data-value="1"></i><b>(1)</b>
 
 
@@ -5080,7 +5067,7 @@ A big win with the cookie approach is that a server restart is no big deal. The 
 <h3 id="_ensuring_that_the_user_is_logged_in_for_a_given_route">Ensuring that the user is logged in for a given route</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn wrap-authentication [handler]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn wrap-authentication [handler]
   (fn [req]
     (if (:auth-user req)
       (handler req)
@@ -5105,8 +5092,7 @@ various other mechanisms for authorization.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>
-(def acme-store-roles                                                     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(def acme-store-roles                                                     <i class="conum" data-value="1"></i><b>(1)</b>
   {:customer 10 :store-admin 11})
 
 (defn any-granted? [req roles]                                            <i class="conum" data-value="2"></i><b>(2)</b>
@@ -5143,7 +5129,7 @@ various other mechanisms for authorization.</p>
 <h3 id="_showing_elements_based_on_role_privileges">Showing elements based on role privileges</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn- render-menu [req]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn- render-menu [req]
   (let [user (:auth-user req)]
     [:nav.menu
      [:div {:class "collapse navbar-collapse bs-navbar-collapse navbar-inverse"}
@@ -5161,7 +5147,7 @@ various other mechanisms for authorization.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/acme_admin_dash.png" alt="acme admin dash">
+<img src="/blog/2015//acme_admin_dash.png" alt="acme admin dash">
 </div>
 <div class="title">Figure 2. Sample Dashboard screen with the Account listing menu option for admins</div>
 </div>
@@ -5182,17 +5168,17 @@ We don&#8217;t want to open up for redirect attacks so we added a simple middlew
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-Lets say someone sends you a link like this <a href="http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot">http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot</a> You probably don&#8217;t want your users to end up there upon successfully login.
+Lets say someone sends you a link like this <a href="http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot" class="bare">http://localhost:6002/login?m=http%3A%2F%2Fwww.robyouonline.bot</a> You probably don&#8217;t want your users to end up there upon successfully login.
 </td>
 </tr>
 </table>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(def redirect-whitelist
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(def redirect-whitelist
   [#"http://localhost:6002/.*"])
 
 (defn wrap-authorized-redirects [handler]
@@ -5231,9 +5217,9 @@ before that I&#8217;d like to cover usage of the token in a service application.
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/buddy.html"> buddy</a>
+		      <a href="/blog/tags/buddy.html">buddy</a>
 	      
-		      <a href="/blog/tags/security.html"> security</a>
+		      <a href="/blog/tags/security.html">security</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -5249,7 +5235,7 @@ before that I&#8217;d like to cover usage of the token in a service application.
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -5285,11 +5271,11 @@ as a starting point. It&#8217;s just a sketch,  so don&#8217;t get too hung up o
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/auth_fun.png" alt="auth fun">
+<img src="/blog/2015//auth_fun.png" alt="auth fun">
 </div>
 </div>
 <div class="paragraph">
-<p>You&#8217;ll find the evolving code examples at <a href="https://github.com/rundis/acme-buddy">https://github.com/rundis/acme-buddy</a>. A tag will be created
+<p>You&#8217;ll find the evolving code examples at <a href="https://github.com/rundis/acme-buddy" class="bare">https://github.com/rundis/acme-buddy</a>. A tag will be created
 for each blog posting.</p>
 </div>
 </div>
@@ -5327,7 +5313,7 @@ will be implemented in the acme-auth service app.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 <a href="http://stackoverflow.com/questions/1592534/what-is-token-based-authentication">What is token based authentication ?</a>
@@ -5342,7 +5328,7 @@ will be implemented in the acme-auth service app.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/acme_user_db.png" alt="acme user db">
+<img src="/blog/2015//acme_user_db.png" alt="acme user db">
 </div>
 </div>
 </div>
@@ -5354,13 +5340,12 @@ will be implemented in the acme-auth service app.</p>
 <div class="listingblock">
 <div class="title">Adding a user</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme-auth.service
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme-auth.service
   (:require [buddy.hashers :as hs]
             [acme-auth.store :as store]))
 
 (defn add-user! [ds user]
-  (store/add-user! ds (update-in user [:password] #(hs/encrypt %))))
-</code></pre>
+  (store/add-user! ds (update-in user [:password] #(hs/encrypt %))))</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5395,7 +5380,7 @@ random <a href="http://en.wikipedia.org/wiki/Salt_%28cryptography%29">salt</a> i
 <div class="listingblock">
 <div class="title">Authenticating a user</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn auth-user [ds credentials]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn auth-user [ds credentials]
   (let [user (store/find-user ds (:username credentials))
         unauthed [false {:message "Invalid username or password"}]]
     (if user
@@ -5421,7 +5406,7 @@ random <a href="http://en.wikipedia.org/wiki/Salt_%28cryptography%29">salt</a> i
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 Bcrypt is intentionally relatively slow. It&#8217;s a measure to help prevent brute force attacks.
@@ -5450,14 +5435,14 @@ whilst the other apps will have the public key for unsigning the token.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>openssl genrsa -aes128 -out auth_privkey.pem 2048</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">openssl genrsa -aes128 -out auth_privkey.pem 2048</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -5470,7 +5455,7 @@ unless it&#8217;s important for you that your government agencies have access to
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem</code></pre>
 </div>
 </div>
 </div>
@@ -5478,7 +5463,7 @@ unless it&#8217;s important for you that your government agencies have access to
 <h4 id="_signing">Signing</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme-auth.service
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme-auth.service
   (:require [buddy.sign.generic :as sign]
             [buddy.sign.jws :as jws]
             [buddy.core.keys :as ks]
@@ -5541,7 +5526,7 @@ unless it&#8217;s important for you that your government agencies have access to
 <div class="listingblock">
 <div class="title">handler</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn create-auth-token [req]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn create-auth-token [req]
   (let [[ok? res] (service/create-auth-token (:datasource req)
                                            (:auth-conf req)
                                            (:params req))]
@@ -5553,8 +5538,7 @@ unless it&#8217;s important for you that your government agencies have access to
 <div class="listingblock">
 <div class="title">Ring / Compojure wrap-up</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>
-(defroutes app-routes
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defroutes app-routes
   (POST "/create-auth-token" [] handlers/create-auth-token))
 
 
@@ -5581,7 +5565,7 @@ unless it&#8217;s important for you that your government agencies have access to
 <h3 id="_invoking">Invoking</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>curl -i -X POST -d '{"username": "test", "password":"secret"}' -H "Content-type: application/json" http://localhost:6001/create-auth-token</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">curl -i -X POST -d '{"username": "test", "password":"secret"}' -H "Content-type: application/json" http://localhost:6001/create-auth-token</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5589,7 +5573,7 @@ unless it&#8217;s important for you that your government agencies have access to
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>{"token":"eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6MTEsImFwcGxpY2F0aW9uLWlkIjoxMH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyMjMxNDk3MH0.bKB3fh2CcPWqP85CK18U_IITxkRce8Xuj8fZGvhqjAaq1dWeiDMKOAGfSlg6GGJi-CrRepMaLOEfAVN23R7yoYb543wgm1Tv_pOYuNQ02tYRQMRJXSxVKS1m9zMEWlszLVet8Q3kfrLBaOxjdvjSp8exjsPeOcfCaqdcXPn9mwWSz0X8k1iaLbnY2fRL0mWbbG8rz4bSUSE0KX0xnKH3LqrtJcZE3BDHSr7tVqaxcHaFt4ivRpk3EYBzMtwRSCQ4jwAMibsh1XhvJMo4QeDwil-et70qJMV5XCJOsAr3SF4FVlNeUsNx2Aj1lORGIN7c8xKq-MDaTaGYV2O7L_0mGA"}</code></pre>
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">{"token":"eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6MTEsImFwcGxpY2F0aW9uLWlkIjoxMH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyMjMxNDk3MH0.bKB3fh2CcPWqP85CK18U_IITxkRce8Xuj8fZGvhqjAaq1dWeiDMKOAGfSlg6GGJi-CrRepMaLOEfAVN23R7yoYb543wgm1Tv_pOYuNQ02tYRQMRJXSxVKS1m9zMEWlszLVet8Q3kfrLBaOxjdvjSp8exjsPeOcfCaqdcXPn9mwWSz0X8k1iaLbnY2fRL0mWbbG8rz4bSUSE0KX0xnKH3LqrtJcZE3BDHSr7tVqaxcHaFt4ivRpk3EYBzMtwRSCQ4jwAMibsh1XhvJMo4QeDwil-et70qJMV5XCJOsAr3SF4FVlNeUsNx2Aj1lORGIN7c8xKq-MDaTaGYV2O7L_0mGA"}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5601,7 +5585,7 @@ public key we generated earlier.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>{"user":{"user-roles":[{"role-id":10,"application-id":10},
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">{"user":{"user-roles":[{"role-id":10,"application-id":10},
                        {"role-id":11,"application-id":10}],
          "username":"test",
          "id":1},
@@ -5631,11 +5615,11 @@ post in this series. Stay tuned !</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/groovy.html"> groovy</a>
+		      <a href="/blog/tags/groovy.html">groovy</a>
 	      
-		      <a href="/blog/tags/gradle.html"> gradle</a>
+		      <a href="/blog/tags/gradle.html">gradle</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -5711,7 +5695,7 @@ to achieve with the Tooling API. This opens up a whole range of oportunities to 
 </div>
 <div class="paragraph">
 <p>The groovy and gradle parts of the currenty groovy plugin should probably be split with a generic gradle
-plugin and specific language plugins (scala, java&#8230;) depending on that.</p>
+plugin and specific language plugins (scala, java&#8230;&#8203;) depending on that.</p>
 </div>
 <div class="ulist">
 <div class="title">How about things like ?:</div>
@@ -5758,7 +5742,7 @@ It puts me in a better shape to contribute to Light Table, but currently leaves 
         <p><em>Tags: </em>
 		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/boot.clj.html"> boot.clj</a>
+		      <a href="/blog/tags/boot.clj.html">boot.clj</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -5815,7 +5799,7 @@ TBH I&#8217;d love to see gradle get some serious clojure love, but it doesn&#82
 <p>Great repl and commandline support.</p>
 </li>
 <li>
-<p>&#8230; and surely a lots more</p>
+<p>&#8230;&#8203; and surely a lots more</p>
 </li>
 </ul>
 </div>
@@ -5831,7 +5815,7 @@ TBH I&#8217;d love to see gradle get some serious clojure love, but it doesn&#82
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defproject boot-sample "0.1.0"
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defproject boot-sample "0.1.0"
   :description "Boot sample application"
   :url "https://github.com/rundis/boot-sample"
   :min-lein-version "2.0.0"
@@ -5842,16 +5826,14 @@ TBH I&#8217;d love to see gradle get some serious clojure love, but it doesn&#82
                  [ring/ring-json "0.3.1"]
                  [bouncer "0.3.1"]
                  [io.aviso/pretty "0.1.14"]]
-  :ring {:handler boot-sample.core/app                       <b>(1)</b>
+  :ring {:handler boot-sample.core/app                       <b class="conum">(1)</b>
          :port 3360}
   :profiles {:dev {:plugins [[lein-ring "0.8.13"]]
                    :test-paths ^:replace []}
              :test {:dependencies [[midje "1.6.3"]]
                     :plugins [[lein-midje "3.1.3"]]
                     :test-paths ["test"]
-                    :resource-paths ["test/resources"]}})
-
-</code></pre>
+                    :resource-paths ["test/resources"]}})</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5866,7 +5848,7 @@ TBH I&#8217;d love to see gradle get some serious clojure love, but it doesn&#82
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>lein ring uberjar
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">lein ring uberjar
 java -jar target/boot-sample-0.1.0-standalone.jar</code></pre>
 </div>
 </div>
@@ -5875,7 +5857,7 @@ java -jar target/boot-sample-0.1.0-standalone.jar</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns boot-sample.core
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns boot-sample.core
   (:require [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.json :refer [wrap-json-params]]
@@ -5907,7 +5889,7 @@ Well, because the ring plugin creates one for us.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>cat target classes/boot_sample/core/main.clj</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">cat target classes/boot_sample/core/main.clj</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5915,7 +5897,7 @@ Well, because the ring plugin creates one for us.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(do
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(do
   (clojure.core/ns boot-sample.core.main
    (:require ring.server.leiningen)
                    (:gen-class))
@@ -5946,8 +5928,8 @@ I&#8217;ll focus on getting that uberjar up and running.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(set-env!
- :resource-paths #{"src"}                                <b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(set-env!
+ :resource-paths #{"src"}                                <b class="conum">(1)</b>
  :dependencies '[[org.clojure/clojure "1.6.0"]
                  [compojure "1.2.1"]
                  [liberator "0.12.2"]
@@ -5959,8 +5941,8 @@ I&#8217;ll focus on getting that uberjar up and running.</p>
 (task-options!
  pom {:project 'boot-Sample
       :version "0.1.0"}
- aot {:namespace '#{boot-sample.core}}                  <b>(2)</b>
- jar {:main 'boot_sample.core                           <b>(3)</b>
+ aot {:namespace '#{boot-sample.core}}                  <b class="conum">(2)</b>
+ jar {:main 'boot_sample.core                           <b class="conum">(3)</b>
       :manifest {"Description" "Sample boot app"
                  "Url" "https://github.com/rundis/boot-sample"}})
 
@@ -5990,21 +5972,20 @@ So the last piece of the puzzle is to add one. It&#8217;t not that hard.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns boot-sample.core
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns boot-sample.core
   (:require [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.json :refer [wrap-json-params]]
             [compojure.core :refer [defroutes ANY GET]]
             [liberator.core :refer [defresource resource]]
-            [ring.adapter.jetty :as jetty])                                <b>(1)</b>
-  (:gen-class))                                                            <b>(2)</b>
+            [ring.adapter.jetty :as jetty])                                <b class="conum">(1)</b>
+  (:gen-class))                                                            <b class="conum">(2)</b>
 
 
 ;; ... the other stuff
 
 (defn -main []
-  (jetty/run-jetty app {:port 3360}))                                     <b>(3)</b>
-</code></pre>
+  (jetty/run-jetty app {:port 3360}))                                     <b class="conum">(3)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6034,7 +6015,7 @@ I needed to build boot from source, should be fixed in the next release though.<
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>git clone git@github.com:boot-clj/boot.git
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">git clone git@github.com:boot-clj/boot.git
 cd boot/boot/core
 lein install</code></pre>
 </div>
@@ -6048,7 +6029,7 @@ lein install</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>boot build
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">boot build
 java -jar target/boot-sample-0.1.0.jar</code></pre>
 </div>
 </div>
@@ -6100,9 +6081,9 @@ just for fun.</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/groovy.html"> groovy</a>
+		      <a href="/blog/tags/groovy.html">groovy</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
 		      <a href="/blog/tags/gradle.html">gradle</a>
 	      </p>
@@ -6152,7 +6133,7 @@ just for fun.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>class GenericGradleModelPlugin implements Plugin {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">class GenericGradleModelPlugin implements Plugin {
     final ToolingModelBuilderRegistry registry;
 
     @Inject
@@ -6172,7 +6153,7 @@ just for fun.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>private static class CustomToolingModelBuilder implements ToolingModelBuilder {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">private static class CustomToolingModelBuilder implements ToolingModelBuilder {
 
 // .. other private methods left out for brevity
 
@@ -6223,11 +6204,11 @@ Map confDiGraph(Configuration conf) {
 <h3 id="_applying_the_plugin_to_gradle_projects_we_connect_to">Applying the plugin to gradle projects we connect to</h3>
 <div class="paragraph">
 <p>Before we can retrieve our custom gradle model, we need to apply the plugin to the project in question. I could ask the users to do it themselves, but that wouldn&#8217;t be particularly user friendly.
-Luckily Gradle provides init scripts that you can apply to projects and the tooling api supports doing so. Init scripts allows you to do&#8230; well &#8230; init stuff for your projects. Applying a plugin from the outside falls into that category.</p>
+Luckily Gradle provides init scripts that you can apply to projects and the tooling api supports doing so. Init scripts allows you to do&#8230;&#8203; well &#8230;&#8203; init stuff for your projects. Applying a plugin from the outside falls into that category.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>initscript {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">initscript {
   repositories {
     maven { url 'http://dl.bintray.com/rundis/maven' }
   }
@@ -6244,7 +6225,7 @@ allprojects {
 <h3 id="_retrieving_the_model">Retrieving the model</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>def genericModel = con.action(new GetGenericModelAction())
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">def genericModel = con.action(new GetGenericModelAction())
                             .withArguments("--init-script", new File("lib/lt-project-init.gradle").absolutePath)
                             .addProgressListener(listener)
                             .run()
@@ -6277,7 +6258,7 @@ We&#8217;ll quickly run through some of the highlights of the LightTable clojure
 <h3 id="_graph_object">Graph object</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defui dependency-graph-ui [this]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defui dependency-graph-ui [this]
   [:div.graph
    [:div.dependency-graph
     [:svg:svg {:width "650" :height "680"}
@@ -6301,7 +6282,7 @@ We&#8217;ll quickly run through some of the highlights of the LightTable clojure
 <h3 id="_some_behaviours">Some behaviours</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-dependencies-loaded
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-dependencies-loaded
           :desc "Gradle dependencies loaded for selected project"
           :triggers #{:graph.set.dependencies}
           :reaction (fn [this rootDeps subDeps]
@@ -6331,7 +6312,7 @@ We&#8217;ll quickly run through some of the highlights of the LightTable clojure
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn create-multiproject-graph [this]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn create-multiproject-graph [this]
   (let [g (new dagreD3/Digraph)]
     (doseq [x (:nodes (multi-proj-deps this))]
       (.addNode g (dep-id x) #js {:label (str "&lt;div class='graph-label clickable' data-proj-name='"
@@ -6367,13 +6348,13 @@ We&#8217;ll quickly run through some of the highlights of the LightTable clojure
 <h3 id="_end_results">End results</h3>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2014/ratpack_multi.png" alt="ratpack multi">
+<img src="/blog/2014//ratpack_multi.png" alt="ratpack multi">
 </div>
 <div class="title">Figure 1. Multiproject sample : Ratpack</div>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2014/ratpack_reactor.png" alt="ratpack reactor">
+<img src="/blog/2014//ratpack_reactor.png" alt="ratpack reactor">
 </div>
 <div class="title">Figure 2. Project configuration dependencies</div>
 </div>
@@ -6399,11 +6380,11 @@ We&#8217;ll quickly run through some of the highlights of the LightTable clojure
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/groovy.html"> groovy</a>
+		      <a href="/blog/tags/groovy.html">groovy</a>
 	      
-		      <a href="/blog/tags/gradle.html"> gradle</a>
+		      <a href="/blog/tags/gradle.html">gradle</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -6442,7 +6423,7 @@ Before anyone potentially asking; I will not bother with maven or ant at any poi
 <h3 id="_retrieving_the_class_path_as_a_list_from_a_gradle_project">Retrieving the class path as a list from a Gradle project</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>// Step 1: Connecting to project
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">// Step 1: Connecting to project
 def con = GradleConnector.newConnector()
   .forProjectDirectory(projectDir)
   .connect()
@@ -6475,12 +6456,12 @@ def classpathList = deps.file + [new File(projectDir, "build/classes/main").path
 <p>The above code is actually wrapped in a class. Connection and model instances are cached for performance reasons.
 We connect to our gradle project. If the project ships with a gradle wrapper (which it should IMO), the gradle connector will use that version (download the distribution even if need be). Otherwise it will use the gradle version of the tooling-api. At the time of writing that&#8217;s 1.12
 The tooling api doesn&#8217;t really expose as much information by default as you might wish. However it ships with an IdeaModel and an EclipseModel that provides what we need for the purposes of creating a class path. As an Idea user the IdeaModel seemed the right choice ! There is also added a progress listener, which is a callback from the api reporting progress. The progress listener returns each progress event as a string to Light Table so that we can display progress information
-We basically navigate the model and extract information about dependencies and put it in a list of maps for ease of jsonifying (useful later !). The location of our projects custom compiled classes are added manually to the class path list (ideally should have been retrieved from the model as well&#8230;)
+We basically navigate the model and extract information about dependencies and put it in a list of maps for ease of jsonifying (useful later !). The location of our projects custom compiled classes are added manually to the class path list (ideally should have been retrieved from the model as well&#8230;&#8203;)
 Adding the class path list to our groovy shell before code invocation</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>private GroovyShell createShell(Map params) {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">private GroovyShell createShell(Map params) {
 def transform = new ScriptTransform()
 def conf = new CompilerConfiguration()
   conf.addCompilationCustomizers(new ASTTransformationCustomizer(transform))
@@ -6511,7 +6492,7 @@ Voila your groovy scripts can invoke any class in your project´s class path.</p
 <h3 id="_groovy">Groovy</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>class ProgressReporter implements LTProgressReporter {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">class ProgressReporter implements LTProgressReporter {
     final LTConnection ltCon
 
     ProgressReporter(LTConnection ltCon) { this.ltCon = ltCon }
@@ -6545,7 +6526,7 @@ Voila your groovy scripts can invoke any class in your project´s class path.</p
 <h3 id="_light_table">Light Table</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-gradle-progress
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-gradle-progress
   :desc "Reporting of progress from gradle related tasks"
   :triggers #{:gradle.progress}
   :reaction (fn [this info]
@@ -6564,7 +6545,7 @@ Listing tasks Groovy/Server</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code> // Step 1: Retrieve generic Gradle model
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy"> // Step 1: Retrieve generic Gradle model
 def gradleProject = con.model(GradleProject)
   .addProgressListener(listener)
   .get()
@@ -6590,13 +6571,12 @@ gradleProject.tasks.collect{
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-gradle-projectinfo
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-gradle-projectinfo
   :desc "Gradle project model information"
   :triggers #{:gradle.projectinfo}
   :reaction (fn [this info]
               (object/merge! groovy {::gradle-project-info info})
-              (object/assoc-in! cmd/manager [:commands :gradle.task.select :options] (add-selector))))
-</code></pre>
+              (object/assoc-in! cmd/manager [:commands :gradle.task.select :options] (add-selector))))</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6608,7 +6588,7 @@ We also update the command for selecting tasks with the new list of tasks. See t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::set-selected
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::set-selected
   :triggers #{:select}
   :reaction (fn [this v]
               (scmd/exec-active! v)))
@@ -6630,8 +6610,7 @@ We also update the command for selecting tasks with the new list of tasks. See t
               :desc "Groovy: Select Gradle task"
               :options (add-selector)
               :exec (fn [item]
-                      (object/raise groovy :gradle.execute item))})
-</code></pre>
+                      (object/raise groovy :gradle.execute item))})</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6639,12 +6618,12 @@ We also update the command for selecting tasks with the new list of tasks. See t
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2014/lt_gr_tasks.png" alt="lt gr tasks">
+<img src="/blog/2014//lt_gr_tasks.png" alt="lt gr tasks">
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>;; Behavior to actually trigger execution of a selected task from the list above
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">;; Behavior to actually trigger execution of a selected task from the list above
 (behavior ::on-gradle-execute
   :desc "Gradle execute task(s)"
   :triggers #{:gradle.execute}
@@ -6663,7 +6642,7 @@ We also update the command for selecting tasks with the new list of tasks. See t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>// Generic execute task function
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">// Generic execute task function
 def execute(Map params, Closure onComplete) {
     def resultHandler = [
         onComplete: {Object result -&gt;
@@ -6687,7 +6666,7 @@ def execute(Map params, Closure onComplete) {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>projectConnection.execute(params) {Map result -&gt;
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">projectConnection.execute(params) {Map result -&gt;
     ltConnection.sendData([
         null,
         result.status == "ERROR" ? "gradle.execute.err" : "gradle.execute.success",
@@ -6713,7 +6692,7 @@ def execute(Map params, Closure onComplete) {
 We&#8217;ve added decent progress reporting and performance seems to be pretty good too. Looks like we have something we can build further upon !</p>
 </div>
 <div class="paragraph">
-<p>I have lots of ideas; Infinitesting,  single test with inline results, compile single file, grails integration ? etc etc. I also really want to show project dependencies in a graph. However before I can do any of those things I need to extend the tooling api with custom models &#8230; and/or maybe I should see if I can contribute to the gradle project in extending the tooling-api with a richer generic project model.</p>
+<p>I have lots of ideas; Infinitesting,  single test with inline results, compile single file, grails integration ? etc etc. I also really want to show project dependencies in a graph. However before I can do any of those things I need to extend the tooling api with custom models &#8230;&#8203; and/or maybe I should see if I can contribute to the gradle project in extending the tooling-api with a richer generic project model.</p>
 </div>
 <div class="paragraph">
 <p>We&#8217;ll have to wait and see. Next week I&#8217;m off to gr8conf.eu in Copenhagen. Really looking forward to meeting up with all the great Groovy dudes/dudettes.  And who knows maybe the hackergarten evening will result in something new and exciting !</p>
@@ -6725,11 +6704,11 @@ We&#8217;ve added decent progress reporting and performance seems to be pretty g
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/groovy.html"> groovy</a>
+		      <a href="/blog/tags/groovy.html">groovy</a>
 	      
-		      <a href="/blog/tags/screencast.html"> screencast</a>
+		      <a href="/blog/tags/screencast.html">screencast</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -6738,22 +6717,18 @@ We&#8217;ve added decent progress reporting and performance seems to be pretty g
            data-via="mrundberget" data-lang="en">Tweet</a>
         <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 
-  			<p><div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>A short demonstration of the repl like capabilities of my Light Table Groovy plugin (<a href="https://github.com/rundis/LightTable-Groovy">https://github.com/rundis/LightTable-Groovy</a>)</p>
+  			<p><div class="paragraph">
+<p>A short demonstration of the repl like capabilities of my Light Table Groovy plugin (<a href="https://github.com/rundis/LightTable-Groovy" class="bare">https://github.com/rundis/LightTable-Groovy</a>)</p>
 </div>
-<iframe width="560" height="315" src="http://www.youtube.com/embed/5ji8RR2A4gQ" frameborder="0" allowfullscreen></iframe>
-</div>
-</div></p>
+<iframe width="560" height="315" src="http://www.youtube.com/embed/5ji8RR2A4gQ" frameborder="0" allowfullscreen></iframe></p>
   			<a href="/blog/2014/gr_lt_part3.html"><h1>A Groovy Light Table client - Step 3: Running out of quick wins</h1></a>
   			<p>12 May 2014</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/groovy.html"> groovy</a>
+		      <a href="/blog/tags/groovy.html">groovy</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -6788,7 +6763,7 @@ We&#8217;ve added decent progress reporting and performance seems to be pretty g
 <h2 id="_a_small_step_towards_a_groovy_repl">A (small) step towards a Groovy REPL</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>After working with Light Table and the Clojure/ClojureScript REPL I have grown very fond of that exploratory nature of working. Is there anything I could do with the plugin to give a more REPL like feel ? Well a small but helpful step would be to be able to remember what I previously have evaluated &#8230;</p>
+<p>After working with Light Table and the Clojure/ClojureScript REPL I have grown very fond of that exploratory nature of working. Is there anything I could do with the plugin to give a more REPL like feel ? Well a small but helpful step would be to be able to remember what I previously have evaluated &#8230;&#8203;</p>
 </div>
 <div class="sect2">
 <h3 id="_groovy_bindings">Groovy Bindings</h3>
@@ -6797,7 +6772,7 @@ We&#8217;ve added decent progress reporting and performance seems to be pretty g
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>// from the evalGroovy method
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">// from the evalGroovy method
 def evalResult = scriptExecutor.execute(data.code, clientSessions.get(currentClientId))
 clientSessions.put(currentClientId, evalResult.bindings)</code></pre>
 </div>
@@ -6813,7 +6788,7 @@ clientSessions.put(currentClientId, evalResult.bindings)</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>;; Behavior for clearing bindings
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">;; Behavior for clearing bindings
 (behavior ::on-clear-bindings
           :desc "Clear cached bindings for this editor"
           :triggers #{:on.clear.bindings}
@@ -6840,7 +6815,7 @@ clientSessions.put(currentClientId, evalResult.bindings)</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>// Wiring up the behaviour in groovy.behaviors
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">// Wiring up the behaviour in groovy.behaviors
 :editor.groovy [:lt.plugins.groovy/on-eval
                      :lt.plugins.groovy/on-eval.one
                      :lt.plugins.groovy/on-clear-bindings
@@ -6857,7 +6832,7 @@ clientSessions.put(currentClientId, evalResult.bindings)</code></pre>
 <h3 id="_clearing_bindings_groovy">Clearing bindings - Groovy</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>// The command dispatch got a new command
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">// The command dispatch got a new command
 case "editor.clear.groovy":
    clientSessions.clear(currentClientId)
    break;</code></pre>
@@ -6891,13 +6866,13 @@ case "editor.clear.groovy":
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/plugin.html"> plugin</a>
+		      <a href="/blog/tags/plugin.html">plugin</a>
 	      
-		      <a href="/blog/tags/clojure.html"> clojure</a>
+		      <a href="/blog/tags/clojure.html">clojure</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/screencast.html"> screencast</a>
+		      <a href="/blog/tags/screencast.html">screencast</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -6906,24 +6881,20 @@ case "editor.clear.groovy":
            data-via="mrundberget" data-lang="en">Tweet</a>
         <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 
-  			<p><div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>A short introduction to my Light Table Snippets plugin (<a href="https://github.com/rundis/lt-snippets">https://github.com/rundis/lt-snippets</a>).</p>
+  			<p><div class="paragraph">
+<p>A short introduction to my Light Table Snippets plugin (<a href="https://github.com/rundis/lt-snippets" class="bare">https://github.com/rundis/lt-snippets</a>).</p>
 </div>
-<iframe width="560" height="315" src="http://www.youtube.com/embed/I6iuXOw3HDQ" frameborder="0" allowfullscreen></iframe>
-</div>
-</div></p>
+<iframe width="560" height="315" src="http://www.youtube.com/embed/I6iuXOw3HDQ" frameborder="0" allowfullscreen></iframe></p>
   			<a href="/blog/2014/instabuster_part2.html"><h1>JavaScript testing with Light Table and Buster.JS</h1></a>
   			<p>21 April 2014</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/javascript.html"> javascript</a>
+		      <a href="/blog/tags/javascript.html">javascript</a>
 	      
-		      <a href="/blog/tags/screencast.html"> screencast</a>
+		      <a href="/blog/tags/screencast.html">screencast</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -6932,25 +6903,21 @@ case "editor.clear.groovy":
            data-via="mrundberget" data-lang="en">Tweet</a>
         <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 
-  			<p><div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>Second part of the intro to the Light Table Buster plugin (<a href="https://github.com/busterjs/lt-instabuster">https://github.com/busterjs/lt-instabuster</a>)
+  			<p><div class="paragraph">
+<p>Second part of the intro to the Light Table Buster plugin (<a href="https://github.com/busterjs/lt-instabuster" class="bare">https://github.com/busterjs/lt-instabuster</a>)
 This time demonstrating some of the more advanced features.</p>
 </div>
-<iframe width="560" height="315" src="http://www.youtube.com/embed/jYDiAVbPL8I" frameborder="0" allowfullscreen></iframe>
-</div>
-</div></p>
+<iframe width="560" height="315" src="http://www.youtube.com/embed/jYDiAVbPL8I" frameborder="0" allowfullscreen></iframe></p>
   			<a href="/blog/2014/instabuster_part1.html"><h1>JavaScript testing with Light Table and Buster.JS</h1></a>
   			<p>17 March 2014</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      
-		      <a href="/blog/tags/javascript.html"> javascript</a>
+		      <a href="/blog/tags/javascript.html">javascript</a>
 	      
-		      <a href="/blog/tags/screencast.html"> screencast</a>
+		      <a href="/blog/tags/screencast.html">screencast</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -6959,22 +6926,18 @@ This time demonstrating some of the more advanced features.</p>
            data-via="mrundberget" data-lang="en">Tweet</a>
         <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 
-  			<p><div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>Intro to the Light Table Buster plugin (<a href="https://github.com/busterjs/lt-instabuster">https://github.com/busterjs/lt-instabuster</a>)</p>
+  			<p><div class="paragraph">
+<p>Intro to the Light Table Buster plugin (<a href="https://github.com/busterjs/lt-instabuster" class="bare">https://github.com/busterjs/lt-instabuster</a>)</p>
 </div>
-<iframe width="560" height="315" src="http://www.youtube.com/embed/WKHWazblpbc" frameborder="0" allowfullscreen></iframe>
-</div>
-</div></p>
+<iframe width="560" height="315" src="http://www.youtube.com/embed/WKHWazblpbc" frameborder="0" allowfullscreen></iframe></p>
   			<a href="/blog/2014/gr_lt_part2.html"><h1>A Groovy Light Table client - Step 2: Evaluating Code</h1></a>
   			<p>23 February 2014</p>
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/groovy.html"> groovy</a>
+		      <a href="/blog/tags/groovy.html">groovy</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -6994,7 +6957,7 @@ This time demonstrating some of the more advanced features.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2014/lt_groovy_eval.png" alt="lt groovy eval">
+<img src="/blog/2014//lt_groovy_eval.png" alt="lt groovy eval">
 </div>
 </div>
 </div>
@@ -7006,7 +6969,7 @@ This time demonstrating some of the more advanced features.</p>
 <h3 id="_evaluate_contents_of_editor_cmd_ctrl_shift_enter">Evaluate contents of editor (cmd/ctrl + shift + enter)</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-eval
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-eval
           :desc "Groovy: Eval current editor"
           :triggers #{:eval}
           :reaction (fn [editor]
@@ -7024,7 +6987,7 @@ This time demonstrating some of the more advanced features.</p>
 <h3 id="_evaluate_current_line_selection">Evaluate current line/selection</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-eval.one
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-eval.one
           :desc "Groovy: Eval current selection"
           :triggers #{:eval.one}
           :reaction (fn [editor]
@@ -7045,7 +7008,7 @@ This time demonstrating some of the more advanced features.</p>
 <h3 id="_our_groovy_eval">Our groovy Eval!</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::eval!
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::eval!
           :triggers #{:eval!}
           :reaction (fn [this event]
                       (let [{:keys [info origin]} event
@@ -7070,7 +7033,7 @@ Once connected it will jsonify our parameters and send them off to our groovy cl
 <div class="listingblock">
 <div class="title">The JSON might look something like:</div>
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>[89,
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">[89,
 "editor.eval.groovy",
   {"line-ending":"\n",
    "name":"sample.groovy",
@@ -7103,7 +7066,7 @@ Once connected it will jsonify our parameters and send them off to our groovy cl
 <h4 id="_command_dispatch">Command dispatch</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>ltClient.withStreams { input, output -&gt;
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">ltClient.withStreams { input, output -&gt;
   try {
     input.eachLine { line -&gt;
     def (currentClientId, command, data) = new JsonSlurper().parseText(line)
@@ -7128,7 +7091,7 @@ Once connected it will jsonify our parameters and send them off to our groovy cl
 <h4 id="_eval_groovy">Eval groovy</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>private void evalGroovy(data, currentClientId) {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">private void evalGroovy(data, currentClientId) {
   def evalResult = scriptExecutor.execute(data.code)
 
   def resultParams = [meta: data.meta]
@@ -7180,7 +7143,7 @@ We run the script (capturing system.out and system.err).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>[89,
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">[89,
  "groovy.res",
  {"meta":{"start":22,"end":23},"out":"hello\nmama\n","result":[{"line":1,"values":["null"]},{"line":2,"values":["null"]}]}]</code></pre>
 </div>
@@ -7191,7 +7154,7 @@ We run the script (capturing system.out and system.err).</p>
 <h3 id="_handling_the_evaluation_results_in_light_table">Handling the evaluation results in Light Table</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn notify-of-results [editor res]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn notify-of-results [editor res]
   (doseq [ln (:result res)]
     (let [lineNo (+ (:line ln) (-&gt; res :meta :start) -1)]
       (object/raise editor :editor.result (clojure.string/join " " (:values ln)) {:line lineNo :start-line lineNo}))))
@@ -7227,7 +7190,7 @@ If the behavior is to handle an error, we show evaluation results up until the s
 <h4 id="_groovy_behaviors">groovy.behaviors</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
      :clients []
      :editor.groovy [:lt.plugins.groovy/on-eval
                      :lt.plugins.groovy/on-eval.one
@@ -7255,7 +7218,7 @@ The ":eval!" behavior is defined for the :groovy.lang tag. Its tied to our groov
 <p>A little bit of plumbing was needed to get this set up. But the hard parts was really coming up with the groovy AST transformation stuff. I guess by now you might have started getting an inkling that Light Table is fairly composable ? It really is super flexible. You don&#8217;t like the behavior for handling inline results for the groovy plugin ? You could easily write your own and wire it up in your user.behaviors file in Light Table. It&#8217;s wicked cool, actually it really is your editor !</p>
 </div>
 <div class="paragraph">
-<p>Yesterday I released version 0.0.2 of the Groovy LightTable plugin. Its available through the Light Table plugin manager, or if you wish to play with the code or maybe feel like contributing feel free to fork the repo at : <a href="https://github.com/rundis/LightTable-Groovy">https://github.com/rundis/LightTable-Groovy</a>. Pull requests are welcome.</p>
+<p>Yesterday I released version 0.0.2 of the Groovy LightTable plugin. Its available through the Light Table plugin manager, or if you wish to play with the code or maybe feel like contributing feel free to fork the repo at : <a href="https://github.com/rundis/LightTable-Groovy" class="bare">https://github.com/rundis/LightTable-Groovy</a>. Pull requests are welcome.</p>
 </div>
 <div class="paragraph">
 <p>So where to next ? I&#8217;d really like to try and create an InstaRepl editor for the plugin. A groovy script editor that evaluates code as you type. There&#8217;s gotta be one or two challenges related to that. A quick win might be to provide groovy api documentation from inside Light Table. I&#8217;ll let you know what happens in the next post.</p>
@@ -7281,9 +7244,9 @@ The ":eval!" behavior is defined for the :groovy.lang tag. Its tied to our groov
         <p><em>Tags: </em>
 		      <a href="/blog/tags/lighttable.html">lighttable</a>
 	      
-		      <a href="/blog/tags/groovy.html"> groovy</a>
+		      <a href="/blog/tags/groovy.html">groovy</a>
 	      
-		      <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+		      <a href="/blog/tags/clojurescript.html">clojurescript</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -7388,7 +7351,7 @@ It becomes evident that our plugin needs to provide some kind of process that re
 <h3 id="_behaviors_for_connecting_from_groovy_cljs">Behaviors for connecting (from groovy.cljs):</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn run-groovy[{:keys [path name client] :as info}]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn run-groovy[{:keys [path name client] :as info}]
   (let [obj (object/create ::connecting-notifier info)
         client-id (clients/-&gt;id client)
         project-dir (files/parent path)]
@@ -7453,8 +7416,7 @@ It becomes evident that our plugin needs to provide some kind of process that re
 (behavior ::connect
                   :triggers #{:connect}
                   :reaction (fn [this path]
-                              (try-connect {:info {:path path}})))
-</code></pre>
+                              (try-connect {:info {:path path}})))</code></pre>
 </div>
 </div>
 <div class="ulist">
@@ -7479,7 +7441,7 @@ It becomes evident that our plugin needs to provide some kind of process that re
 <h3 id="_the_server_part_ltserver_groovy">The server part (LTServer.groovy)</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>import groovy.json.*
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">import groovy.json.*
 
 params = [
   ltPort:   args[0].toInteger(),
@@ -7527,7 +7489,7 @@ client.withStreams {input, output -&gt;
 <h3 id="_notification_of_successful_connection">Notification of successful connection</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(behavior ::on-out
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::on-out
           :triggers #{:proc.out}
           :reaction (fn [this data]
                       (let [out (.toString data)]
@@ -7578,7 +7540,7 @@ client.withStreams {input, output -&gt;
 <h3 id="_wiring_up_behaviors_behaviors_groovy">Wiring up behaviors (behaviors.groovy)</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/groovy.js", "groovy_compiled.js"])]
      :clients []
      :editor.groovy []
      :files [(:lt.objs.files/file-types
@@ -7611,13 +7573,13 @@ client.withStreams {input, output -&gt;
         <p><em>Tags: </em>
 		      <a href="/blog/tags/gradle.html">gradle</a>
 	      
-		      <a href="/blog/tags/groovy.html"> groovy</a>
+		      <a href="/blog/tags/groovy.html">groovy</a>
 	      
-		      <a href="/blog/tags/javascript.html"> javascript</a>
+		      <a href="/blog/tags/javascript.html">javascript</a>
 	      
-		      <a href="/blog/tags/buster.html"> buster</a>
+		      <a href="/blog/tags/buster.html">buster</a>
 	      
-		      <a href="/blog/tags/screencast.html"> screencast</a>
+		      <a href="/blog/tags/screencast.html">screencast</a>
 	      </p>
         <a href="https://twitter.com/share"
            class="twitter-share-button"
@@ -7672,7 +7634,7 @@ You can run tests in multiple browsers in parallell
 Its really really fast
 Write tests in the fashion that suits you (xUnit or spec)
 Nice assertion library and integrated with Sinon.JS (powerful stubbing and spying)
-&#8230; and lots more</p>
+&#8230;&#8203; and lots more</p>
 </div>
 </div>
 </div>
@@ -7695,7 +7657,7 @@ Nice assertion library and integrated with Sinon.JS (powerful stubbing and spyin
 </ul>
 </div>
 <div class="paragraph">
-<p>The homepage for the pluging is here: <a href="https://github.com/rundis/gradle-buster-plugin">https://github.com/rundis/gradle-buster-plugin</a></p>
+<p>The homepage for the pluging is here: <a href="https://github.com/rundis/gradle-buster-plugin" class="bare">https://github.com/rundis/gradle-buster-plugin</a></p>
 </div>
 </div>
 </div>
@@ -7722,7 +7684,7 @@ Nice assertion library and integrated with Sinon.JS (powerful stubbing and spyin
 <h3 id="_set_up_the_buster_plugin_in_your_gradle_config">Set up the buster plugin in your gradle config</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint groovy language-groovy"><code>buildscript {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">buildscript {
     repositories { jcenter() }
     dependencies {
         classpath  'org.gradle.buster:gradle-buster-plugin:0.2.4.1'
@@ -7740,7 +7702,7 @@ build.dependsOn busterTest // hook up javascript task in the build</code></pre>
 <h3 id="_set_up_a_buster_js_configuration_file">Set up a buster.js configuration file</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>var config = module.exports;
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">var config = module.exports;
 
 config["Sample JSTests"] = {
     environment: "browser",
@@ -7759,7 +7721,7 @@ config["Sample JSTests"] = {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>var myapp = this.myapp || {};
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">var myapp = this.myapp || {};
 myapp.services = app.services || {};
 (function () {
     myapp.services.DummyService = function (my) {
@@ -7785,7 +7747,7 @@ myapp.services = app.services || {};
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>(function () {
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">(function () {
     buster.testCase("DummyService", {
         setUp: function() {
             this.service = myapp.services.DummyService;
@@ -7825,7 +7787,7 @@ myapp.services = app.services || {};
 <h3 id="_running_the_tests_locally">Running the tests locally</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>$ gradle busterTest</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ gradle busterTest</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7837,7 +7799,7 @@ When doing your tdd cycles its quite useful to use the autotest feature (kinda l
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>$ gradle busterAutoTest</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ gradle busterAutoTest</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7850,7 +7812,7 @@ Its quite easy to set up just see the readme for the plugin</p>
 </div>
 <div class="paragraph">
 <p>CI Server
-Obviously you will need to set up the preconditions. If you&#8217;re server isn&#8217;t headless you have the option of testing with a few proper browsers(firefox and chrome on linux, safari if your server is mac&#8230; which I doubt).</p>
+Obviously you will need to set up the preconditions. If you&#8217;re server isn&#8217;t headless you have the option of testing with a few proper browsers(firefox and chrome on linux, safari if your server is mac&#8230;&#8203; which I doubt).</p>
 </div>
 </div>
 </div>

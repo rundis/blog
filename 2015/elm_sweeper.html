@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/javascript.html">javascript</a>
   </em>
-    <a href="/blog/tags/react.html"> react</a>
+    <a href="/blog/tags/react.html">react</a>
   </em>
-    <a href="/blog/tags/elm.html"> elm</a>
+    <a href="/blog/tags/elm.html">elm</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/elm_sweeper.html"
@@ -91,21 +91,21 @@
 <div class="paragraph">
 <p>After taking a keen interest to Elm lately I figured I needed to solve a real problem. Something a bit fun and achievable in a couple of evenings/nights.
 Not being awfully creative, piggiebacking on other peoples' work is sometimes a good option.
-In this post I&#8217;ll take you through some of my steps in porting/re-implementing <a href="https://github.com/cjohansen/react-sweeper">https://github.com/cjohansen/react-sweeper</a> (JavaScript and React) to an Elm implementation.</p>
+In this post I&#8217;ll take you through some of my steps in porting/re-implementing <a href="https://github.com/cjohansen/react-sweeper" class="bare">https://github.com/cjohansen/react-sweeper</a> (JavaScript and React) to an Elm implementation.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/elm_sweeper.png" alt="elm sweeper">
+<img src="/blog/2015//elm_sweeper.png" alt="elm sweeper">
 </div>
 </div>
 <div class="admonitionblock tip">
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-If you&#8217;d like to have a look at the complete implementation of the game, check out <a href="https://github.com/rundis/elm-sweeper">https://github.com/rundis/elm-sweeper</a>.
+If you&#8217;d like to have a look at the complete implementation of the game, check out <a href="https://github.com/rundis/elm-sweeper" class="bare">https://github.com/rundis/elm-sweeper</a>.
 There you&#8217;ll find instructions on how to get it running too.
 </td>
 </tr>
@@ -139,7 +139,7 @@ an all out repl driven approach. That gave me a chance to experience the good an
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/elm_repl.png" alt="elm repl">
+<img src="/blog/2015//elm_repl.png" alt="elm repl">
 </div>
 </div>
 <div class="sect2">
@@ -150,7 +150,7 @@ define a couple of types</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>type alias Tile               <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type alias Tile               <i class="conum" data-value="1"></i><b>(1)</b>
   { id: Int
   , threatCount: Maybe Int    <i class="conum" data-value="2"></i><b>(2)</b>
   , isRevealed: Bool
@@ -181,7 +181,7 @@ type alias Game =             <i class="conum" data-value="3"></i><b>(3)</b>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Status of the game, the possible states are defined by GameStatus. SAFE means you&#8217;ve won, DEAD&#8230; well</td>
+<td>Status of the game, the possible states are defined by GameStatus. SAFE means you&#8217;ve won, DEAD&#8230;&#8203; well</td>
 </tr>
 </table>
 </div>
@@ -193,7 +193,7 @@ the game logic later on.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 What&#8217;s that <code>Maybe</code> thing ? If someone told me it&#8217;s a <a href="https://en.wikipedia.org/wiki/Monad_(functional_programming)">Monad</a> I wouldn&#8217;t be any wiser. I think of it
@@ -216,7 +216,7 @@ you just revealed. So we need a way to find the neighbouring tiles of a given ti
 <h4 id="_javascript_implementation">JavaScript implementation</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>function onWEdge(game, tile) {                                                 <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">function onWEdge(game, tile) {                                                 <i class="conum" data-value="1"></i><b>(1)</b>
   return tile % game.get('cols') === 0;
 }
 
@@ -272,8 +272,7 @@ neighbouring the given tile.</td>
 <h4 id="_elm_implementation">Elm implementation</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>
-type Direction = W | NW | N | NE | E | SE | S | SW                                 <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Direction = W | NW | N | NE | E | SE | S | SW                                 <i class="conum" data-value="1"></i><b>(1)</b>
 
 onWEdge : Game -&gt; Tile -&gt; Bool                                                     <i class="conum" data-value="2"></i><b>(2)</b>
 onWEdge game tile =
@@ -329,7 +328,7 @@ is also the index in the tiles list of our game.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>tileByIdx is a functions that finds a tile by its index. (it returns a tile, &#8230; maybe). tIdx is a local function that just curries(/binds/partially applies) the first parameter - game</td>
+<td>tileByIdx is a functions that finds a tile by its index. (it returns a tile, &#8230;&#8203; maybe). tIdx is a local function that just curries(/binds/partially applies) the first parameter - game</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
@@ -368,7 +367,7 @@ really nice overview as well.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 Think of &lt;| as one way to avoid parenthesis. It&#8217;s actually a backwards function application
@@ -380,7 +379,7 @@ Think of &lt;| as one way to avoid parenthesis. It&#8217;s actually a backwards 
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -389,7 +388,7 @@ exhaustive. Rumors has it that the next version of elm might handle this at comp
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/elm_case_error.png" alt="elm case error">
+<img src="/blog/2015//elm_case_error.png" alt="elm case error">
 </div>
 </div>
 </td>
@@ -404,7 +403,7 @@ exhaustive. Rumors has it that the next version of elm might handle this at comp
 <h4 id="_javascript">JavaScript</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>function getMineCount(game, tile) {                                             <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">function getMineCount(game, tile) {                                             <i class="conum" data-value="1"></i><b>(1)</b>
   var nbs = neighbours(game, tile);
   return nbs.filter(prop('isMine')).length;
 }
@@ -431,7 +430,7 @@ function addThreatCount(game, tile) {                                           
 <h4 id="_elm">Elm</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>mineCount : Game -&gt; Maybe Tile -&gt; Int                                           <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">mineCount : Game -&gt; Maybe Tile -&gt; Int                                           <i class="conum" data-value="1"></i><b>(1)</b>
 mineCount game tile =
   List.length &lt;| List.filter .isMine &lt;| neighbours game tile
 
@@ -458,7 +457,7 @@ I opted for a two in one function.</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="ulist">
@@ -467,7 +466,7 @@ I opted for a two in one function.</td>
 <li>
 <p>For JavaScript you might get 0 for a non-existent tile, which isn&#8217;t too bad. But maybe you&#8217;ll get
 a null pointer somewhere deeper down the call stack. To be sure you have to crawl through all function calls this function makes and
-apply your JavaScript foo to know things like null &lt; 1 is obviously true, but null &lt; 0 is false. &#8230; and so on.</p>
+apply your JavaScript foo to know things like null &lt; 1 is obviously true, but null &lt; 0 is false. &#8230;&#8203; and so on.</p>
 </li>
 <li>
 <p>The elm implementation won&#8217;t have any null pointer exceptions, but really it should return Maybe Int to guard
@@ -487,7 +486,7 @@ against giving 0 back for a Nothing tile !</p>
 <h4 id="_javascript_2">JavaScript</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>function revealAdjacentSafeTiles(game, tile) {
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">function revealAdjacentSafeTiles(game, tile) {
   if (isMine(game, tile)) {
     return game;
   }
@@ -509,7 +508,7 @@ against giving 0 back for a Nothing tile !</p>
 <h4 id="_elm_2">Elm</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>revealAdjacentSafeTiles :  Game -&gt; Int -&gt; Game
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">revealAdjacentSafeTiles :  Game -&gt; Int -&gt; Game
 revealAdjacentSafeTiles game tileId =
   case tileByIdx game tileId of
     Nothing -&gt; game
@@ -552,7 +551,7 @@ Below I&#8217;ve picked out the most interesting parts</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>export function createUI(channel) {                                            <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">export function createUI(channel) {                                            <i class="conum" data-value="1"></i><b>(1)</b>
   const Tile = createComponent((tile) =&gt; {                                     <i class="conum" data-value="2"></i><b>(2)</b>
     if (tile.get('isRevealed')) {
       return div({className: 'tile' + (tile.get('isMine') ? ' mine' : '')},
@@ -623,7 +622,7 @@ A neat way to avoid using callbacks!</td>
 <h3 id="_elm_3">Elm</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>threatCount : Maybe Int -&gt; List Html
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">threatCount : Maybe Int -&gt; List Html
 threatCount count =
   case count of
     Nothing -&gt; []
@@ -698,7 +697,7 @@ is a list of attributes and the second is a list of child elements</td>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <code>Signal.Address Action</code> : Address points to a particular type of Signal, in our case the Signal is an <code>Action</code>
@@ -717,7 +716,7 @@ we&#8217;ll come back to that shortly. But the short story is that this is what 
 <h3 id="_javascript_4">JavaScript</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>const channel = new EventEmitter();
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">const channel = new EventEmitter();
 const renderMinesweeper = createUI(channel);
 let game = createGame({cols: 16, rows: 16, mines: 48});
 let history = List([game]);
@@ -790,7 +789,7 @@ with an elm Model-View-Update structure. This is a great place to start for your
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>type Action = RevealTile Int                                             <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Action = RevealTile Int                                             <i class="conum" data-value="1"></i><b>(1)</b>
 
 
 init : Game                                                              <i class="conum" data-value="2"></i><b>(2)</b>
@@ -862,8 +861,7 @@ To use that we have to change a few things though, most notably we can&#8217;t u
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint elm language-elm"><code>
-type Action =
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Action =
   NewGame                                                                 <i class="conum" data-value="1"></i><b>(1)</b>
   | RevealTile Int
 
@@ -891,8 +889,7 @@ main =
 
 port initGame : Task.Task x ()                                            <i class="conum" data-value="7"></i><b>(7)</b>
 port initGame =
-  Signal.send actions.address NewGame
-</code></pre>
+  Signal.send actions.address NewGame</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -935,7 +932,7 @@ If any elm-ers out there reads this, feel free to comment on how this could be d
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 I found <a href="https://yobriefca.se/blog/2015/08/02/deconstructing-your-first-elm-app/">this</a> blogpost

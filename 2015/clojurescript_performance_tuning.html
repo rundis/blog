@@ -76,11 +76,11 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/clojure.html">clojure</a>
   </em>
-    <a href="/blog/tags/clojurescript.html"> clojurescript</a>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
   </em>
-    <a href="/blog/tags/javascript.html"> javascript</a>
+    <a href="/blog/tags/javascript.html">javascript</a>
   </em>
-    <a href="/blog/tags/performance.html"> performance</a>
+    <a href="/blog/tags/performance.html">performance</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/clojurescript_performance_tuning.html"
@@ -114,7 +114,7 @@ rewriting of medium to large sized files (as strings currently mind you) from Li
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 One of my sample ClojureScript files (about 600 lines / 20K characters) took about 250 ms to parse and build a zip for before
@@ -158,7 +158,7 @@ I decided to try to just dispatch using a cond or case.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn- dispatch
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn- dispatch
   [c]
   (cond (nil? c)                        parse-eof
         (identical? c *delimiter*)      reader/ignore
@@ -198,7 +198,7 @@ I&#8217;ll show a couple of samples</p>
 <h4 id="_checking_for_token_boundaries">Checking for token boundaries</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn boundary?
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn boundary?
   [c]
   "Check whether a given char is a token boundary."
   (contains?
@@ -212,7 +212,7 @@ I&#8217;ll show a couple of samples</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(def js-boundaries                                     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(def js-boundaries                                     <i class="conum" data-value="1"></i><b>(1)</b>
   #js [\" \: \; \' \@ \^ \` \~
       \( \) \[ \] \{ \} \\ nil])
 
@@ -246,7 +246,7 @@ I&#8217;ll show a couple of samples</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(when (= c "\")
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(when (= c "\")
   ... )</code></pre>
 </div>
 </div>
@@ -255,7 +255,7 @@ I&#8217;ll show a couple of samples</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(when (identical? c "(")
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(when (identical? c "(")
   ... )</code></pre>
 </div>
 </div>
@@ -278,7 +278,7 @@ Hey, surely this guy nows a thing or two about what really might help and still 
 <h4 id="_avoiding_protocol_indirection">Avoiding protocol indirection</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn peek
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn peek
   "Peek next char."
   [^not-native reader]     <i class="conum" data-value="1"></i><b>(1)</b>
   (r/peek-char reader))</code></pre>
@@ -297,7 +297,7 @@ Hey, surely this guy nows a thing or two about what really might help and still 
 <h4 id="_type_hinting">Type hinting</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn ^boolean whitespace?   <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn ^boolean whitespace?   <i class="conum" data-value="1"></i><b>(1)</b>
   [c]
   (r/whitespace? c))</code></pre>
 </div>
@@ -319,7 +319,7 @@ isn&#8217;t one of <code>0, "" (empty-string) and NaN</code> we can coerce the c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(if (satisfies? IWithMeta o)
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(if (satisfies? IWithMeta o)
   ...)</code></pre>
 </div>
 </div>
@@ -328,7 +328,7 @@ isn&#8217;t one of <code>0, "" (empty-string) and NaN</code> we can coerce the c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(if (implements? IWithMeta o)
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(if (implements? IWithMeta o)
   ...)</code></pre>
 </div>
 </div>
@@ -347,7 +347,7 @@ isn&#8217;t one of <code>0, "" (empty-string) and NaN</code> we can coerce the c
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/lt_profiler.png" alt="lt profiler">
+<img src="/blog/2015//lt_profiler.png" alt="lt profiler">
 </div>
 </div>
 <div class="ulist">
@@ -383,7 +383,7 @@ Both of the methods was using the following pattern for handling a single var-ar
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn token-node
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn token-node
   "Create node for an unspecified EDN token."
   [value &amp; [string-value]]                       <i class="conum" data-value="1"></i><b>(1)</b>
   (-&gt;TokenNode
@@ -401,14 +401,14 @@ Both of the methods was using the following pattern for handling a single var-ar
 </div>
 <div class="paragraph">
 <p>This constructor method was called a lot. So not only was this perhaps not ideal stylewise, but it turns out
-it has some pretty bad performance characteristics as well. (Not knowing the details, I can only speculate on why&#8230;)</p>
+it has some pretty bad performance characteristics as well. (Not knowing the details, I can only speculate on why&#8230;&#8203;)</p>
 </div>
 <div class="paragraph">
 <p>So I changed the above code to:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn token-node
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn token-node
   "Create node for an unspecified EDN token."
   ([value]
    (token-node value (pr-str value)))
@@ -445,10 +445,10 @@ and hopefully make some additional shavings in rewrite-cljs !</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<a href="https://github.com/rundis/rewrite-cljs">rewrite-cljs</a> 0.3.1 was just released. Snappier than ever <span class="icon green"><i class="icon-smile-o"></i></span>
+<a href="https://github.com/rundis/rewrite-cljs">rewrite-cljs</a> 0.3.1 was just released. Snappier than ever <span class="icon green"><i class="fa fa-smile-o"></i></span>
 </td>
 </tr>
 </table>

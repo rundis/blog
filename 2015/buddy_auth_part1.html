@@ -76,9 +76,9 @@
   <p><em>Tags: </em>
     <a href="/blog/tags/clojure.html">clojure</a>
   </em>
-    <a href="/blog/tags/buddy.html"> buddy</a>
+    <a href="/blog/tags/buddy.html">buddy</a>
   </em>
-    <a href="/blog/tags/security.html"> security</a>
+    <a href="/blog/tags/security.html">security</a>
   </p>
   <a href="https://twitter.com/share" class="twitter-share-button"
     data-url="http://rundis.github.io/blog/2015/buddy_auth_part1.html"
@@ -93,7 +93,7 @@
 <table>
 <tr>
 <td class="icon">
-<i class="icon-warning" title="Warning"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -129,11 +129,11 @@ as a starting point. It&#8217;s just a sketch,  so don&#8217;t get too hung up o
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/auth_fun.png" alt="auth fun">
+<img src="/blog/2015//auth_fun.png" alt="auth fun">
 </div>
 </div>
 <div class="paragraph">
-<p>You&#8217;ll find the evolving code examples at <a href="https://github.com/rundis/acme-buddy">https://github.com/rundis/acme-buddy</a>. A tag will be created
+<p>You&#8217;ll find the evolving code examples at <a href="https://github.com/rundis/acme-buddy" class="bare">https://github.com/rundis/acme-buddy</a>. A tag will be created
 for each blog posting.</p>
 </div>
 </div>
@@ -171,7 +171,7 @@ will be implemented in the acme-auth service app.</p>
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 <a href="http://stackoverflow.com/questions/1592534/what-is-token-based-authentication">What is token based authentication ?</a>
@@ -186,7 +186,7 @@ will be implemented in the acme-auth service app.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="/blog/2015/acme_user_db.png" alt="acme user db">
+<img src="/blog/2015//acme_user_db.png" alt="acme user db">
 </div>
 </div>
 </div>
@@ -198,13 +198,12 @@ will be implemented in the acme-auth service app.</p>
 <div class="listingblock">
 <div class="title">Adding a user</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme-auth.service
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme-auth.service
   (:require [buddy.hashers :as hs]
             [acme-auth.store :as store]))
 
 (defn add-user! [ds user]
-  (store/add-user! ds (update-in user [:password] #(hs/encrypt %))))
-</code></pre>
+  (store/add-user! ds (update-in user [:password] #(hs/encrypt %))))</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -239,7 +238,7 @@ random <a href="http://en.wikipedia.org/wiki/Salt_%28cryptography%29">salt</a> i
 <div class="listingblock">
 <div class="title">Authenticating a user</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn auth-user [ds credentials]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn auth-user [ds credentials]
   (let [user (store/find-user ds (:username credentials))
         unauthed [false {:message "Invalid username or password"}]]
     (if user
@@ -265,7 +264,7 @@ random <a href="http://en.wikipedia.org/wiki/Salt_%28cryptography%29">salt</a> i
 <table>
 <tr>
 <td class="icon">
-<i class="icon-tip" title="Tip"></i>
+<i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
 Bcrypt is intentionally relatively slow. It&#8217;s a measure to help prevent brute force attacks.
@@ -294,14 +293,14 @@ whilst the other apps will have the public key for unsigning the token.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>openssl genrsa -aes128 -out auth_privkey.pem 2048</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">openssl genrsa -aes128 -out auth_privkey.pem 2048</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="icon-note" title="Note"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <div class="paragraph">
@@ -314,7 +313,7 @@ unless it&#8217;s important for you that your government agencies have access to
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem</code></pre>
 </div>
 </div>
 </div>
@@ -322,7 +321,7 @@ unless it&#8217;s important for you that your government agencies have access to
 <h4 id="_signing">Signing</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(ns acme-auth.service
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(ns acme-auth.service
   (:require [buddy.sign.generic :as sign]
             [buddy.sign.jws :as jws]
             [buddy.core.keys :as ks]
@@ -385,7 +384,7 @@ unless it&#8217;s important for you that your government agencies have access to
 <div class="listingblock">
 <div class="title">handler</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>(defn create-auth-token [req]
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn create-auth-token [req]
   (let [[ok? res] (service/create-auth-token (:datasource req)
                                            (:auth-conf req)
                                            (:params req))]
@@ -397,8 +396,7 @@ unless it&#8217;s important for you that your government agencies have access to
 <div class="listingblock">
 <div class="title">Ring / Compojure wrap-up</div>
 <div class="content">
-<pre class="prettyprint clojure language-clojure"><code>
-(defroutes app-routes
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defroutes app-routes
   (POST "/create-auth-token" [] handlers/create-auth-token))
 
 
@@ -425,7 +423,7 @@ unless it&#8217;s important for you that your government agencies have access to
 <h3 id="_invoking">Invoking</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint bash language-bash"><code>curl -i -X POST -d '{"username": "test", "password":"secret"}' -H "Content-type: application/json" http://localhost:6001/create-auth-token</code></pre>
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">curl -i -X POST -d '{"username": "test", "password":"secret"}' -H "Content-type: application/json" http://localhost:6001/create-auth-token</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -433,7 +431,7 @@ unless it&#8217;s important for you that your government agencies have access to
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>{"token":"eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6MTEsImFwcGxpY2F0aW9uLWlkIjoxMH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyMjMxNDk3MH0.bKB3fh2CcPWqP85CK18U_IITxkRce8Xuj8fZGvhqjAaq1dWeiDMKOAGfSlg6GGJi-CrRepMaLOEfAVN23R7yoYb543wgm1Tv_pOYuNQ02tYRQMRJXSxVKS1m9zMEWlszLVet8Q3kfrLBaOxjdvjSp8exjsPeOcfCaqdcXPn9mwWSz0X8k1iaLbnY2fRL0mWbbG8rz4bSUSE0KX0xnKH3LqrtJcZE3BDHSr7tVqaxcHaFt4ivRpk3EYBzMtwRSCQ4jwAMibsh1XhvJMo4QeDwil-et70qJMV5XCJOsAr3SF4FVlNeUsNx2Aj1lORGIN7c8xKq-MDaTaGYV2O7L_0mGA"}</code></pre>
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">{"token":"eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyIjp7InVzZXItcm9sZXMiOlt7InJvbGUtaWQiOjEwLCJhcHBsaWNhdGlvbi1pZCI6MTB9LHsicm9sZS1pZCI6MTEsImFwcGxpY2F0aW9uLWlkIjoxMH1dLCJ1c2VybmFtZSI6InRlc3QiLCJpZCI6MX0sImV4cCI6MTQyMjMxNDk3MH0.bKB3fh2CcPWqP85CK18U_IITxkRce8Xuj8fZGvhqjAaq1dWeiDMKOAGfSlg6GGJi-CrRepMaLOEfAVN23R7yoYb543wgm1Tv_pOYuNQ02tYRQMRJXSxVKS1m9zMEWlszLVet8Q3kfrLBaOxjdvjSp8exjsPeOcfCaqdcXPn9mwWSz0X8k1iaLbnY2fRL0mWbbG8rz4bSUSE0KX0xnKH3LqrtJcZE3BDHSr7tVqaxcHaFt4ivRpk3EYBzMtwRSCQ4jwAMibsh1XhvJMo4QeDwil-et70qJMV5XCJOsAr3SF4FVlNeUsNx2Aj1lORGIN7c8xKq-MDaTaGYV2O7L_0mGA"}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -445,7 +443,7 @@ public key we generated earlier.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint javascript language-javascript"><code>{"user":{"user-roles":[{"role-id":10,"application-id":10},
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">{"user":{"user-roles":[{"role-id":10,"application-id":10},
                        {"role-id":11,"application-id":10}],
          "username":"test",
          "id":1},
