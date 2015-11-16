@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/elmfeed.xml" rel="self" type="application/rss+xml" />
     <description>Elm feed from rundis.github.com/blog</description>
     <language>en-gb</language>
-    <pubDate>Mon, 16 Nov 2015 12:59:24 +0100</pubDate>
-    <lastBuildDate>Mon, 16 Nov 2015 12:59:24 +0100</lastBuildDate>
+    <pubDate>Mon, 16 Nov 2015 13:36:54 +0100</pubDate>
+    <lastBuildDate>Mon, 16 Nov 2015 13:36:54 +0100</lastBuildDate>
 
       <item>
         <title>Minesweeper - a brief journey from JavaScript/React to Elm</title>
@@ -24,7 +24,7 @@ In this post I&amp;#8217;ll take you through some of my steps in porting/re-impl
 &lt;/div&gt;
 &lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;img src=&quot;/blog/2015//elm_sweeper.png&quot; alt=&quot;elm sweeper&quot;&gt;
+&lt;img src=&quot;http://http://rundis.github.io/blog/2015/elm_sweeper.png&quot; alt=&quot;elm sweeper&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;admonitionblock tip&quot;&gt;
@@ -68,7 +68,7 @@ an all out repl driven approach. That gave me a chance to experience the good an
 &lt;/div&gt;
 &lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;img src=&quot;/blog/2015//elm_repl.png&quot; alt=&quot;elm repl&quot;&gt;
+&lt;img src=&quot;http://http://rundis.github.io/blog/2015/elm_repl.png&quot; alt=&quot;elm repl&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;sect2&quot;&gt;
@@ -317,7 +317,7 @@ exhaustive. Rumors has it that the next version of elm might handle this at comp
 &lt;/div&gt;
 &lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;img src=&quot;/blog/2015//elm_case_error.png&quot; alt=&quot;elm case error&quot;&gt;
+&lt;img src=&quot;http://http://rundis.github.io/blog/2015/elm_case_error.png&quot; alt=&quot;elm case error&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/td&gt;
