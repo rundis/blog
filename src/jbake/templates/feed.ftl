@@ -16,12 +16,12 @@
       <pubDate>${post.date?string("EEE, d MMM yyyy HH:mm:ss Z")}</pubDate>
       <guid isPermaLink="false">${post.uri}</guid>
       	<description>
-	<#escape x as x?xml>	
+	<#escape x as x?xml>
 	${post.body}
 	</#escape>
 	</description>
     </item>
     </#list>
 
-  </channel> 
+  </channel>
 </rss>

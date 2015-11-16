@@ -1,0 +1,8 @@
+= Elm feed dummy
+Magnus Rundberget
+2015-11-10
+:jbake-type: elmfeed
+:jbake-status: published
+
+
+This file is here just to trigger the generation of the elm rss feed !

@@ -5,7 +5,10 @@ buildscript {
 
   dependencies {
     classpath 'me.champeau.gradle:jbake-gradle-plugin:0.2'
-    classpath 'org.asciidoctor:asciidoctor-java-integration:0.1.4'
+    //classpath 'org.asciidoctor:asciidoctor-java-integration:0.1.4'
+    classpath "org.jbake:jbake-core:2.4.0"
+    classpath 'org.asciidoctor:asciidoctorj:1.5.2'
+
     classpath 'org.freemarker:freemarker:2.3.19'
     classpath 'com.bluepapa32:gradle-watch-plugin:0.1.4'
   }
@@ -14,6 +17,10 @@ buildscript {
 apply plugin: 'base'
 apply plugin: 'me.champeau.jbake'
 apply plugin: 'com.bluepapa32.watch'
+
+jbake {
+    clearCache = true
+}
 
 
 task publish(type: GradleBuild) {
