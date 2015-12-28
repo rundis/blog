@@ -6,9 +6,676 @@
     <atom:link href="http://rundis.github.io/blog/elmfeed.xml" rel="self" type="application/rss+xml" />
     <description>Elm feed from rundis.github.com/blog</description>
     <language>en-gb</language>
-    <pubDate>Mon, 16 Nov 2015 13:38:51 +0100</pubDate>
-    <lastBuildDate>Mon, 16 Nov 2015 13:38:51 +0100</lastBuildDate>
+    <pubDate>Mon, 28 Dec 2015 17:03:38 +0100</pubDate>
+    <lastBuildDate>Mon, 28 Dec 2015 17:03:38 +0100</lastBuildDate>
 
+      <item>
+        <title>Typed up CRUD SPA with Haskell and Elm  - Part 1: Spike time</title>
+        <link>http://rundis.github.io/blog/2015/haskell_elm_spa_part1.html</link>
+        <pubDate>Mon, 28 Dec 2015 00:00:00 +0100</pubDate>
+        <guid isPermaLink="false">2015/haskell_elm_spa_part1.html</guid>
+          <description>
+  	       &lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Join me on my journey into statically typed functional languages. I&amp;#8217;ve been living a pretty happily
+dynamic life so far. What&amp;#8217;s the fuzz with all those types ? What do they give me in a real life
+scenario (aka is it worth using for work gigs) ? I need to make an effort and try to figure
+some of this out. This blog series is an attempt to document some of my experiences along the way through a practical example.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;There will be:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;A single page web application with crud features&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Lots of types, refactoring and hopefully some testing&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;An evolving web-app github repo for your amusement or amazement&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_just_a_little_background_on_me&quot;&gt;Just a little background on me&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For quite some time I&amp;#8217;ve been wanting to learn more about functional languages that are statically (and strongly) typed.
+What benefits do they really provide in practice and what are the downsides ?
+My background is a from quite a few years with Java, and the last 3-4 years I&amp;#8217;ve been working
+ mostly with Groovy, JavaScript and Clojure/ClojureScript.
+I&amp;#8217;ve dabbled a little with Elm recently (&lt;a href=&quot;http://rundis.github.io/blog/2015/elm_sweeper.html&quot;&gt;minesweeper in Elm&lt;/a&gt;)
+, and I&amp;#8217;ve tried to take on Haskell a couple of times (without much success I might add).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I mostly do web apps at work, so I figured I need to try and make something at least remotely
+similar to what I do in real life.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_let_s_get_started&quot;&gt;Let&amp;#8217;s get started&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This is the point where I&amp;#8217;ve run into analysis paralysis so many a time before.
+So I set out to create a crud app, but what shall I build. After some deliberation
+I settled on making something related to Music. You know Albums, Artists, Tracks and such.
+I have no idea what the end result will be, but to start off I&amp;#8217;ll make a simple spike.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;http://rundis.github.io/blog/2015/artists.png&quot; alt=&quot;artists&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;The spike should&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;establish a base architecture&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;implement a simple feature: &lt;strong&gt;List artists&lt;/strong&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;You will find the sample application code on &lt;a href=&quot;https://github.com/rundis/albums&quot;&gt;github&lt;/a&gt;.
+There will be a tag for each blog post in the series&lt;/p&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_backend&quot;&gt;Backend&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I wanted to implement server component that would provide REST-services. There are quite
+a few options available for Haskell that can help with that. After some research and trials
+I ended up using &lt;a href=&quot;https://haskell-servant.github.io/&quot;&gt;Servant&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Some of the other options I looked at includes:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://www.spock.li/&quot;&gt;Spock&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/scotty-web/scotty&quot;&gt;Scotty&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://snapframework.com/&quot;&gt;Snap&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://www.yesodweb.com/&quot;&gt;Yesod&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I just had to choose one, and Servant seemed like a nice fit for REST stuff and I managed to get it
+working without to much hazzle.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_project_set_up&quot;&gt;Project set up&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m using &lt;a href=&quot;https://www.haskell.org/cabal/&quot;&gt;cabal&lt;/a&gt;, but you might also want to consider looking
+at &lt;a href=&quot;http://docs.haskellstack.org/en/stable/index.html&quot;&gt;stack&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;name:                albums
+version:             0.1.0.0
+synopsis:            Albums rest backend
+license:             MIT
+license-file:        LICENSE
+author:              rundis
+maintainer:          mrundberget@hotmail.com
+category:            Web
+build-type:          Simple
+cabal-version:       &amp;gt;=1.10
+
+executable albums
+  main-is:             Main.hs              &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  build-depends:
+      base &amp;gt;= 4.7 &amp;amp;&amp;amp; &amp;lt; 5
+    , either
+    , aeson &amp;gt;= 0.8                          &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    , servant                               &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+    , servant-server
+    , wai
+    , warp
+  hs-source-dirs:      src                  &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+  default-language:    Haskell2010&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The entry point for the application&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Provides JSON support&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The servant library that helps us create type safe rest services&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The directory(ies) where the source code for our app resides&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For the purposes of this spike all haskell code will reside in &lt;code&gt;Main.hs&lt;/code&gt;. This will
+surely not be the case as the app progresses.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+If you wan&amp;#8217;t to try out automatic reloading support, you may want to check out &lt;a href=&quot;https://github.com/lukexi/halive&quot;&gt;halive&lt;/a&gt;.
+Unfortunately I couldn&amp;#8217;t get it to work on my machine (OS/X Maverick), but it might work our for you though :-)
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_main_hs&quot;&gt;Main.hs&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;data Artist = Artist
+  { artistId :: Int
+  , name :: String
+  } deriving (Eq, Show, Generic)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A simple type describing the shape of an Artist in our app.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;instance ToJSON Artist                                       &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+
+type ArtistAPI =                                             &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+       Get &apos;[JSON] [Artist]                                  &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  :&amp;lt;|&amp;gt; Capture &quot;artistId&quot; Int :&amp;gt; Get &apos;[JSON] Artist          &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+
+
+artistsServer :: Server ArtistAPI
+artistsServer = getArtists :&amp;lt;|&amp;gt; artistOperations             &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+
+  where getArtists :: EitherT ServantErr IO [Artist]
+        getArtists = return artists                          &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+
+        artistOperations artistId =
+          viewArtist
+
+          where viewArtist :: EitherT ServantErr IO Artist
+                viewArtist = artistById artistId             &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;ToJSON&lt;/code&gt; is a &lt;a href=&quot;https://www.haskell.org/tutorial/classes.html&quot;&gt;type class&lt;/a&gt;. This line
+basically is all we need to set up for json encoding an instance of our Artist type.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We describe our REST api using a type&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Get on this api returns a list of Artists&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Definition of how to get a single Artist by it&amp;#8217;s id&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The &lt;code&gt;server&lt;/code&gt; type is the part where we descibe how we actually serve the api&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The handler for listing artists. Currently it just returns a static list&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The handler for retrieving a given artist by its id&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;code&gt;:&amp;lt;&amp;gt;&lt;/code&gt; is a &lt;a href=&quot;https://wiki.haskell.org/Combinator&quot;&gt;combinator&lt;/a&gt; that ships with Servant. It allows us to combine the various parts
+of our API into a single type.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;artistById :: Int -&amp;gt; EitherT ServantErr IO Artist
+artistById idParam =
+  case a of
+    Nothing -&amp;gt; left (err404 {errBody = &quot;No artist with given id exists&quot;})  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+    Just b -&amp;gt; return b                                                     &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  where
+    a = find ((== idParam) . artistId) artists                             &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If the find (by id) in &lt;strong&gt;3&lt;/strong&gt; returns Nothing (see &lt;a href=&quot;https://hackage.haskell.org/package/base-4.8.1.0/docs/Data-Maybe.html&quot;&gt;Maybe monad&lt;/a&gt;).
+We return a 404 error with a custom body&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Upon success return the given artist instance&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Find a given artist by id from our List of artists&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;code&gt;EitherT&lt;/code&gt; - An either monad. Check out the description from the servant tutorial on &lt;a href=&quot;https://haskell-servant.github.io/tutorial/server.html#the-eithert-servanterr-io-monad&quot;&gt;EitherT&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Wrapping it all up&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;type API = &quot;artists&quot; :&amp;gt; ArtistAPI    &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+
+
+api :: Proxy API
+api = Proxy                          &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+
+
+app :: Application
+app = serve api artistsServer        &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+
+
+main :: IO ()
+main = run 8081 app                  &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;A generic type for our api. It let&amp;#8217;s us combine multiple types, but the
+main reason it&amp;#8217;s factored out for now is to avoid repetion of the root path for our
+api &lt;code&gt;artists&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;TBH I haven&amp;#8217;t grokked why this is needed, but it&amp;#8217;s probably to do with some type magic ?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;An &quot;abstract&quot; web application. serve gives us a &lt;a href=&quot;http://www.stackage.org/package/wai&quot;&gt;WAI&lt;/a&gt; web application.
+I guess WAI is like a common API for Haskell Web applicaitons.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The main entry point for our application. It starts our web application on port 8081
+(and uses &lt;a href=&quot;http://www.stackage.org/package/warp&quot;&gt;warp&lt;/a&gt; behind the scene to do so.)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To get the backend up and running, check out the readme for the &lt;a href=&quot;https://github.com/rundis/albums&quot;&gt;sample application&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_backend_experiences&quot;&gt;Backend experiences&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Following the &lt;a href=&quot;https://haskell-servant.github.io/tutorial/server.html&quot;&gt;Servant tutorial&lt;/a&gt; it was quite
+easy to get a simple translated example to work. However I did start to struggle once I started
+to venture off from the tutorial. Some of it is obviously due to my nearly non-existing haskell knowledge.
+But I think what tripped me up most was the EitherT monad. Heck I still don&amp;#8217;t really know what
+a monad is. The error messages I got along the way didn&amp;#8217;t help me much, but I guess gradually
+they&amp;#8217;ll make more and more sense, once my haskell foo improves.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_frontend&quot;&gt;Frontend&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So Elm is pretty cool. The syntax isn&amp;#8217;t too far off from Haskell. I&amp;#8217;ve already started
+looking at Elm so it makes sense continuing with Elm to hopefully gain deeper knowledge of its
+strenghts and weaknesses.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+For a really pleasurable experience when developing elm I would suggest choosing an
+editor with linting support. As a shameless plug, one suggestion would be to use &lt;a href=&quot;http://lighttable.com/&quot;&gt;Light Table&lt;/a&gt;
+with my &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;elm-light&lt;/a&gt; plugin. (Emacs, Vim, Sublime, Visual Code are other good options)
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_project_setup&quot;&gt;Project setup&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;{
+    &quot;version&quot;: &quot;1.0.0&quot;,
+    &quot;summary&quot;: &quot;The frontend for the Albums CRUD sample app&quot;,
+    &quot;repository&quot;: &quot;https://github.com/rundis/albums.git&quot;,
+    &quot;license&quot;: &quot;MIT&quot;,
+    &quot;source-directories&quot;: [
+        &quot;.&quot;                                                      &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+    ],
+    &quot;exposed-modules&quot;: [],
+    &quot;dependencies&quot;: {                                            &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+        &quot;elm-lang/core&quot;: &quot;3.0.0 &amp;lt;= v &amp;lt; 4.0.0&quot;,
+        &quot;evancz/elm-effects&quot;: &quot;2.0.1 &amp;lt;= v &amp;lt; 3.0.0&quot;,
+        &quot;evancz/elm-html&quot;: &quot;4.0.2 &amp;lt;= v &amp;lt; 5.0.0&quot;,
+        &quot;evancz/elm-http&quot;: &quot;3.0.0 &amp;lt;= v &amp;lt; 4.0.0&quot;,
+        &quot;evancz/start-app&quot;: &quot;2.0.2 &amp;lt;= v &amp;lt; 3.0.0&quot;
+    },
+    &quot;elm-version&quot;: &quot;0.16.0 &amp;lt;= v &amp;lt; 0.17.0&quot;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;For simplicity source files currently resides in the root folder of the project.
+This will change once the application grows&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Initial set of dependencies used&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_album_elm&quot;&gt;Album.elm&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Before you start you may want to check out &lt;a href=&quot;https://github.com/evancz/start-app&quot;&gt;start-app&lt;/a&gt;.
+The frontend code is based on this.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type alias Artist =                                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { id : Int
+  , name : String
+  }
+
+type alias Model =                                      &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  { artists : List Artist}
+
+
+type Action = ArtistRetrieved (Maybe (List Artist))     &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Front end representation of Artist. You&amp;#8217;ll notice it&amp;#8217;s strikingly similar
+to it&amp;#8217;s Haskell counterpart on the server side&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Type for keeping track of our model. Currently it will only contain
+a list of artists, but there is more to come later&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&quot;Tagged type&quot; that describes the actions supported in the frontend app.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;init : (Model, Effects Action)
+init =                                                  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  ( Model []
+    , getArtists
+  )
+
+
+update : Action -&amp;gt; Model -&amp;gt; (Model, Effects Action)
+update action model =                                  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  case action of
+    ArtistRetrieved xs -&amp;gt;
+      ( {model | artists = (Maybe.withDefault [] xs) }
+      , Effects.none
+      )
+
+
+getArtists : Effects.Effects Action
+getArtists =                                           &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  Http.get artists &quot;http://localhost:8081/artists&quot;
+    |&amp;gt; Task.toMaybe
+    |&amp;gt; Task.map ArtistRetrieved
+    |&amp;gt; Effects.task
+
+
+artist : Json.Decoder Artist
+artist =                                               &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+  Json.object2 Artist
+    (&quot;artistId&quot; := Json.int)
+    (&quot;name&quot; := Json.string)
+
+
+artists : Json.Decoder (List Artist)
+artists =                                              &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+  Json.list artist&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Initializer function called by start-app when staring the application
+it returns an empty model and an effect &lt;code&gt;getArtists&lt;/code&gt;. Meaning getArtists will be
+invoked once the page is loaded&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The update function handles actions in our app. Currently it only supports
+one action, and that is the a callback once getArtists have returned. It updates
+the model with the retrieved artists and returns the updated model&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Our ajax call ! We invoke the our rest endpoint using the elm http library. The first
+argument to Http.get, &lt;code&gt;artists&lt;/code&gt;, tells elm how to decode the result.
+A lot is going on here, but the end result is that it does an xhr request decodes the result (if success)
+using the given decoder and eventually invoke the update function with our list of artists (wrapped in a Maybe).&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;A decoder for decoding the json representation of an artist from the server to and &lt;code&gt;Artist&lt;/code&gt; type instance&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The response from our rest endpoint is a list of artists, so we use the JSON.list function
+telling it to use our artist decoder for each item in the list&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;artistRow : Artist -&amp;gt; Html
+artistRow artist =                                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  tr [] [
+     td [] [text (toString artist.id)]
+    ,td [] [text artist.name]
+  ]
+
+view : Signal.Address Action -&amp;gt; Model -&amp;gt; Html
+view address model =                                  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  div [class &quot;container-fluid&quot;] [
+        h1 [] [text &quot;Artists&quot; ]
+      , table [class &quot;table table-striped&quot;] [
+          thead [] [
+            tr [] [
+               th [] [text &quot;Id&quot;]
+              ,th [] [text &quot;Name&quot;]
+          ]
+        ]
+      , tbody [] (List.map artistRow model.artists)
+    ]
+  ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Function to generate the view for a single artist row&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Our main view function for presenting a list of artists&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+We are not rendering dom nodes here, it&amp;#8217;s just a representation of what we want
+to render. The actual rendering uses Virual DOM.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Wrapping up the frontend&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;app : StartApp.App Model
+app =                                          &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  StartApp.start
+    { init = init
+    , update = update
+    , view = view
+    , inputs = []
+    }
+
+
+
+main : Signal Html
+main =                                         &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  app.html
+
+
+
+port tasks : Signal (Task.Task Never ())
+port tasks =                                   &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  app.tasks&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Using startapp to wire up our core functions (init, update and view)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The entry point function for our frontend app&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When communicating with the outside world elm uses &lt;a href=&quot;http://elm-lang.org/guide/interop#ports&quot;&gt;ports&lt;/a&gt;.
+This is used for by our rest invocation. It does so using &lt;a href=&quot;http://elm-lang.org/guide/reactivity#tasks&quot;&gt;tasks&lt;/a&gt; which
+is the elm way to describe asynchronous operations.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_frontend_experiences&quot;&gt;Frontend experiences&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Elm ports, tasks and effects are concepts that are yet to dawn completely on me. I protect my brain
+temporarily by giving them overy simplistic explanations.
+I wasn&amp;#8217;t sure how to do the JSON decoding stuff, but fired up an elm-repl in Light Table and just experiemented a little until
+I had something workable.
+I used the linter feature of my Light Table plugin quite heavily, and the error messages from elm proved yet again
+to be very helpful.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_conclusion_and_next_steps&quot;&gt;Conclusion and next steps&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I pretty sure I could have knocked this up with Clojure/ClojureScript, groovy/grails or plan old JavaScript
+in a fraction of the time I&amp;#8217;ve used. But that&amp;#8217;s not really a fair or relevant comparison.
+Learning completely new languages and new libraries takes time.
+I think I&amp;#8217;ve learned quite a bit already and I&amp;#8217;m very pleased to have made it this far !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Elm was easier to get into than Haskell and the Elm compiler felt a lot more helpful to me than
+ghc (haskell compiler). I had a head start on Elm, but I do remember getting started with Elm felt
+a lot smoother than jumping into Haskell. I&amp;#8217;m still very much looking forward to improving my haskell skills
+and I&amp;#8217;m sure that will proove very valuable eventually.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So what&amp;#8217;s up next? Not sure, but i think adding persistence and the facility to add/update
+artists might be next up. I will keep you posted !&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+  	       </description>
+      </item>
       <item>
         <title>Minesweeper - a brief journey from JavaScript/React to Elm</title>
         <link>http://rundis.github.io/blog/2015/elm_sweeper.html</link>

@@ -71,6 +71,681 @@
 	<div class="page-header">
 		<h1>Blog</h1>
 	</div>
+  			<a href="/blog/2015/haskell_elm_spa_part1.html"><h1>Typed up CRUD SPA with Haskell and Elm  - Part 1: Spike time</h1></a>
+  			<p>28 December 2015</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/haskell.html">haskell</a>
+	      
+		      <a href="/blog/tags/elm.html">elm</a>
+	      
+		      <a href="/blog/tags/haskellelmspa.html">haskellelmspa</a>
+	      </p>
+        <a href="https://twitter.com/share"
+           class="twitter-share-button"
+           data-text="Typed up CRUD SPA with Haskell and Elm  - Part 1: Spike time"
+           data-url="http://rundis.github.io/blog/2015/haskell_elm_spa_part1.html"
+           data-via="mrundberget" data-lang="en">Tweet</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+  			<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Join me on my journey into statically typed functional languages. I&#8217;ve been living a pretty happily
+dynamic life so far. What&#8217;s the fuzz with all those types ? What do they give me in a real life
+scenario (aka is it worth using for work gigs) ? I need to make an effort and try to figure
+some of this out. This blog series is an attempt to document some of my experiences along the way through a practical example.</p>
+</div>
+<div class="ulist">
+<div class="title">There will be:</div>
+<ul>
+<li>
+<p>A single page web application with crud features</p>
+</li>
+<li>
+<p>Lots of types, refactoring and hopefully some testing</p>
+</li>
+<li>
+<p>An evolving web-app github repo for your amusement or amazement</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_just_a_little_background_on_me">Just a little background on me</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For quite some time I&#8217;ve been wanting to learn more about functional languages that are statically (and strongly) typed.
+What benefits do they really provide in practice and what are the downsides ?
+My background is a from quite a few years with Java, and the last 3-4 years I&#8217;ve been working
+ mostly with Groovy, JavaScript and Clojure/ClojureScript.
+I&#8217;ve dabbled a little with Elm recently (<a href="http://rundis.github.io/blog/2015/elm_sweeper.html">minesweeper in Elm</a>)
+, and I&#8217;ve tried to take on Haskell a couple of times (without much success I might add).</p>
+</div>
+<div class="paragraph">
+<p>I mostly do web apps at work, so I figured I need to try and make something at least remotely
+similar to what I do in real life.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_let_s_get_started">Let&#8217;s get started</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This is the point where I&#8217;ve run into analysis paralysis so many a time before.
+So I set out to create a crud app, but what shall I build. After some deliberation
+I settled on making something related to Music. You know Albums, Artists, Tracks and such.
+I have no idea what the end result will be, but to start off I&#8217;ll make a simple spike.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="http://rundis.github.io/blog/2015/artists.png" alt="artists">
+</div>
+</div>
+<div class="ulist">
+<div class="title">The spike should</div>
+<ul>
+<li>
+<p>establish a base architecture</p>
+</li>
+<li>
+<p>implement a simple feature: <strong>List artists</strong></p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>You will find the sample application code on <a href="https://github.com/rundis/albums">github</a>.
+There will be a tag for each blog post in the series</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_backend">Backend</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I wanted to implement server component that would provide REST-services. There are quite
+a few options available for Haskell that can help with that. After some research and trials
+I ended up using <a href="https://haskell-servant.github.io/">Servant</a>.</p>
+</div>
+<div class="ulist">
+<div class="title">Some of the other options I looked at includes:</div>
+<ul>
+<li>
+<p><a href="https://www.spock.li/">Spock</a></p>
+</li>
+<li>
+<p><a href="https://github.com/scotty-web/scotty">Scotty</a></p>
+</li>
+<li>
+<p><a href="http://snapframework.com/">Snap</a></p>
+</li>
+<li>
+<p><a href="http://www.yesodweb.com/">Yesod</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>I just had to choose one, and Servant seemed like a nice fit for REST stuff and I managed to get it
+working without to much hazzle.</p>
+</div>
+<div class="sect2">
+<h3 id="_project_set_up">Project set up</h3>
+<div class="paragraph">
+<p>I&#8217;m using <a href="https://www.haskell.org/cabal/">cabal</a>, but you might also want to consider looking
+at <a href="http://docs.haskellstack.org/en/stable/index.html">stack</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-haskell" data-lang="haskell">name:                albums
+version:             0.1.0.0
+synopsis:            Albums rest backend
+license:             MIT
+license-file:        LICENSE
+author:              rundis
+maintainer:          mrundberget@hotmail.com
+category:            Web
+build-type:          Simple
+cabal-version:       &gt;=1.10
+
+executable albums
+  main-is:             Main.hs              <i class="conum" data-value="1"></i><b>(1)</b>
+  build-depends:
+      base &gt;= 4.7 &amp;&amp; &lt; 5
+    , either
+    , aeson &gt;= 0.8                          <i class="conum" data-value="2"></i><b>(2)</b>
+    , servant                               <i class="conum" data-value="3"></i><b>(3)</b>
+    , servant-server
+    , wai
+    , warp
+  hs-source-dirs:      src                  <i class="conum" data-value="4"></i><b>(4)</b>
+  default-language:    Haskell2010</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The entry point for the application</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Provides JSON support</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The servant library that helps us create type safe rest services</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The directory(ies) where the source code for our app resides</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>For the purposes of this spike all haskell code will reside in <code>Main.hs</code>. This will
+surely not be the case as the app progresses.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+If you wan&#8217;t to try out automatic reloading support, you may want to check out <a href="https://github.com/lukexi/halive">halive</a>.
+Unfortunately I couldn&#8217;t get it to work on my machine (OS/X Maverick), but it might work our for you though :-)
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_main_hs">Main.hs</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-haskell" data-lang="haskell">data Artist = Artist
+  { artistId :: Int
+  , name :: String
+  } deriving (Eq, Show, Generic)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A simple type describing the shape of an Artist in our app.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-haskell" data-lang="haskell">instance ToJSON Artist                                       <i class="conum" data-value="1"></i><b>(1)</b>
+
+type ArtistAPI =                                             <i class="conum" data-value="2"></i><b>(2)</b>
+       Get '[JSON] [Artist]                                  <i class="conum" data-value="3"></i><b>(3)</b>
+  :&lt;|&gt; Capture "artistId" Int :&gt; Get '[JSON] Artist          <i class="conum" data-value="4"></i><b>(4)</b>
+
+
+artistsServer :: Server ArtistAPI
+artistsServer = getArtists :&lt;|&gt; artistOperations             <i class="conum" data-value="5"></i><b>(5)</b>
+
+  where getArtists :: EitherT ServantErr IO [Artist]
+        getArtists = return artists                          <i class="conum" data-value="6"></i><b>(6)</b>
+
+        artistOperations artistId =
+          viewArtist
+
+          where viewArtist :: EitherT ServantErr IO Artist
+                viewArtist = artistById artistId             <i class="conum" data-value="7"></i><b>(7)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>ToJSON</code> is a <a href="https://www.haskell.org/tutorial/classes.html">type class</a>. This line
+basically is all we need to set up for json encoding an instance of our Artist type.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We describe our REST api using a type</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Get on this api returns a list of Artists</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Definition of how to get a single Artist by it&#8217;s id</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>The <code>server</code> type is the part where we descibe how we actually serve the api</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>The handler for listing artists. Currently it just returns a static list</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>The handler for retrieving a given artist by its id</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<code>:&lt;&gt;</code> is a <a href="https://wiki.haskell.org/Combinator">combinator</a> that ships with Servant. It allows us to combine the various parts
+of our API into a single type.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-haskell" data-lang="haskell">artistById :: Int -&gt; EitherT ServantErr IO Artist
+artistById idParam =
+  case a of
+    Nothing -&gt; left (err404 {errBody = "No artist with given id exists"})  <i class="conum" data-value="1"></i><b>(1)</b>
+    Just b -&gt; return b                                                     <i class="conum" data-value="2"></i><b>(2)</b>
+  where
+    a = find ((== idParam) . artistId) artists                             <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>If the find (by id) in <strong>3</strong> returns Nothing (see <a href="https://hackage.haskell.org/package/base-4.8.1.0/docs/Data-Maybe.html">Maybe monad</a>).
+We return a 404 error with a custom body</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Upon success return the given artist instance</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Find a given artist by id from our List of artists</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<code>EitherT</code> - An either monad. Check out the description from the servant tutorial on <a href="https://haskell-servant.github.io/tutorial/server.html#the-eithert-servanterr-io-monad">EitherT</a>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Wrapping it all up</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-haskell" data-lang="haskell">type API = "artists" :&gt; ArtistAPI    <i class="conum" data-value="1"></i><b>(1)</b>
+
+
+api :: Proxy API
+api = Proxy                          <i class="conum" data-value="2"></i><b>(2)</b>
+
+
+app :: Application
+app = serve api artistsServer        <i class="conum" data-value="3"></i><b>(3)</b>
+
+
+main :: IO ()
+main = run 8081 app                  <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>A generic type for our api. It let&#8217;s us combine multiple types, but the
+main reason it&#8217;s factored out for now is to avoid repetion of the root path for our
+api <code>artists</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>TBH I haven&#8217;t grokked why this is needed, but it&#8217;s probably to do with some type magic ?</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>An "abstract" web application. serve gives us a <a href="http://www.stackage.org/package/wai">WAI</a> web application.
+I guess WAI is like a common API for Haskell Web applicaitons.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The main entry point for our application. It starts our web application on port 8081
+(and uses <a href="http://www.stackage.org/package/warp">warp</a> behind the scene to do so.)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To get the backend up and running, check out the readme for the <a href="https://github.com/rundis/albums">sample application</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_backend_experiences">Backend experiences</h3>
+<div class="paragraph">
+<p>Following the <a href="https://haskell-servant.github.io/tutorial/server.html">Servant tutorial</a> it was quite
+easy to get a simple translated example to work. However I did start to struggle once I started
+to venture off from the tutorial. Some of it is obviously due to my nearly non-existing haskell knowledge.
+But I think what tripped me up most was the EitherT monad. Heck I still don&#8217;t really know what
+a monad is. The error messages I got along the way didn&#8217;t help me much, but I guess gradually
+they&#8217;ll make more and more sense, once my haskell foo improves.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_frontend">Frontend</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>So Elm is pretty cool. The syntax isn&#8217;t too far off from Haskell. I&#8217;ve already started
+looking at Elm so it makes sense continuing with Elm to hopefully gain deeper knowledge of its
+strenghts and weaknesses.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+For a really pleasurable experience when developing elm I would suggest choosing an
+editor with linting support. As a shameless plug, one suggestion would be to use <a href="http://lighttable.com/">Light Table</a>
+with my <a href="https://github.com/rundis/elm-light">elm-light</a> plugin. (Emacs, Vim, Sublime, Visual Code are other good options)
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_project_setup">Project setup</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">{
+    "version": "1.0.0",
+    "summary": "The frontend for the Albums CRUD sample app",
+    "repository": "https://github.com/rundis/albums.git",
+    "license": "MIT",
+    "source-directories": [
+        "."                                                      <i class="conum" data-value="1"></i><b>(1)</b>
+    ],
+    "exposed-modules": [],
+    "dependencies": {                                            <i class="conum" data-value="2"></i><b>(2)</b>
+        "elm-lang/core": "3.0.0 &lt;= v &lt; 4.0.0",
+        "evancz/elm-effects": "2.0.1 &lt;= v &lt; 3.0.0",
+        "evancz/elm-html": "4.0.2 &lt;= v &lt; 5.0.0",
+        "evancz/elm-http": "3.0.0 &lt;= v &lt; 4.0.0",
+        "evancz/start-app": "2.0.2 &lt;= v &lt; 3.0.0"
+    },
+    "elm-version": "0.16.0 &lt;= v &lt; 0.17.0"
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>For simplicity source files currently resides in the root folder of the project.
+This will change once the application grows</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Initial set of dependencies used</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_album_elm">Album.elm</h3>
+<div class="paragraph">
+<p>Before you start you may want to check out <a href="https://github.com/evancz/start-app">start-app</a>.
+The frontend code is based on this.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type alias Artist =                                     <i class="conum" data-value="1"></i><b>(1)</b>
+  { id : Int
+  , name : String
+  }
+
+type alias Model =                                      <i class="conum" data-value="2"></i><b>(2)</b>
+  { artists : List Artist}
+
+
+type Action = ArtistRetrieved (Maybe (List Artist))     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Front end representation of Artist. You&#8217;ll notice it&#8217;s strikingly similar
+to it&#8217;s Haskell counterpart on the server side</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Type for keeping track of our model. Currently it will only contain
+a list of artists, but there is more to come later</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>"Tagged type" that describes the actions supported in the frontend app.</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">init : (Model, Effects Action)
+init =                                                  <i class="conum" data-value="1"></i><b>(1)</b>
+  ( Model []
+    , getArtists
+  )
+
+
+update : Action -&gt; Model -&gt; (Model, Effects Action)
+update action model =                                  <i class="conum" data-value="2"></i><b>(2)</b>
+  case action of
+    ArtistRetrieved xs -&gt;
+      ( {model | artists = (Maybe.withDefault [] xs) }
+      , Effects.none
+      )
+
+
+getArtists : Effects.Effects Action
+getArtists =                                           <i class="conum" data-value="3"></i><b>(3)</b>
+  Http.get artists "http://localhost:8081/artists"
+    |&gt; Task.toMaybe
+    |&gt; Task.map ArtistRetrieved
+    |&gt; Effects.task
+
+
+artist : Json.Decoder Artist
+artist =                                               <i class="conum" data-value="4"></i><b>(4)</b>
+  Json.object2 Artist
+    ("artistId" := Json.int)
+    ("name" := Json.string)
+
+
+artists : Json.Decoder (List Artist)
+artists =                                              <i class="conum" data-value="5"></i><b>(5)</b>
+  Json.list artist</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Initializer function called by start-app when staring the application
+it returns an empty model and an effect <code>getArtists</code>. Meaning getArtists will be
+invoked once the page is loaded</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The update function handles actions in our app. Currently it only supports
+one action, and that is the a callback once getArtists have returned. It updates
+the model with the retrieved artists and returns the updated model</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Our ajax call ! We invoke the our rest endpoint using the elm http library. The first
+argument to Http.get, <code>artists</code>, tells elm how to decode the result.
+A lot is going on here, but the end result is that it does an xhr request decodes the result (if success)
+using the given decoder and eventually invoke the update function with our list of artists (wrapped in a Maybe).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>A decoder for decoding the json representation of an artist from the server to and <code>Artist</code> type instance</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>The response from our rest endpoint is a list of artists, so we use the JSON.list function
+telling it to use our artist decoder for each item in the list</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">artistRow : Artist -&gt; Html
+artistRow artist =                                     <i class="conum" data-value="1"></i><b>(1)</b>
+  tr [] [
+     td [] [text (toString artist.id)]
+    ,td [] [text artist.name]
+  ]
+
+view : Signal.Address Action -&gt; Model -&gt; Html
+view address model =                                  <i class="conum" data-value="2"></i><b>(2)</b>
+  div [class "container-fluid"] [
+        h1 [] [text "Artists" ]
+      , table [class "table table-striped"] [
+          thead [] [
+            tr [] [
+               th [] [text "Id"]
+              ,th [] [text "Name"]
+          ]
+        ]
+      , tbody [] (List.map artistRow model.artists)
+    ]
+  ]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Function to generate the view for a single artist row</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Our main view function for presenting a list of artists</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+We are not rendering dom nodes here, it&#8217;s just a representation of what we want
+to render. The actual rendering uses Virual DOM.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Wrapping up the frontend</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">app : StartApp.App Model
+app =                                          <i class="conum" data-value="1"></i><b>(1)</b>
+  StartApp.start
+    { init = init
+    , update = update
+    , view = view
+    , inputs = []
+    }
+
+
+
+main : Signal Html
+main =                                         <i class="conum" data-value="2"></i><b>(2)</b>
+  app.html
+
+
+
+port tasks : Signal (Task.Task Never ())
+port tasks =                                   <i class="conum" data-value="3"></i><b>(3)</b>
+  app.tasks</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Using startapp to wire up our core functions (init, update and view)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The entry point function for our frontend app</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>When communicating with the outside world elm uses <a href="http://elm-lang.org/guide/interop#ports">ports</a>.
+This is used for by our rest invocation. It does so using <a href="http://elm-lang.org/guide/reactivity#tasks">tasks</a> which
+is the elm way to describe asynchronous operations.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_frontend_experiences">Frontend experiences</h3>
+<div class="paragraph">
+<p>Elm ports, tasks and effects are concepts that are yet to dawn completely on me. I protect my brain
+temporarily by giving them overy simplistic explanations.
+I wasn&#8217;t sure how to do the JSON decoding stuff, but fired up an elm-repl in Light Table and just experiemented a little until
+I had something workable.
+I used the linter feature of my Light Table plugin quite heavily, and the error messages from elm proved yet again
+to be very helpful.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion_and_next_steps">Conclusion and next steps</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I pretty sure I could have knocked this up with Clojure/ClojureScript, groovy/grails or plan old JavaScript
+in a fraction of the time I&#8217;ve used. But that&#8217;s not really a fair or relevant comparison.
+Learning completely new languages and new libraries takes time.
+I think I&#8217;ve learned quite a bit already and I&#8217;m very pleased to have made it this far !</p>
+</div>
+<div class="paragraph">
+<p>Elm was easier to get into than Haskell and the Elm compiler felt a lot more helpful to me than
+ghc (haskell compiler). I had a head start on Elm, but I do remember getting started with Elm felt
+a lot smoother than jumping into Haskell. I&#8217;m still very much looking forward to improving my haskell skills
+and I&#8217;m sure that will proove very valuable eventually.</p>
+</div>
+<div class="paragraph">
+<p>So what&#8217;s up next? Not sure, but i think adding persistence and the facility to add/update
+artists might be next up. I will keep you posted !</p>
+</div>
+</div>
+</div></p>
   			<a href="/blog/2015/elm_sweeper.html"><h1>Minesweeper - a brief journey from JavaScript/React to Elm</h1></a>
   			<p>10 November 2015</p>
         <p><em>Tags: </em>
