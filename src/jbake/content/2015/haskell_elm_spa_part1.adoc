@@ -1,0 +1,439 @@
+= Typed up CRUD SPA with Haskell and Elm  - Part 1: Spike time
+Magnus Rundberget
+2015-12-28
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: haskell, elm, haskellelmspa
+:imagesdir: /blog/2015/
+:icons: font
+:id: haskell_elm_spa_part1
+
+
+Join me on my journey into statically typed functional languages. I've been living a pretty happily
+dynamic life so far. What's the fuzz with all those types ? What do they give me in a real life
+scenario (aka is it worth using for work gigs) ? I need to make an effort and try to figure
+some of this out. This blog series is an attempt to document some of my experiences along the way through a practical example.
+
+.There will be:
+- A single page web application with crud features
+- Lots of types, refactoring and hopefully some testing
+- An evolving web-app github repo for your amusement or amazement
+
+
+== Just a little background on me
+For quite some time I've been wanting to learn more about functional languages that are statically (and strongly) typed.
+What benefits do they really provide in practice and what are the downsides ?
+My background is a from quite a few years with Java, and the last 3-4 years I've been working
+ mostly with Groovy, JavaScript and Clojure/ClojureScript.
+I've dabbled a little with Elm recently (http://rundis.github.io/blog/2015/elm_sweeper.html[minesweeper in Elm])
+, and I've tried to take on Haskell a couple of times (without much success I might add).
+
+I mostly do web apps at work, so I figured I need to try and make something at least remotely
+similar to what I do in real life.
+
+
+
+== Let's get started
+This is the point where I've run into analysis paralysis so many a time before.
+So I set out to create a crud app, but what shall I build. After some deliberation
+I settled on making something related to Music. You know Albums, Artists, Tracks and such.
+I have no idea what the end result will be, but to start off I'll make a simple spike.
+
+
+image::http://rundis.github.io/blog/2015/artists.png[]
+
+.The spike should
+- establish a base architecture
+- implement a simple feature: *List artists*
+
+
+
+[TIP]
+====
+You will find the sample application code on https://github.com/rundis/albums[github].
+There will be a tag for each blog post in the series
+====
+
+
+
+== Backend
+I wanted to implement server component that would provide REST-services. There are quite
+a few options available for Haskell that can help with that. After some research and trials
+I ended up using https://haskell-servant.github.io/[Servant].
+
+.Some of the other options I looked at includes:
+- https://www.spock.li/[Spock]
+- https://github.com/scotty-web/scotty[Scotty]
+- http://snapframework.com/[Snap]
+- http://www.yesodweb.com/[Yesod]
+
+
+I just had to choose one, and Servant seemed like a nice fit for REST stuff and I managed to get it
+working without to much hazzle.
+
+
+=== Project set up
+I'm using https://www.haskell.org/cabal/[cabal], but you might also want to consider looking
+at http://docs.haskellstack.org/en/stable/index.html[stack].
+
+
+[source, haskell]
+----
+name:                albums
+version:             0.1.0.0
+synopsis:            Albums rest backend
+license:             MIT
+license-file:        LICENSE
+author:              rundis
+maintainer:          mrundberget@hotmail.com
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable albums
+  main-is:             Main.hs              // <1>
+  build-depends:
+      base >= 4.7 && < 5
+    , either
+    , aeson >= 0.8                          // <2>
+    , servant                               // <3>
+    , servant-server
+    , wai
+    , warp
+  hs-source-dirs:      src                  // <4>
+  default-language:    Haskell2010
+----
+<1> The entry point for the application
+<2> Provides JSON support
+<3> The servant library that helps us create type safe rest services
+<4> The directory(ies) where the source code for our app resides
+
+
+For the purposes of this spike all haskell code will reside in `Main.hs`. This will
+surely not be the case as the app progresses.
+
+
+TIP: If you wan't to try out automatic reloading support, you may want to check out https://github.com/lukexi/halive[halive].
+Unfortunately I couldn't get it to work on my machine (OS/X Maverick), but it might work our for you though :-)
+
+
+=== Main.hs
+
+
+[source,haskell]
+----
+data Artist = Artist
+  { artistId :: Int
+  , name :: String
+  } deriving (Eq, Show, Generic)
+
+----
+A simple type describing the shape of an Artist in our app.
+
+[source, haskell]
+----
+instance ToJSON Artist                                       // <1>
+
+type ArtistAPI =                                             // <2>
+       Get '[JSON] [Artist]                                  // <3>
+  :<|> Capture "artistId" Int :> Get '[JSON] Artist          // <4>
+
+
+artistsServer :: Server ArtistAPI
+artistsServer = getArtists :<|> artistOperations             // <5>
+
+  where getArtists :: EitherT ServantErr IO [Artist]
+        getArtists = return artists                          // <6>
+
+        artistOperations artistId =
+          viewArtist
+
+          where viewArtist :: EitherT ServantErr IO Artist
+                viewArtist = artistById artistId             // <7>
+
+----
+<1> `ToJSON` is a https://www.haskell.org/tutorial/classes.html[type class]. This line
+basically is all we need to set up for json encoding an instance of our Artist type.
+<2> We describe our REST api using a type
+<3> Get on this api returns a list of Artists
+<4> Definition of how to get a single Artist by it's id
+<5> The `server` type is the part where we descibe how we actually serve the api
+<6> The handler for listing artists. Currently it just returns a static list
+<7> The handler for retrieving a given artist by its id
+
+TIP: `:<>` is a https://wiki.haskell.org/Combinator[combinator] that ships with Servant. It allows us to combine the various parts
+of our API into a single type.
+
+
+[source,haskell]
+----
+artistById :: Int -> EitherT ServantErr IO Artist
+artistById idParam =
+  case a of
+    Nothing -> left (err404 {errBody = "No artist with given id exists"})  // <1>
+    Just b -> return b                                                     // <2>
+  where
+    a = find ((== idParam) . artistId) artists                             // <3>
+----
+<1> If the find (by id) in *3* returns Nothing (see https://hackage.haskell.org/package/base-4.8.1.0/docs/Data-Maybe.html[Maybe monad]).
+We return a 404 error with a custom body
+<2> Upon success return the given artist instance
+<3> Find a given artist by id from our List of artists
+
+TIP: `EitherT` - An either monad. Check out the description from the servant tutorial on https://haskell-servant.github.io/tutorial/server.html#the-eithert-servanterr-io-monad[EitherT]
+
+
+.Wrapping it all up
+
+[source,haskell]
+----
+type API = "artists" :> ArtistAPI    // <1>
+
+
+api :: Proxy API
+api = Proxy                          // <2>
+
+
+app :: Application
+app = serve api artistsServer        // <3>
+
+
+main :: IO ()
+main = run 8081 app                  // <4>
+----
+<1> A generic type for our api. It let's us combine multiple types, but the
+main reason it's factored out for now is to avoid repetion of the root path for our
+api `artists`
+<2> TBH I haven't grokked why this is needed, but it's probably to do with some type magic ?
+<3> An "abstract" web application. serve gives us a http://www.stackage.org/package/wai[WAI] web application.
+I guess WAI is like a common API for Haskell Web applicaitons.
+<4> The main entry point for our application. It starts our web application on port 8081
+(and uses http://www.stackage.org/package/warp[warp] behind the scene to do so.)
+
+
+To get the backend up and running, check out the readme for the https://github.com/rundis/albums[sample application]
+
+
+=== Backend experiences
+Following the https://haskell-servant.github.io/tutorial/server.html[Servant tutorial] it was quite
+easy to get a simple translated example to work. However I did start to struggle once I started
+to venture off from the tutorial. Some of it is obviously due to my nearly non-existing haskell knowledge.
+But I think what tripped me up most was the EitherT monad. Heck I still don't really know what
+a monad is. The error messages I got along the way didn't help me much, but I guess gradually
+they'll make more and more sense, once my haskell foo improves.
+
+
+== Frontend
+So Elm is pretty cool. The syntax isn't too far off from Haskell. I've already started
+looking at Elm so it makes sense continuing with Elm to hopefully gain deeper knowledge of its
+strenghts and weaknesses.
+
+
+TIP: For a really pleasurable experience when developing elm I would suggest choosing an
+editor with linting support. As a shameless plug, one suggestion would be to use http://lighttable.com/[Light Table]
+with my https://github.com/rundis/elm-light[elm-light] plugin. (Emacs, Vim, Sublime, Visual Code are other good options)
+
+
+=== Project setup
+
+[source, javascript]
+----
+{
+    "version": "1.0.0",
+    "summary": "The frontend for the Albums CRUD sample app",
+    "repository": "https://github.com/rundis/albums.git",
+    "license": "MIT",
+    "source-directories": [
+        "."                                                      // <1>
+    ],
+    "exposed-modules": [],
+    "dependencies": {                                            // <2>
+        "elm-lang/core": "3.0.0 <= v < 4.0.0",
+        "evancz/elm-effects": "2.0.1 <= v < 3.0.0",
+        "evancz/elm-html": "4.0.2 <= v < 5.0.0",
+        "evancz/elm-http": "3.0.0 <= v < 4.0.0",
+        "evancz/start-app": "2.0.2 <= v < 3.0.0"
+    },
+    "elm-version": "0.16.0 <= v < 0.17.0"
+}
+----
+<1> For simplicity source files currently resides in the root folder of the project.
+This will change once the application grows
+<2> Initial set of dependencies used
+
+
+=== Album.elm
+Before you start you may want to check out https://github.com/evancz/start-app[start-app].
+The frontend code is based on this.
+
+
+
+[source,elm]
+----
+type alias Artist =                                     // <1>
+  { id : Int
+  , name : String
+  }
+
+type alias Model =                                      // <2>
+  { artists : List Artist}
+
+
+type Action = ArtistRetrieved (Maybe (List Artist))     // <3>
+----
+<1> Front end representation of Artist. You'll notice it's strikingly similar
+to it's Haskell counterpart on the server side
+<2> Type for keeping track of our model. Currently it will only contain
+a list of artists, but there is more to come later
+<3> "Tagged type" that describes the actions supported in the frontend app.
+
+
+
+
+[source, elm]
+----
+init : (Model, Effects Action)
+init =                                                  // <1>
+  ( Model []
+    , getArtists
+  )
+
+
+update : Action -> Model -> (Model, Effects Action)
+update action model =                                  // <2>
+  case action of
+    ArtistRetrieved xs ->
+      ( {model | artists = (Maybe.withDefault [] xs) }
+      , Effects.none
+      )
+
+
+getArtists : Effects.Effects Action
+getArtists =                                           // <3>
+  Http.get artists "http://localhost:8081/artists"
+    |> Task.toMaybe
+    |> Task.map ArtistRetrieved
+    |> Effects.task
+
+
+artist : Json.Decoder Artist
+artist =                                               // <4>
+  Json.object2 Artist
+    ("artistId" := Json.int)
+    ("name" := Json.string)
+
+
+artists : Json.Decoder (List Artist)
+artists =                                              // <5>
+  Json.list artist
+----
+<1> Initializer function called by start-app when staring the application
+it returns an empty model and an effect `getArtists`. Meaning getArtists will be
+invoked once the page is loaded
+<2> The update function handles actions in our app. Currently it only supports
+one action, and that is the a callback once getArtists have returned. It updates
+the model with the retrieved artists and returns the updated model
+<3> Our ajax call ! We invoke the our rest endpoint using the elm http library. The first
+argument to Http.get, `artists`, tells elm how to decode the result.
+A lot is going on here, but the end result is that it does an xhr request decodes the result (if success)
+using the given decoder and eventually invoke the update function with our list of artists (wrapped in a Maybe).
+<4> A decoder for decoding the json representation of an artist from the server to and `Artist` type instance
+<5> The response from our rest endpoint is a list of artists, so we use the JSON.list function
+telling it to use our artist decoder for each item in the list
+
+
+
+
+[source, elm]
+----
+artistRow : Artist -> Html
+artistRow artist =                                     // <1>
+  tr [] [
+     td [] [text (toString artist.id)]
+    ,td [] [text artist.name]
+  ]
+
+view : Signal.Address Action -> Model -> Html
+view address model =                                  // <2>
+  div [class "container-fluid"] [
+        h1 [] [text "Artists" ]
+      , table [class "table table-striped"] [
+          thead [] [
+            tr [] [
+               th [] [text "Id"]
+              ,th [] [text "Name"]
+          ]
+        ]
+      , tbody [] (List.map artistRow model.artists)
+    ]
+  ]
+----
+<1> Function to generate the view for a single artist row
+<2> Our main view function for presenting a list of artists
+
+TIP: We are not rendering dom nodes here, it's just a representation of what we want
+to render. The actual rendering uses Virual DOM.
+
+
+
+.Wrapping up the frontend
+
+[source, elm]
+----
+app : StartApp.App Model
+app =                                          // <1>
+  StartApp.start
+    { init = init
+    , update = update
+    , view = view
+    , inputs = []
+    }
+
+
+
+main : Signal Html
+main =                                         // <2>
+  app.html
+
+
+
+port tasks : Signal (Task.Task Never ())
+port tasks =                                   // <3>
+  app.tasks
+----
+<1> Using startapp to wire up our core functions (init, update and view)
+<2> The entry point function for our frontend app
+<3> When communicating with the outside world elm uses http://elm-lang.org/guide/interop#ports[ports].
+This is used for by our rest invocation. It does so using http://elm-lang.org/guide/reactivity#tasks[tasks] which
+is the elm way to describe asynchronous operations.
+
+
+=== Frontend experiences
+Elm ports, tasks and effects are concepts that are yet to dawn completely on me. I protect my brain
+temporarily by giving them overy simplistic explanations.
+I wasn't sure how to do the JSON decoding stuff, but fired up an elm-repl in Light Table and just experiemented a little until
+I had something workable.
+I used the linter feature of my Light Table plugin quite heavily, and the error messages from elm proved yet again
+to be very helpful.
+
+
+
+== Conclusion and next steps
+I pretty sure I could have knocked this up with Clojure/ClojureScript, groovy/grails or plan old JavaScript
+in a fraction of the time I've used. But that's not really a fair or relevant comparison.
+Learning completely new languages and new libraries takes time.
+I think I've learned quite a bit already and I'm very pleased to have made it this far !
+
+Elm was easier to get into than Haskell and the Elm compiler felt a lot more helpful to me than
+ghc (haskell compiler). I had a head start on Elm, but I do remember getting started with Elm felt
+a lot smoother than jumping into Haskell. I'm still very much looking forward to improving my haskell skills
+and I'm sure that will proove very valuable eventually.
+
+
+So what's up next? Not sure, but i think adding persistence and the facility to add/update
+artists might be next up. I will keep you posted !
+
+
+
+
+
