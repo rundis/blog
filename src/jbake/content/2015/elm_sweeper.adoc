@@ -16,7 +16,7 @@ Not being awfully creative, piggiebacking on other peoples' work is sometimes a 
 In this post I'll take you through some of my steps in porting/re-implementing https://github.com/cjohansen/react-sweeper (JavaScript and React) to an Elm implementation.
 
 
-image::elm_sweeper.png[]
+image::http://rundis.github.io/blog/2015/elm_sweeper.png[]
 
 TIP: If you'd like to have a look at the complete implementation of the game, check out https://github.com/rundis/elm-sweeper.
 There you'll find instructions on how to get it running too.
@@ -38,7 +38,7 @@ So the obvious place to start was the game logic. I had the option of trying to 
 to use a test-driven inspired approach. But heck I figured I had to try to put those types to the test, so I went for
 an all out repl driven approach. That gave me a chance to experience the good and bad with the https://github.com/rundis/elm-light#56-editor-repl[repl integration] of my own Light Table Elm plugin too.
 
-image::elm_repl.png[]
+image::http://rundis.github.io/blog/2015/elm_repl.png[]
 
 
 === Starting with records and type aliases
@@ -197,7 +197,7 @@ TIP: Think of <| as one way to avoid parenthesis. It's actually a backwards func
 When testing this function I got my first runtime error in Elm complaining that my case wasn't
 exhaustive. Rumors has it that the next version of elm might handle this at compile time as well :-)
 
-image::elm_case_error.png[]
+image::http://rundis.github.io/blog/2015/elm_case_error.png[]
 ====
 
 === Threat count
