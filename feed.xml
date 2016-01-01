@@ -6,11 +6,11 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sat, 2 Jan 2016 00:26:40 +0100</pubDate>
-    <lastBuildDate>Sat, 2 Jan 2016 00:26:40 +0100</lastBuildDate>
+    <pubDate>Sat, 2 Jan 2016 00:29:01 +0100</pubDate>
+    <lastBuildDate>Sat, 2 Jan 2016 00:29:01 +0100</lastBuildDate>
 
     <item>
-      <title>Managing &amp;amp; diagramming elm packages with d3 in Light Table</title>
+      <title>Managing and diagramming elm packages with d3 in Light Table</title>
       <link>http://rundis.github.io/blog/2016/elm_light_package.html</link>
       <pubDate>Fri, 1 Jan 2016 00:00:00 +0100</pubDate>
       <guid isPermaLink="false">2016/elm_light_package.html</guid>
