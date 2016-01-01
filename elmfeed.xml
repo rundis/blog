@@ -6,9 +6,220 @@
     <atom:link href="http://rundis.github.io/blog/elmfeed.xml" rel="self" type="application/rss+xml" />
     <description>Elm feed from rundis.github.com/blog</description>
     <language>en-gb</language>
-    <pubDate>Mon, 28 Dec 2015 17:03:38 +0100</pubDate>
-    <lastBuildDate>Mon, 28 Dec 2015 17:03:38 +0100</lastBuildDate>
+    <pubDate>Sat, 2 Jan 2016 00:26:40 +0100</pubDate>
+    <lastBuildDate>Sat, 2 Jan 2016 00:26:40 +0100</lastBuildDate>
 
+      <item>
+        <title>Managing &amp;amp; diagramming elm packages with d3 in Light Table</title>
+        <link>http://rundis.github.io/blog/2016/elm_light_package.html</link>
+        <pubDate>Fri, 1 Jan 2016 00:00:00 +0100</pubDate>
+        <guid isPermaLink="false">2016/elm_light_package.html</guid>
+          <description>
+  	       &lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In an effort to making management of project dependencies in Elm projects a little easier, the Elm plugin
+for &lt;a href=&quot;http://lighttable.com/&quot;&gt;Light Table&lt;/a&gt; the &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;elm-light&lt;/a&gt; has a few neat features up it&amp;#8217;s sleave.
+Check out the demo below for a brief overview.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+You can find the elm-light plugin &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;here&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_demo&quot;&gt;Demo&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://youtu.be/Okk-YjEeUgI&quot;&gt;ScreenCast demo&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/Okk-YjEeUgI&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Other relevant demos:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://rundis.github.io/blog/2015/elm_light.html&quot;&gt;elm-light intro demo&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_short_implementation_summary&quot;&gt;Short implementation summary&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m just going to give a very brief overview of a few key pieces for how the features are implemented here.
+I might add a more detailed blog post if there is any interest for that in the future.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_package_management&quot;&gt;Package management&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The package manager is just a thin wrapper around the &lt;code&gt;elm-package&lt;/code&gt; executable.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;(defn parse-json-file [json-file]
+  (when (files/exists? json-file)
+    (-&amp;gt; (-&amp;gt;&amp;gt; (files/open-sync json-file)
+             :content
+             (.parse js/JSON))
+        (js-&amp;gt;clj :keywordize-keys true))))
+
+
+(defn remove-pkg [path pkg]
+  (let [pkg-file (files/join path &quot;elm-package.json&quot;)]
+    (-&amp;gt; (u/parse-json-file pkg-file)
+        (update-in [:dependencies] (fn [deps]
+                                     (-&amp;gt; (into {}
+                                               (map (fn [[k v]]
+                                                      [(u/nskw-&amp;gt;name k) v]) deps))
+                                         (dissoc pkg))))
+        u/pretty-json
+        ((partial files/save pkg-file)))))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To list, update and remove dependencies it parses (and updates) the project file for elm projects; &lt;code&gt;elm-package.json&lt;/code&gt;. In addition
+it parses the &lt;code&gt;exact-dependencies.json&lt;/code&gt; file for all resolved dependencies.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Working with json in ClojureScript feels almost seamless to working with native ClojureScript datastructures
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_view_rendering&quot;&gt;View rendering&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To render the package listing the plugin uses &lt;a href=&quot;https://github.com/levand/quiescent&quot;&gt;quiescent&lt;/a&gt; and &lt;a href=&quot;https://facebook.github.io/react/&quot;&gt;react&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;(q/defcomponent PackageTable [props]
+  (d/table
+   {:className &quot;package-table&quot;}
+   (d/thead
+    {}
+    (d/tr
+     {}
+     (d/th {} &quot;Package&quot;)
+     (d/th {} &quot;Range&quot;)
+     (d/th {} &quot;Exact&quot;)
+     (d/th {} &quot;&quot;)))
+   (apply d/tbody {}
+          (map #(PackageRow (assoc %
+                              :on-remove (:on-remove props)
+                              :on-browse (:on-browse props)))
+               (:packages props)))))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;You can find a detailed blog post about some of the benefits of using react for view rendering in Light Table
+in &lt;a href=&quot;http://rundis.github.io/blog/2015/lt_react.html&quot;&gt;Implementing a Clojure ns-browser in Light Table with React&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_dependency_autocompletion&quot;&gt;Dependency autocompletion&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Whan adding dependencies there is a handy autocompleter. This uses a json resource from &lt;a href=&quot;http://package.elm-lang.org/&quot; class=&quot;bare&quot;&gt;http://package.elm-lang.org/&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;(defn fetch-all-packages
+  &quot;Fetch all packages from package.elm-lang.org&quot;
+  [callback]
+  (fetch/xhr (str &quot;http://package.elm-lang.org/all-packages?date=&quot; (.getTime (new js/Date)))
+             {}
+             (fn [data]
+               (let [pkgs (js-&amp;gt;clj (.parse js/JSON data) :keywordize-keys true)]
+                 (callback pkgs)))))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_dependency_graph&quot;&gt;Dependency graph&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To implement the dependency graph d3 and dagreD3 is used. Both of these ships node-modules. Using node-modules from
+Light Table plugins is definetely not rocket science !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;(def dagreD3 (js/require (files/join u/elm-plugin-dir &quot;node_modules/dagre-d3&quot;)))
+(def d3 (js/require (files/join u/elm-plugin-dir &quot;node_modules/d3&quot;)))
+
+
+defn create-graph [data]                                                         &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  (let [g (.setGraph (new dagreD3.graphlib.Graph)  #js {})]
+    (doseq [x (:nodes data)]
+      (.setNode g (dep-id x) (node-label x)))
+    (doseq [x (:edges data)]
+      (.setEdge g (:a x) (:b x) #js {:label (:label x)
+                                     :style (when (:transitive x)
+                                              &quot;stroke-dasharray: 5, 5;&quot;)}))
+    g))
+
+
+
+(behavior ::on-render                                                           &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+          :desc &quot;Elm render dependencies&quot;
+          :triggers #{:elm.graph.render}
+          :reaction (fn [this]
+                      (let [svg (.select d3 &quot;svg&quot;)
+                            g (.select svg &quot;g&quot;)
+                            renderer (.render dagreD3)]
+                        (renderer g (create-graph (:data @this)))
+                        (init-zoom svg g)
+                        (resize-graph this svg))))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The function to create the dependency graph. Helper functions omitted, but not much to it really&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Light Table behavior that is responsible for rendering the graph&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_credits&quot;&gt;Credits&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://d3js.org/&quot;&gt;d3.js&lt;/a&gt; - Provides awesome graphing features&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/cpettitt/dagre-d3&quot;&gt;dagreD3&lt;/a&gt; - Create Directed Acyclic Graphs in a breeze&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+  	       </description>
+      </item>
       <item>
         <title>Typed up CRUD SPA with Haskell and Elm  - Part 1: Spike time</title>
         <link>http://rundis.github.io/blog/2015/haskell_elm_spa_part1.html</link>
