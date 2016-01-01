@@ -1,4 +1,4 @@
-= Managing & diagramming elm packages with d3 in Light Table
+= Managing and diagramming elm packages with d3 in Light Table
 Magnus Rundberget
 2016-01-01
 :jbake-type: post
