@@ -1,0 +1,695 @@
+= Typed up CRUD SPA with Haskell and Elm - Part 2: Persistence up and running
+Magnus Rundberget
+2016-01-14
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: haskell, elm, haskellelmspa
+:imagesdir: /blog/2016/
+:icons: font
+:id: haskell_elm_spa_part2
+:toc: macro
+
+
+
+My journey into Elm and Haskell continues. It's time to add database support.
+
+Since http://rundis.github.io/blog/2015/haskell_elm_spa_part1.html[episode 1] I've
+managed to implement simple CRUD features for the Artist entity of the https://github.com/rundis/albums[Albums] sample application.
+It's been anything but plain sailing, but it's been a blast so far. Trying to wrap my head around two
+new languages and their libraries in parallell is somewhat daunting. The journey would probably
+have been smoother if I took more time to learn the language proper. Learning by doing is at times
+frustrating, at the same time very rewarding when stuff finally works.
+
+[quote, Magnus, (yeah I know; correlation does not imply causation) ]
+____
+There seems to be a pretty close correlation between **it compiles** and **it works** when programming
+in Elm and Haskell
+____
+
+
+
+toc::[]
+
+
+
+
+== Overview
+
+[TIP]
+====
+.Useful resources
+* Check out the other http://rundis.github.io/blog/tags/haskellelmspa.html[episodes] in this blog series.
+* The accompanying https://github.com/rundis/albums[Albums] sample app is on github, and there is a tag
+for each episode
+====
+
+
+.So what have I done for this episode ?
+- Added persistence support to the haskell/servant backend server using https://www.sqlite.org/[SQLite]
+- REST API now supports POST, PUT, DELETE and GET (multiple/single) Artists
+- The Elm frontend has features for listing, deleting, updating and creating new artists
+
+
+image::http://rundis.github.io/blog/2016/albumlistingpage.png[]
+
+I've taken a bottom up approach to developing the features. For both the Frontend and the Backend I've
+implemented everything in one module. After that I've done pretty substantial refactorings into smaller
+modules while letting the respective compilers guide me along the way. So how did that work out ?
+
+
+
+== Backend
+Pretty early on I managed to get https://github.com/lukexi/halive[halive] to start working. Having live recompiling is
+really nice and seriously improved my workflow. I have very limited editor support because my editor (https://github.com/LightTable/LightTable[Light Table])
+currently doesn't provide much in terms of haskell support. I was almost derailed with developing a Haskell plugin (or making the existing one work), but
+managed to keep on track.
+
+
+=== Adding cors support
+During development of the spike for the previous episode I used a chrome plugin to get around CORS
+restrictions from my browser. Surely this has to be solvable ? Indeed it was, https://github.com/larskuhtz/wai-cors[wai-cors] to the rescue.
+
+
+.backend/albums.cabal
+[source,haskell]
+----
+  build-depends:
+    -- ...
+    ,  wai-cors
+    -- ...
+----
+
+.backend/src/Main.hs
+[source,haskell]
+----
+
+;....
+
+import Network.Wai.Middleware.Cors
+
+;....
+
+albumCors :: Middleware
+albumCors = cors $ const (Just albumResourcePolicy)                             // <1>
+
+
+albumResourcePolicy :: CorsResourcePolicy                                       // <2>
+albumResourcePolicy =
+    CorsResourcePolicy
+        { corsOrigins = Nothing -- gives you /*
+        , corsMethods = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTION"]
+        , corsRequestHeaders = simpleHeaders -- adds "Content-Type" to defaults
+        , corsExposedHeaders = Nothing
+        , corsMaxAge = Nothing
+        , corsVaryOrigin = False
+        , corsRequireOrigin = False
+        , corsIgnoreFailures = False
+        }
+
+
+main :: IO ()
+main = do
+  run 8081 $ albumCors $ app                                                    // <3>
+----
+<1> Define wai cors middleware
+<2> Define a cors policy. This one is very lax. You wouldn't want to use this for anything public facing as is
+<3> Apply the middleware to our app. Now cross origin headers are added and OPTION prefligh requests are supported. Nice
+
+NOTE: Cors inspiration harvested from https://github.com/nicklawls/lessons btw
+
+
+
+=== Enter SQLite
+I looked at a few different options for database support. Most examples and tutorials related
+to servant and database usage seems to favor http://www.yesodweb.com/book/persistent[persistent].
+I'm surely going to have a closer look at that, but my initial impression was that perhaps there was just
+a little bit to much going on there. Just a little bit to much "magic" ? Having lost my taste
+for ORM's in the JVM spehere (hibernate in particular) I wanted to start with something closer to the metal.
+
+So to make it a little harder for myself I went for the https://github.com/nurpax/sqlite-simple[sqlite-simple] library.
+Pretty happy with the choice so far.
+
+
+.backend/albums.cabal
+[source,haskell]
+----
+  build-depends:
+    -- ...
+    , sqlite-simple
+    -- ...
+----
+
+
+.backend/Main.hs
+[source,haskell]
+----
+{-# LANGUAGE OverloadedStrings #-}
+module Main where
+
+
+import qualified Storage as S                              // <1>
+import qualified Api as A                                  // <2>
+import Network.Wai
+import Network.Wai.Handler.Warp
+import Servant
+import Network.Wai.Middleware.Cors
+import Control.Exception (bracket)
+import Database.SQLite.Simple as Sql
+
+
+app :: Sql.Connection -> Application
+app conn = serve A.api (A.artistsServer conn)              // <3>
+
+
+testConnect :: IO Sql.Connection
+testConnect = Sql.open ":memory:"                          // <4>
+
+
+withTestConnection :: (Sql.Connection -> IO a) -> IO a
+withTestConnection cb =                                    // <5>
+  withConn $ \conn -> cb conn
+  where
+    withConn = bracket testConnect Sql.close               // <6>
+
+{-
+  ...
+  cors stuff omitted, already covered
+-}
+
+
+main :: IO ()
+main = do
+  withTestConnection $ \conn ->  do
+    S.bootstrapDB conn                                     // <7>
+    run 8081 $ albumCors $ app conn                        // <8>
+----
+<1> Module with functions for communication with the Albums database. Only used for bootstrapping with test data in main
+<2> Module that defines the webservice api
+<3> We make sure to pass a connection to our webservice server
+<4> For simplicity we are using an in memory database
+<5> Wrap a function (cb) giving it a connection and cleaning up when done
+<6> `bracket` ensures we also release the connection in case of any exceptions.
+<7> Creates schema and bootstraps with some sample data
+<8> Ensure we pass the connection to our app function
+
+
+TIP: Read more about the https://wiki.haskell.org/Bracket_pattern[bracket pattern]
+
+
+.backend/Api.hs
+[source,haskell]
+----
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds     #-}
+
+module Api where
+
+import qualified Model as M                           // <1>
+import qualified Storage as S
+import Data.Aeson
+import Control.Monad.IO.Class     (MonadIO, liftIO)
+import Control.Monad.Trans.Either
+import Servant
+import Database.SQLite.Simple as Sql
+
+
+instance ToJSON M.Artist
+instance FromJSON M.Artist
+
+
+type ArtistAPI =                                       // <2>
+       Get '[JSON] [M.Artist]
+  :<|> ReqBody '[JSON] M.Artist :> Post '[JSON] M.Artist
+  :<|> Capture "artistId" Int :> Get '[JSON] M.Artist
+  :<|> Capture "artistId" Int :> ReqBody '[JSON] M.Artist :> Put '[JSON] M.Artist
+  :<|> Capture "artistId" Int :> Delete '[] ()
+
+-- '
+
+artistsServer :: Sql.Connection -> Server ArtistAPI    // <3>
+artistsServer conn =
+  getArtists :<|> postArtist :<|> getArtist :<|>  updateArtist :<|> deleteArtist
+
+  where
+    getArtists                   = liftIO $ S.findArtists conn     // <4>
+    getArtist artistId           = liftIOMaybeToEither err404 $ S.artistById conn artistId
+    postArtist artist            = liftIO $ S.newArtist conn artist
+    updateArtist artistId artist = liftIO $ S.updateArtist conn artist artistId
+    deleteArtist artistId        = liftIO $ S.deleteArtist conn artistId
+
+
+liftIOMaybeToEither ::  (MonadIO m) => a -> IO (Maybe b) -> EitherT a m b
+liftIOMaybeToEither err x = do                         // <5>
+    m <- liftIO x
+    case m of
+      Nothing -> left err
+      Just x -> right x
+
+
+type API = "artists" :> ArtistAPI
+
+
+api :: Proxy API
+api = Proxy
+----
+<1> The record definitions for our API lives in this module
+<2> We've extended the api type defintions from http://rundis.github.io/blog/2015/haskell_elm_spa_part1.html#_main_hs[episode 1]
+to define the shape of get multiple, get single, post, put and delete.
+<3> Connection has been added as a parameter to our artist server
+<4> `liftIO` is a https://en.wikibooks.org/wiki/Haskell/Monad_transformers[monad transformer]. I'd love to be able to explain
+how it works, but well... Anyways net result is that I don't have to define `EitherT ServantErr IO ..` all over the place
+<5> `liftIOMaybeToEither` - what it says. Handy function to return a servant error (which again maps to a http error) if a function like getArtist doesn't return
+a result. Tx to ToJans for https://gist.github.com/ToJans/233f82087ee7b385e6e1[inspiration]
+
+NOTE: put aka update artist should also return a 404 when a non existing artist id is provided.
+Actually, error handling is pretty light throughout, but we'll get back to that in a later episode !
+
+
+./backend/Model.hs
+[source,haskell]
+----
+{-# LANGUAGE DeriveGeneric #-}
+
+module Model where
+
+import GHC.Generics
+
+data Artist = Artist                // <1>
+  { artistId :: Maybe Int           // <2>
+  , artistName :: String            // <3>
+  } deriving (Eq, Show, Generic)
+----
+<1> Moved record defintions to a separate module. Currently just Artist
+<2> Make id optional. This is a quick and dirty way to be able to use the same
+record definiton for new artists as for updates and gets.
+<3> Names in records are not scoped withing the record so one solution is to manually
+make sure names stay unique.
+
+WARNING: From what I gather record syntax is a bit clunky in Haskell (atleast when compared to Elm).
+This http://stackoverflow.com/questions/6922437/haskell-any-way-to-qualify-or-disambiguate-record-names[stackoverflow post]
+didn't bring any warm fuzzy feelings. If anyone has some better solutions which also plays
+well with the handy servant and SQLite simple functions feel free to leave a comment below !
+
+
+
+.backend/Storage.hs
+[source,haskell]
+----
+{-# LANGUAGE OverloadedStrings #-}
+module Storage where
+
+
+import qualified Model as M
+import qualified Data.Text as Txt
+
+
+import Database.SQLite.Simple as Sql
+import Database.SQLite.Simple.Types as SqlTypes
+
+
+instance Sql.FromRow M.Artist where                         // <1>
+  fromRow = M.Artist <$> Sql.field <*> Sql.field
+
+
+
+artistById :: Sql.Connection -> Int -> IO (Maybe M.Artist)  // <2>
+artistById conn idParam =
+  findById conn "artist" idParam :: IO (Maybe M.Artist)
+
+
+findArtists :: Sql.Connection -> IO [M.Artist]
+findArtists conn =
+  Sql.query_ conn "select * from artist" :: IO [M.Artist]
+
+
+newArtist :: Sql.Connection -> M.Artist -> IO M.Artist
+newArtist conn artist = do
+  Sql.execute conn "insert into artist (name) values (?) " (Sql.Only $ M.artistName artist)
+  rawId <- lastInsertRowId conn
+  let updArtist = artist { M.artistId = Just (fromIntegral rawId) }  // <3>
+  return updArtist
+
+
+-- Really we should check whether the artist exists here
+updateArtist :: Sql.Connection -> M.Artist -> Int -> IO M.Artist
+updateArtist conn artist idParam = do
+  Sql.executeNamed conn "update artist set name = :name where id = :id" params
+  return artist { M.artistId = Just idParam }                        // <4>
+  where
+    params = [":id" := (idParam :: Int), ":name" := ((M.artistName artist) :: String)]
+
+
+deleteArtist :: Sql.Connection -> Int -> IO ()
+deleteArtist conn idParam =
+  Sql.execute conn "delete from artist where id = ?" (Sql.Only idParam)
+
+
+findById :: (FromRow a) => Sql.Connection -> String -> Int -> IO (Maybe a)
+findById conn table idParam = do
+  rows <- Sql.queryNamed conn (createFindByIdQuery table) [":id" := (idParam :: Int)]
+  let result = case (length rows) of
+                  0 -> Nothing
+                  _ -> Just $ head rows      // <5>
+
+  return result
+
+
+createFindByIdQuery :: String -> SqlTypes.Query
+createFindByIdQuery table =
+  SqlTypes.Query $ Txt.pack $ "SELECT * from " ++ table ++ " where id = :id"   // <6>
+
+-- ... boostrap function left out, check the source repo for details
+----
+<1> Define SQLite row converter to create artist records for rows with id and name
+<2> Finding an artist by Id may return empty results. Prematurely factored out a generic findById function that is used here
+<3> Add the id of the newly inserted artist row to the resulting artist. (The Maybe artistId starts to smell)
+<4> Yuck, this smells even worse. The decision to support an optional id on the Artist record doesn't ring true
+<5> Using let allows us to "work inside" the IO monad. Otherwise the compiler complains along the lines of `Couldn't match expected type ‘[r1]’ with actual type ‘IO [r0]’`
+<6> Whacking strings together is discouraged (helps avoid sql injection for one), but getting around it is possible with a little serimony
+
+
+=== Backend summary
+Well now we got persistence up and running with a good ole' relational database. That's
+not very exciting and I might return to change that in a future episode. The REST api is quite simple and lacking in validation and error handling, but it's hopefully a decent start and foundation
+for future changes.
+
+After working with Clojure and Leiningen not to long ago, the server startup time feels blistering fast in comparison.
+Getting halive to work made significant improvements to the development workflow.
+When working with Haskell I get a constant reminder that I would benefit from learning more about the language
+and fundemental concepts. The compiler messages still throws me off a lot of times, but the situation is gradually improving as I'm learning.
+I guess I'm already spoilt with the error messages from Elm which feels a lot clearer and better at highlighting the root cause(s) of my mistakes.
+
+I'm still fumbling to design a sensible structure for the custom data types. I have a feeling
+several iterations will be needed as I add support for additional services.
+
+
+== Frontend
+It's a shame the hot reloading support in elm-reactor is broken at the time of writing, otherwise the development experience
+would have been a lot better. `Make` -> `reload browser` is just a keystroak away in Light Table, but still.
+Having the informative compiler error and warning messages inline in my Editor is really nice though.
+
+TIP: Do better understand the elm-architecture I've tried to follow, you should really check out the
+https://github.com/evancz/elm-architecture-tutorial[tutorial]. It does a much better job at explaining the core
+concepts than I do.
+
+image::http://rundis.github.io/blog/2016/album_pages.png[]
+
+
+.frontend/Main.elm
+[source,elm]
+----
+module Main where
+
+
+import ArtistListing
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
+import Task exposing (..)
+import Effects exposing (Effects, Never)
+import StartApp
+
+
+type alias Model =                                    // <1>
+  { artistListing : ArtistListing.Model}
+
+
+type Action =                                         // <2>
+    ShowHomePage
+  | ArtistListingAction ArtistListing.Action
+
+
+init : (Model, Effects Action)                        // <3>
+init =
+  let
+    (artistListing, fx) = ArtistListing.init
+  in
+    ( Model artistListing
+      , Effects.map ArtistListingAction fx            // <4>
+    )
+
+
+
+
+update : Action -> Model -> (Model, Effects Action)
+update action model =
+  case action of
+
+    ShowHomePage ->                                   // <5>
+      let
+        (artistListing, fx) = ArtistListing.init
+      in
+        ( {model | artistListing = artistListing}
+        , Effects.map ArtistListingAction fx
+        )
+
+    ArtistListingAction sub ->                        // <6>
+      let
+        (artistListing, fx) = ArtistListing.update sub model.artistListing
+      in
+        ( {model | artistListing = artistListing}
+        , Effects.map ArtistListingAction fx
+        )
+
+
+menu : Signal.Address Action -> Model -> Html
+menu address model =
+  header [class "navbar navbar-default"] [
+    div [class "container"] [
+      div [class "navbar-header"] [
+        button [ class "btn-link navbar-brand", onClick address ShowHomePage ]
+        [text "Albums Crud"]
+      ]
+    ]
+  ]
+
+
+view : Signal.Address Action -> Model -> Html
+view address model =
+  div [class "container-fluid"] [
+      menu address model   // <7>
+    , ArtistListing.view (Signal.forwardTo address ArtistListingAction) model.artistListing
+  ]
+
+-- ... app, main and port for tasks left out, no changes since previous episode
+----
+<1> The main model composes the artistlisting page model
+<2> Actions for main, currently just holds the actions for ArtistListing + a convenience action to reset/show home page
+<3> The init function from ArtistListing returns it's model and an effect (get artist from server task). We initialize the
+main model with the artistlisting model
+<4> We map the effect from ArtistListing to an Main module effect which is then handled by the startapp "signal loop"
+<5> Quick and dirty way to trigger showing of the artist listing page (re-initialized)
+<6> All ArtistListing actions are tagged with ArtistListingAction, we delegate to the update function for ArtistListing
+, update the main model accordingly and the map the returne effect
+<7> To get/create the view for ArtistListing we call it's view function, but we need to ensure signals sent from  ArtistListing makes it back to the main view mailbox address. `Signal.forwardTo` helps us create a forwarding address.
+
+
+
+TIP: Read more about https://github.com/elm-guides/elm-for-js/blob/master/Mailboxes%2C%20Messages%2C%20and%20Addresses.md#talk-to-this-guy[Mailboxes, Messages and Addresses]
+
+
+.frontend/ArtistListing.elm
+[source,elm]
+----
+module ArtistListing (Model, Action (..), init, view, update) where
+
+
+import ServerApi exposing (..)                                                 // <1>
+import ArtistDetail
+-- ... other imports ommited
+
+type Page = ArtistListingPage | ArtistDetailPage
+
+
+type alias Model =
+  { artists : List Artist
+  , artistDetail : ArtistDetail.Model
+  , page : Page}
+
+
+
+type Action =
+    HandleArtistsRetrieved (Maybe (List Artist))
+  | SelectArtist (Int)
+  | DeleteArtist (Int)
+  | HandleArtistDeleted (Maybe Http.Response)
+  | ArtistDetailAction ArtistDetail.Action
+  | NewArtist
+
+
+init : (Model, Effects Action)
+init =
+  let
+    (artistDetail, fx) = ArtistDetail.init
+  in
+    ( Model [] artistDetail ArtistListingPage
+      , getArtists HandleArtistsRetrieved                                      // <2>
+    )
+
+
+update : Action -> Model -> (Model, Effects Action)
+update action model =
+  case action of
+
+    HandleArtistsRetrieved xs ->                                               // <3>
+      ( {model | artists = (Maybe.withDefault [] xs) }
+      , Effects.none
+      )
+
+    DeleteArtist id ->
+      (model, deleteArtist id HandleArtistDeleted)
+
+    HandleArtistDeleted res ->
+      (model, getArtists HandleArtistsRetrieved)
+
+    NewArtist ->                                                              // <4>
+      update (ArtistDetailAction <| ArtistDetail.ShowArtist Nothing) model
+
+    SelectArtist id ->
+      update (ArtistDetailAction <| ArtistDetail.GetArtist id) model
+
+    ArtistDetailAction sub ->                                                 // <5>
+      let
+        (detailModel, fx) = ArtistDetail.update sub model.artistDetail
+      in
+        ( { model | artistDetail = detailModel
+                  , page = ArtistDetailPage }                                 // <6>
+        , Effects.map ArtistDetailAction fx
+        )
+
+
+
+-- ... artistView details ommitted for brevity
+
+view : Signal.Address Action -> Model -> Html
+view address model =
+  div [class "content"] [
+    case model.page of                                                       // <7>
+
+      ArtistListingPage ->
+        artistsView address model
+
+      ArtistDetailPage ->
+        ArtistDetail.view (Signal.forwardTo address ArtistDetailAction) model.artistDetail
+
+  ]
+
+----
+<1> The `ServerApi` module exposes functions to interact with the backend server
+<2> `getArtists HandleArtistsRetrieved` calls the serverAPI with a action param, so that when the ajax/xhr callback finally makes in back into the elm signal loop, the update function is called with the action we want
+<3> Update the model with the list of artists retrieved (if any)
+<4> To show the artist detail page in "create" mode we create a ArtistDetailAction with the appropriate ArtistDetail.action
+<5> ArtistDetailAction sub actions are actions that are delegated to the actions of the ArtistDetail module.
+<6> Note that we change "page context" here so that the view function displays the appropriate page
+<7> Our naive page routing, just toggles display of pages by the page attribute of our model
+
+
+We've implemented a very simplistic page routing here. In a later episode we will refactor to
+something more managable for handling proper page routing.
+
+
+
+.frontend/ArtistDetail.elm
+This page handles update/creation of a single Artist. I'll leave it to you to check out
+the details of the https://github.com/rundis/albums/releases/tag/part_2[sample code] on github.
+
+
+.frontend/ServerApi.elm
+[source,elm]
+----
+module ServerApi where
+
+
+import Json.Decode as JsonD exposing ((:=))
+import Json.Encode as JsonE
+import Effects exposing (Effects)
+import Http
+import Task
+
+
+type alias ArtistRequest a =                                                 // <1>
+  { a | name : String }
+
+type alias Artist =
+  { id : Int
+  , name : String
+  }
+
+baseUrl : String
+baseUrl = "http://localhost:8081"
+
+
+getArtist : Int -> (Maybe Artist -> a) -> Effects.Effects a
+getArtist id action =                                                        // <2>
+  Http.get artistDecoder (baseUrl ++ "/artists/" ++ toString id)
+    |> Task.toMaybe
+    |> Task.map action                                                       // <3>
+    |> Effects.task
+
+
+getArtists : (Maybe (List Artist) -> a) -> Effects a
+getArtists action =
+  Http.get artistsDecoder (baseUrl ++ "/artists")
+    |> Task.toMaybe
+    |> Task.map action
+    |> Effects.task
+
+createArtist : ArtistRequest a -> (Maybe Artist -> b) -> Effects.Effects b
+createArtist artist action =                                                 // <4>
+  Http.send Http.defaultSettings
+        { verb = "POST"
+        , url = baseUrl ++ "/artists"
+        , body = Http.string (encodeArtist artist)                           // <5>
+        , headers = [("Content-Type", "application/json")]
+        }
+    |> Http.fromJson artistDecoder
+    |> Task.toMaybe
+    |> Task.map action
+    |> Effects.task
+
+-- .. the remaining services and encoding|decoding left out for brevity
+----
+
+<1> This type is an extensible http://elm-lang.org/docs/records#record-types[record type]. It allows our
+artist related services to be a little bit more generic and still keep a level of type checking
+<2> GET a single artist from our backend api. (Actually it returns and effect that will executa a http://elm-lang.org/guide/reactivity#tasks[task] which upon callback will eventually call the update function in our app with the given action)
+<3> We've relented on type safety for actions by allowing it to be a generic param, but we gain some flexibility
+that allows our service to be usable in many different contexts
+<4> To take more control over http actions we use `Http.send`. It's closer to the metal so it's a little
+bit more boilerplate.
+<5> Encode the artist (request) to a json string
+
+To see the remaining services and details of decoding and encoding please consolt the https://github.com/rundis/albums/releases/tag/part_2[sample code] on github.
+
+
+=== Frontend summary
+We are beginning to see the resmblance of a Single Page Application. We have started to compose
+views and pages using the Elm Architecture. The app supports basic CRUD oparations for an Artist entity.
+Error handling is light, there is no validation and our routing solution is overly simplistic, but we'll get
+to that soonish !
+
+Working with Elm has been an absolute pleasure. The compiler messages really do help. Doing refactoring (without tests I might add)
+doesn't feel anywhere near as scary as I'm used to from other languages.
+I'm starting to understand more about the Elm Architecture, but I'm still getting a little confused about the details
+of Signals, Tasks, Mailboxes, Effects etc. It's coming to me gradually. The important thing is I can still be quite productive
+even though I don't understand all the details.
+
+****
+I have to say I'm not looking forward to my next refactoring in some messy imperative jquery page mutant at work.
+****
+
+== Conclusion and next steps
+I'm aware this blog post got way to long even though I tried to shave of some of the code from the
+code listings. I'll have to try to take on smaller/more targeted chunks in future episodes.
+
+Anyways. I'm staring to feel I'm getting somewhere now. Both with Haskell and Elm. Learning Haskell is
+by far the most challenging but getting my head around Functional Reactive Programming in Elm isn't without challenges either.
+My motivation is still strong and I'm learning a ton of stuff.
+
+Candidate areas to address for the next episode are; routing, validation, error handling and obviously more useful features.
+I'm thinking perhaps routing comes first, but we'll see.
+
+
+
+
+
