@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Wed, 13 Jan 2016 08:15:02 +0100</pubDate>
-    <lastBuildDate>Wed, 13 Jan 2016 08:15:02 +0100</lastBuildDate>
+    <pubDate>Wed, 13 Jan 2016 08:19:32 +0100</pubDate>
+    <lastBuildDate>Wed, 13 Jan 2016 08:19:32 +0100</lastBuildDate>
 
     <item>
       <title>Typed up CRUD SPA with Haskell and Elm - Part 2: Persistence up and running</title>
@@ -600,7 +600,7 @@ concepts than I do.
 &lt;/div&gt;
 &lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;img src=&quot;http://rundis.github.io/blog/2016/album_pages.png&quot; alt=&quot;album pages&quot;&gt;
+&lt;img src=&quot;http://rundis.github.io/blog/2016/albums_pages.png&quot; alt=&quot;albums pages&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
