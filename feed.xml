@@ -6,9 +6,987 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sat, 2 Jan 2016 00:29:01 +0100</pubDate>
-    <lastBuildDate>Sat, 2 Jan 2016 00:29:01 +0100</lastBuildDate>
+    <pubDate>Wed, 13 Jan 2016 08:15:02 +0100</pubDate>
+    <lastBuildDate>Wed, 13 Jan 2016 08:15:02 +0100</lastBuildDate>
 
+    <item>
+      <title>Typed up CRUD SPA with Haskell and Elm - Part 2: Persistence up and running</title>
+      <link>http://rundis.github.io/blog/2016/haskel_elm_spa_part2.html</link>
+      <pubDate>Thu, 14 Jan 2016 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2016/haskel_elm_spa_part2.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;My journey into Elm and Haskell continues. It&amp;#8217;s time to add database support.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Since &lt;a href=&quot;http://rundis.github.io/blog/2015/haskell_elm_spa_part1.html&quot;&gt;episode 1&lt;/a&gt; I&amp;#8217;ve
+managed to implement simple CRUD features for the Artist entity of the &lt;a href=&quot;https://github.com/rundis/albums&quot;&gt;Albums&lt;/a&gt; sample application.
+It&amp;#8217;s been anything but plain sailing, but it&amp;#8217;s been a blast so far. Trying to wrap my head around two
+new languages and their libraries in parallell is somewhat daunting. The journey would probably
+have been smoother if I took more time to learn the language proper. Learning by doing is at times
+frustrating, at the same time very rewarding when stuff finally works.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;quoteblock&quot;&gt;
+&lt;blockquote&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There seems to be a pretty close correlation between &lt;strong&gt;it compiles&lt;/strong&gt; and &lt;strong&gt;it works&lt;/strong&gt; when programming
+in Elm and Haskell&lt;/p&gt;
+&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;div class=&quot;attribution&quot;&gt;
+&amp;#8212; Magnus&lt;br&gt;
+&lt;cite&gt;(yeah I know; correlation does not imply causation)&lt;/cite&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;toc&quot; class=&quot;toc&quot;&gt;
+&lt;div id=&quot;toctitle&quot; class=&quot;title&quot;&gt;Table of Contents&lt;/div&gt;
+&lt;ul class=&quot;sectlevel1&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_overview&quot;&gt;Overview&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_backend&quot;&gt;Backend&lt;/a&gt;
+&lt;ul class=&quot;sectlevel2&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_adding_cors_support&quot;&gt;Adding cors support&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_enter_sqlite&quot;&gt;Enter SQLite&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_backend_summary&quot;&gt;Backend summary&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_frontend&quot;&gt;Frontend&lt;/a&gt;
+&lt;ul class=&quot;sectlevel2&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_frontend_summary&quot;&gt;Frontend summary&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_conclusion_and_next_steps&quot;&gt;Conclusion and next steps&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_overview&quot;&gt;Overview&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Useful resources&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Check out the other &lt;a href=&quot;http://rundis.github.io/blog/tags/haskellelmspa.html&quot;&gt;episodes&lt;/a&gt; in this blog series.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The accompanying &lt;a href=&quot;https://github.com/rundis/albums&quot;&gt;Albums&lt;/a&gt; sample app is on github, and there is a tag
+for each episode&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;So what have I done for this episode ?&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Added persistence support to the haskell/servant backend server using &lt;a href=&quot;https://www.sqlite.org/&quot;&gt;SQLite&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;REST API now supports POST, PUT, DELETE and GET (multiple/single) Artists&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The Elm frontend has features for listing, deleting, updating and creating new artists&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;http://rundis.github.io/blog/2016/albumlistingpage.png&quot; alt=&quot;albumlistingpage&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;ve taken a bottom up approach to developing the features. For both the Frontend and the Backend I&amp;#8217;ve
+implemented everything in one module. After that I&amp;#8217;ve done pretty substantial refactorings into smaller
+modules while letting the respective compilers guide me along the way. So how did that work out ?&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_backend&quot;&gt;Backend&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Pretty early on I managed to get &lt;a href=&quot;https://github.com/lukexi/halive&quot;&gt;halive&lt;/a&gt; to start working. Having live recompiling is
+really nice and seriously improved my workflow. I have very limited editor support because my editor (&lt;a href=&quot;https://github.com/LightTable/LightTable&quot;&gt;Light Table&lt;/a&gt;)
+currently doesn&amp;#8217;t provide much in terms of haskell support. I was almost derailed with developing a Haskell plugin (or making the existing one work), but
+managed to keep on track.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_adding_cors_support&quot;&gt;Adding cors support&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;During development of the spike for the previous episode I used a chrome plugin to get around CORS
+restrictions from my browser. Surely this has to be solvable ? Indeed it was, &lt;a href=&quot;https://github.com/larskuhtz/wai-cors&quot;&gt;wai-cors&lt;/a&gt; to the rescue.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/albums.cabal&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;  build-depends:
+    -- ...
+    ,  wai-cors
+    -- ...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/src/Main.hs&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;;....
+
+import Network.Wai.Middleware.Cors
+
+;....
+
+albumCors :: Middleware
+albumCors = cors $ const (Just albumResourcePolicy)                             &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+
+
+albumResourcePolicy :: CorsResourcePolicy                                       &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+albumResourcePolicy =
+    CorsResourcePolicy
+        { corsOrigins = Nothing -- gives you /*
+        , corsMethods = [&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;, &quot;HEAD&quot;, &quot;OPTION&quot;]
+        , corsRequestHeaders = simpleHeaders -- adds &quot;Content-Type&quot; to defaults
+        , corsExposedHeaders = Nothing
+        , corsMaxAge = Nothing
+        , corsVaryOrigin = False
+        , corsRequireOrigin = False
+        , corsIgnoreFailures = False
+        }
+
+
+main :: IO ()
+main = do
+  run 8081 $ albumCors $ app                                                    &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Define wai cors middleware&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Define a cors policy. This one is very lax. You wouldn&amp;#8217;t want to use this for anything public facing as is&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Apply the middleware to our app. Now cross origin headers are added and OPTION prefligh requests are supported. Nice&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Cors inspiration harvested from &lt;a href=&quot;https://github.com/nicklawls/lessons&quot; class=&quot;bare&quot;&gt;https://github.com/nicklawls/lessons&lt;/a&gt; btw
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_enter_sqlite&quot;&gt;Enter SQLite&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I looked at a few different options for database support. Most examples and tutorials related
+to servant and database usage seems to favor &lt;a href=&quot;http://www.yesodweb.com/book/persistent&quot;&gt;persistent&lt;/a&gt;.
+I&amp;#8217;m surely going to have a closer look at that, but my initial impression was that perhaps there was just
+a little bit to much going on there. Just a little bit to much &quot;magic&quot; ? Having lost my taste
+for ORM&amp;#8217;s in the JVM spehere (hibernate in particular) I wanted to start with something closer to the metal.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So to make it a little harder for myself I went for the &lt;a href=&quot;https://github.com/nurpax/sqlite-simple&quot;&gt;sqlite-simple&lt;/a&gt; library.
+Pretty happy with the choice so far.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/albums.cabal&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;  build-depends:
+    -- ...
+    , sqlite-simple
+    -- ...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/Main.hs&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;{-# LANGUAGE OverloadedStrings #-}
+module Main where
+
+
+import qualified Storage as S                              &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+import qualified Api as A                                  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+import Network.Wai
+import Network.Wai.Handler.Warp
+import Servant
+import Network.Wai.Middleware.Cors
+import Control.Exception (bracket)
+import Database.SQLite.Simple as Sql
+
+
+app :: Sql.Connection -&amp;gt; Application
+app conn = serve A.api (A.artistsServer conn)              &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+
+
+testConnect :: IO Sql.Connection
+testConnect = Sql.open &quot;:memory:&quot;                          &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+
+
+withTestConnection :: (Sql.Connection -&amp;gt; IO a) -&amp;gt; IO a
+withTestConnection cb =                                    &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+  withConn $ \conn -&amp;gt; cb conn
+  where
+    withConn = bracket testConnect Sql.close               &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+
+{-
+  ...
+  cors stuff omitted, already covered
+-}
+
+
+main :: IO ()
+main = do
+  withTestConnection $ \conn -&amp;gt;  do
+    S.bootstrapDB conn                                     &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+    run 8081 $ albumCors $ app conn                        &lt;i class=&quot;conum&quot; data-value=&quot;8&quot;&gt;&lt;/i&gt;&lt;b&gt;(8)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Module with functions for communication with the Albums database. Only used for bootstrapping with test data in main&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Module that defines the webservice api&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We make sure to pass a connection to our webservice server&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;For simplicity we are using an in memory database&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Wrap a function (cb) giving it a connection and cleaning up when done&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;bracket&lt;/code&gt; ensures we also release the connection in case of any exceptions.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Creates schema and bootstraps with some sample data&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;8&quot;&gt;&lt;/i&gt;&lt;b&gt;8&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Ensure we pass the connection to our app function&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Read more about the &lt;a href=&quot;https://wiki.haskell.org/Bracket_pattern&quot;&gt;bracket pattern&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/Api.hs&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds     #-}
+
+module Api where
+
+import qualified Model as M                           &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+import qualified Storage as S
+import Data.Aeson
+import Control.Monad.IO.Class     (MonadIO, liftIO)
+import Control.Monad.Trans.Either
+import Servant
+import Database.SQLite.Simple as Sql
+
+
+instance ToJSON M.Artist
+instance FromJSON M.Artist
+
+
+type ArtistAPI =                                       &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+       Get &apos;[JSON] [M.Artist]
+  :&amp;lt;|&amp;gt; ReqBody &apos;[JSON] M.Artist :&amp;gt; Post &apos;[JSON] M.Artist
+  :&amp;lt;|&amp;gt; Capture &quot;artistId&quot; Int :&amp;gt; Get &apos;[JSON] M.Artist
+  :&amp;lt;|&amp;gt; Capture &quot;artistId&quot; Int :&amp;gt; ReqBody &apos;[JSON] M.Artist :&amp;gt; Put &apos;[JSON] M.Artist
+  :&amp;lt;|&amp;gt; Capture &quot;artistId&quot; Int :&amp;gt; Delete &apos;[] ()
+
+-- &apos;
+
+artistsServer :: Sql.Connection -&amp;gt; Server ArtistAPI    &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+artistsServer conn =
+  getArtists :&amp;lt;|&amp;gt; postArtist :&amp;lt;|&amp;gt; getArtist :&amp;lt;|&amp;gt;  updateArtist :&amp;lt;|&amp;gt; deleteArtist
+
+  where
+    getArtists                   = liftIO $ S.findArtists conn     &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+    getArtist artistId           = liftIOMaybeToEither err404 $ S.artistById conn artistId
+    postArtist artist            = liftIO $ S.newArtist conn artist
+    updateArtist artistId artist = liftIO $ S.updateArtist conn artist artistId
+    deleteArtist artistId        = liftIO $ S.deleteArtist conn artistId
+
+
+liftIOMaybeToEither ::  (MonadIO m) =&amp;gt; a -&amp;gt; IO (Maybe b) -&amp;gt; EitherT a m b
+liftIOMaybeToEither err x = do                         &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+    m &amp;lt;- liftIO x
+    case m of
+      Nothing -&amp;gt; left err
+      Just x -&amp;gt; right x
+
+
+type API = &quot;artists&quot; :&amp;gt; ArtistAPI
+
+
+api :: Proxy API
+api = Proxy&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The record definitions for our API lives in this module&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We&amp;#8217;ve extended the api type defintions from &lt;a href=&quot;http://rundis.github.io/blog/2015/haskell_elm_spa_part1.html#_main_hs&quot;&gt;episode 1&lt;/a&gt;
+to define the shape of get multiple, get single, post, put and delete.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Connection has been added as a parameter to our artist server&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;liftIO&lt;/code&gt; is a &lt;a href=&quot;https://en.wikibooks.org/wiki/Haskell/Monad_transformers&quot;&gt;monad transformer&lt;/a&gt;. I&amp;#8217;d love to be able to explain
+how it works, but well&amp;#8230;&amp;#8203; Anyways net result is that I don&amp;#8217;t have to define &lt;code&gt;EitherT ServantErr IO ..&lt;/code&gt; all over the place&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;liftIOMaybeToEither&lt;/code&gt; - what it says. Handy function to return a servant error (which again maps to a http error) if a function like getArtist doesn&amp;#8217;t return
+a result. Tx to ToJans for &lt;a href=&quot;https://gist.github.com/ToJans/233f82087ee7b385e6e1&quot;&gt;inspiration&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+put aka update artist should also return a 404 when a non existing artist id is provided.
+Actually, error handling is pretty light throughout, but we&amp;#8217;ll get back to that in a later episode !
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;/backend/Model.hs&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;{-# LANGUAGE DeriveGeneric #-}
+
+module Model where
+
+import GHC.Generics
+
+data Artist = Artist                &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { artistId :: Maybe Int           &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  , artistName :: String            &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  } deriving (Eq, Show, Generic)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Moved record defintions to a separate module. Currently just Artist&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Make id optional. This is a quick and dirty way to be able to use the same
+record definiton for new artists as for updates and gets.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Names in records are not scoped withing the record so one solution is to manually
+make sure names stay unique.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock warning&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-warning&quot; title=&quot;Warning&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+From what I gather record syntax is a bit clunky in Haskell (atleast when compared to Elm).
+This &lt;a href=&quot;http://stackoverflow.com/questions/6922437/haskell-any-way-to-qualify-or-disambiguate-record-names&quot;&gt;stackoverflow post&lt;/a&gt;
+didn&amp;#8217;t bring any warm fuzzy feelings. If anyone has some better solutions which also plays
+well with the handy servant and SQLite simple functions feel free to leave a comment below !
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/Storage.hs&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;{-# LANGUAGE OverloadedStrings #-}
+module Storage where
+
+
+import qualified Model as M
+import qualified Data.Text as Txt
+
+
+import Database.SQLite.Simple as Sql
+import Database.SQLite.Simple.Types as SqlTypes
+
+
+instance Sql.FromRow M.Artist where                         &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  fromRow = M.Artist &amp;lt;$&amp;gt; Sql.field &amp;lt;*&amp;gt; Sql.field
+
+
+
+artistById :: Sql.Connection -&amp;gt; Int -&amp;gt; IO (Maybe M.Artist)  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+artistById conn idParam =
+  findById conn &quot;artist&quot; idParam :: IO (Maybe M.Artist)
+
+
+findArtists :: Sql.Connection -&amp;gt; IO [M.Artist]
+findArtists conn =
+  Sql.query_ conn &quot;select * from artist&quot; :: IO [M.Artist]
+
+
+newArtist :: Sql.Connection -&amp;gt; M.Artist -&amp;gt; IO M.Artist
+newArtist conn artist = do
+  Sql.execute conn &quot;insert into artist (name) values (?) &quot; (Sql.Only $ M.artistName artist)
+  rawId &amp;lt;- lastInsertRowId conn
+  let updArtist = artist { M.artistId = Just (fromIntegral rawId) }  &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  return updArtist
+
+
+-- Really we should check whether the artist exists here
+updateArtist :: Sql.Connection -&amp;gt; M.Artist -&amp;gt; Int -&amp;gt; IO M.Artist
+updateArtist conn artist idParam = do
+  Sql.executeNamed conn &quot;update artist set name = :name where id = :id&quot; params
+  return artist { M.artistId = Just idParam }                        &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+  where
+    params = [&quot;:id&quot; := (idParam :: Int), &quot;:name&quot; := ((M.artistName artist) :: String)]
+
+
+deleteArtist :: Sql.Connection -&amp;gt; Int -&amp;gt; IO ()
+deleteArtist conn idParam =
+  Sql.execute conn &quot;delete from artist where id = ?&quot; (Sql.Only idParam)
+
+
+findById :: (FromRow a) =&amp;gt; Sql.Connection -&amp;gt; String -&amp;gt; Int -&amp;gt; IO (Maybe a)
+findById conn table idParam = do
+  rows &amp;lt;- Sql.queryNamed conn (createFindByIdQuery table) [&quot;:id&quot; := (idParam :: Int)]
+  let result = case (length rows) of
+                  0 -&amp;gt; Nothing
+                  _ -&amp;gt; Just $ head rows      &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+
+  return result
+
+
+createFindByIdQuery :: String -&amp;gt; SqlTypes.Query
+createFindByIdQuery table =
+  SqlTypes.Query $ Txt.pack $ &quot;SELECT * from &quot; ++ table ++ &quot; where id = :id&quot;   &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+
+-- ... boostrap function left out, check the source repo for details&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Define SQLite row converter to create artist records for rows with id and name&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Finding an artist by Id may return empty results. Prematurely factored out a generic findById function that is used here&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Add the id of the newly inserted artist row to the resulting artist. (The Maybe artistId starts to smell)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Yuck, this smells even worse. The decision to support an optional id on the Artist record doesn&amp;#8217;t ring true&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Using let allows us to &quot;work inside&quot; the IO monad. Otherwise the compiler complains along the lines of &lt;code&gt;Couldn&amp;#8217;t match expected type ‘[r1]’ with actual type ‘IO [r0]’&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Whacking strings together is discouraged (helps avoid sql injection for one), but getting around it is possible with a little serimony&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_backend_summary&quot;&gt;Backend summary&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Well now we got persistence up and running with a good ole&apos; relational database. That&amp;#8217;s
+not very exciting and I might return to change that in a future episode. The REST api is quite simple and lacking in validation and error handling, but it&amp;#8217;s hopefully a decent start and foundation
+for future changes.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;After working with Clojure and Leiningen not to long ago, the server startup time feels blistering fast in comparison.
+Getting halive to work made significant improvements to the development workflow.
+When working with Haskell I get a constant reminder that I would benefit from learning more about the language
+and fundemental concepts. The compiler messages still throws me off a lot of times, but the situation is gradually improving as I&amp;#8217;m learning.
+I guess I&amp;#8217;m already spoilt with the error messages from Elm which feels a lot clearer and better at highlighting the root cause(s) of my mistakes.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m still fumbling to design a sensible structure for the custom data types. I have a feeling
+several iterations will be needed as I add support for additional services.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_frontend&quot;&gt;Frontend&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;It&amp;#8217;s a shame the hot reloading support in elm-reactor is broken at the time of writing, otherwise the development experience
+would have been a lot better. &lt;code&gt;Make&lt;/code&gt; &amp;#8594; &lt;code&gt;reload browser&lt;/code&gt; is just a keystroak away in Light Table, but still.
+Having the informative compiler error and warning messages inline in my Editor is really nice though.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Do better understand the elm-architecture I&amp;#8217;ve tried to follow, you should really check out the
+&lt;a href=&quot;https://github.com/evancz/elm-architecture-tutorial&quot;&gt;tutorial&lt;/a&gt;. It does a much better job at explaining the core
+concepts than I do.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;http://rundis.github.io/blog/2016/album_pages.png&quot; alt=&quot;album pages&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;frontend/Main.elm&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;module Main where
+
+
+import ArtistListing
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
+import Task exposing (..)
+import Effects exposing (Effects, Never)
+import StartApp
+
+
+type alias Model =                                    &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { artistListing : ArtistListing.Model}
+
+
+type Action =                                         &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    ShowHomePage
+  | ArtistListingAction ArtistListing.Action
+
+
+init : (Model, Effects Action)                        &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+init =
+  let
+    (artistListing, fx) = ArtistListing.init
+  in
+    ( Model artistListing
+      , Effects.map ArtistListingAction fx            &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+    )
+
+
+
+
+update : Action -&amp;gt; Model -&amp;gt; (Model, Effects Action)
+update action model =
+  case action of
+
+    ShowHomePage -&amp;gt;                                   &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+      let
+        (artistListing, fx) = ArtistListing.init
+      in
+        ( {model | artistListing = artistListing}
+        , Effects.map ArtistListingAction fx
+        )
+
+    ArtistListingAction sub -&amp;gt;                        &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+      let
+        (artistListing, fx) = ArtistListing.update sub model.artistListing
+      in
+        ( {model | artistListing = artistListing}
+        , Effects.map ArtistListingAction fx
+        )
+
+
+menu : Signal.Address Action -&amp;gt; Model -&amp;gt; Html
+menu address model =
+  header [class &quot;navbar navbar-default&quot;] [
+    div [class &quot;container&quot;] [
+      div [class &quot;navbar-header&quot;] [
+        button [ class &quot;btn-link navbar-brand&quot;, onClick address ShowHomePage ]
+        [text &quot;Albums Crud&quot;]
+      ]
+    ]
+  ]
+
+
+view : Signal.Address Action -&amp;gt; Model -&amp;gt; Html
+view address model =
+  div [class &quot;container-fluid&quot;] [
+      menu address model   &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+    , ArtistListing.view (Signal.forwardTo address ArtistListingAction) model.artistListing
+  ]
+
+-- ... app, main and port for tasks left out, no changes since previous episode&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The main model composes the artistlisting page model&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Actions for main, currently just holds the actions for ArtistListing + a convenience action to reset/show home page&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The init function from ArtistListing returns it&amp;#8217;s model and an effect (get artist from server task). We initialize the
+main model with the artistlisting model&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We map the effect from ArtistListing to an Main module effect which is then handled by the startapp &quot;signal loop&quot;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Quick and dirty way to trigger showing of the artist listing page (re-initialized)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;All ArtistListing actions are tagged with ArtistListingAction, we delegate to the update function for ArtistListing
+, update the main model accordingly and the map the returne effect&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;To get/create the view for ArtistListing we call it&amp;#8217;s view function, but we need to ensure signals sent from  ArtistListing makes it back to the main view mailbox address. &lt;code&gt;Signal.forwardTo&lt;/code&gt; helps us create a forwarding address.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Read more about &lt;a href=&quot;https://github.com/elm-guides/elm-for-js/blob/master/Mailboxes%2C%20Messages%2C%20and%20Addresses.md#talk-to-this-guy&quot;&gt;Mailboxes, Messages and Addresses&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;frontend/ArtistListing.elm&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;module ArtistListing (Model, Action (..), init, view, update) where
+
+
+import ServerApi exposing (..)                                                 &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+import ArtistDetail
+-- ... other imports ommited
+
+type Page = ArtistListingPage | ArtistDetailPage
+
+
+type alias Model =
+  { artists : List Artist
+  , artistDetail : ArtistDetail.Model
+  , page : Page}
+
+
+
+type Action =
+    HandleArtistsRetrieved (Maybe (List Artist))
+  | SelectArtist (Int)
+  | DeleteArtist (Int)
+  | HandleArtistDeleted (Maybe Http.Response)
+  | ArtistDetailAction ArtistDetail.Action
+  | NewArtist
+
+
+init : (Model, Effects Action)
+init =
+  let
+    (artistDetail, fx) = ArtistDetail.init
+  in
+    ( Model [] artistDetail ArtistListingPage
+      , getArtists HandleArtistsRetrieved                                      &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    )
+
+
+update : Action -&amp;gt; Model -&amp;gt; (Model, Effects Action)
+update action model =
+  case action of
+
+    HandleArtistsRetrieved xs -&amp;gt;                                               &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+      ( {model | artists = (Maybe.withDefault [] xs) }
+      , Effects.none
+      )
+
+    DeleteArtist id -&amp;gt;
+      (model, deleteArtist id HandleArtistDeleted)
+
+    HandleArtistDeleted res -&amp;gt;
+      (model, getArtists HandleArtistsRetrieved)
+
+    NewArtist -&amp;gt;                                                              &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+      update (ArtistDetailAction &amp;lt;| ArtistDetail.ShowArtist Nothing) model
+
+    SelectArtist id -&amp;gt;
+      update (ArtistDetailAction &amp;lt;| ArtistDetail.GetArtist id) model
+
+    ArtistDetailAction sub -&amp;gt;                                                 &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+      let
+        (detailModel, fx) = ArtistDetail.update sub model.artistDetail
+      in
+        ( { model | artistDetail = detailModel
+                  , page = ArtistDetailPage }                                 &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+        , Effects.map ArtistDetailAction fx
+        )
+
+
+
+-- ... artistView details ommitted for brevity
+
+view : Signal.Address Action -&amp;gt; Model -&amp;gt; Html
+view address model =
+  div [class &quot;content&quot;] [
+    case model.page of                                                       &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+
+      ArtistListingPage -&amp;gt;
+        artistsView address model
+
+      ArtistDetailPage -&amp;gt;
+        ArtistDetail.view (Signal.forwardTo address ArtistDetailAction) model.artistDetail
+
+  ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The &lt;code&gt;ServerApi&lt;/code&gt; module exposes functions to interact with the backend server&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;getArtists HandleArtistsRetrieved&lt;/code&gt; calls the serverAPI with a action param, so that when the ajax/xhr callback finally makes in back into the elm signal loop, the update function is called with the action we want&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Update the model with the list of artists retrieved (if any)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;To show the artist detail page in &quot;create&quot; mode we create a ArtistDetailAction with the appropriate ArtistDetail.action&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;ArtistDetailAction sub actions are actions that are delegated to the actions of the ArtistDetail module.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Note that we change &quot;page context&quot; here so that the view function displays the appropriate page&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Our naive page routing, just toggles display of pages by the page attribute of our model&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We&amp;#8217;ve implemented a very simplistic page routing here. In a later episode we will refactor to
+something more managable for handling proper page routing.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;frontend/ArtistDetail.elm&lt;/div&gt;
+&lt;p&gt;This page handles update/creation of a single Artist. I&amp;#8217;ll leave it to you to check out
+the details of the &lt;a href=&quot;https://github.com/rundis/albums/releases/tag/part_2&quot;&gt;sample code&lt;/a&gt; on github.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;frontend/ServerApi.elm&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;module ServerApi where
+
+
+import Json.Decode as JsonD exposing ((:=))
+import Json.Encode as JsonE
+import Effects exposing (Effects)
+import Http
+import Task
+
+
+type alias ArtistRequest a =                                                 &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { a | name : String }
+
+type alias Artist =
+  { id : Int
+  , name : String
+  }
+
+baseUrl : String
+baseUrl = &quot;http://localhost:8081&quot;
+
+
+getArtist : Int -&amp;gt; (Maybe Artist -&amp;gt; a) -&amp;gt; Effects.Effects a
+getArtist id action =                                                        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  Http.get artistDecoder (baseUrl ++ &quot;/artists/&quot; ++ toString id)
+    |&amp;gt; Task.toMaybe
+    |&amp;gt; Task.map action                                                       &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+    |&amp;gt; Effects.task
+
+
+getArtists : (Maybe (List Artist) -&amp;gt; a) -&amp;gt; Effects a
+getArtists action =
+  Http.get artistsDecoder (baseUrl ++ &quot;/artists&quot;)
+    |&amp;gt; Task.toMaybe
+    |&amp;gt; Task.map action
+    |&amp;gt; Effects.task
+
+createArtist : ArtistRequest a -&amp;gt; (Maybe Artist -&amp;gt; b) -&amp;gt; Effects.Effects b
+createArtist artist action =                                                 &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+  Http.send Http.defaultSettings
+        { verb = &quot;POST&quot;
+        , url = baseUrl ++ &quot;/artists&quot;
+        , body = Http.string (encodeArtist artist)                           &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+        , headers = [(&quot;Content-Type&quot;, &quot;application/json&quot;)]
+        }
+    |&amp;gt; Http.fromJson artistDecoder
+    |&amp;gt; Task.toMaybe
+    |&amp;gt; Task.map action
+    |&amp;gt; Effects.task
+
+-- .. the remaining services and encoding|decoding left out for brevity&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This type is an extensible &lt;a href=&quot;http://elm-lang.org/docs/records#record-types&quot;&gt;record type&lt;/a&gt;. It allows our
+artist related services to be a little bit more generic and still keep a level of type checking&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;GET a single artist from our backend api. (Actually it returns and effect that will executa a &lt;a href=&quot;http://elm-lang.org/guide/reactivity#tasks&quot;&gt;task&lt;/a&gt; which upon callback will eventually call the update function in our app with the given action)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We&amp;#8217;ve relented on type safety for actions by allowing it to be a generic param, but we gain some flexibility
+that allows our service to be usable in many different contexts&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;To take more control over http actions we use &lt;code&gt;Http.send&lt;/code&gt;. It&amp;#8217;s closer to the metal so it&amp;#8217;s a little
+bit more boilerplate.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Encode the artist (request) to a json string&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To see the remaining services and details of decoding and encoding please consolt the &lt;a href=&quot;https://github.com/rundis/albums/releases/tag/part_2&quot;&gt;sample code&lt;/a&gt; on github.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_frontend_summary&quot;&gt;Frontend summary&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We are beginning to see the resmblance of a Single Page Application. We have started to compose
+views and pages using the Elm Architecture. The app supports basic CRUD oparations for an Artist entity.
+Error handling is light, there is no validation and our routing solution is overly simplistic, but we&amp;#8217;ll get
+to that soonish !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Working with Elm has been an absolute pleasure. The compiler messages really do help. Doing refactoring (without tests I might add)
+doesn&amp;#8217;t feel anywhere near as scary as I&amp;#8217;m used to from other languages.
+I&amp;#8217;m starting to understand more about the Elm Architecture, but I&amp;#8217;m still getting a little confused about the details
+of Signals, Tasks, Mailboxes, Effects etc. It&amp;#8217;s coming to me gradually. The important thing is I can still be quite productive
+even though I don&amp;#8217;t understand all the details.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sidebarblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I have to say I&amp;#8217;m not looking forward to my next refactoring in some messy imperative jquery page mutant at work.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_conclusion_and_next_steps&quot;&gt;Conclusion and next steps&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m aware this blog post got way to long even though I tried to shave of some of the code from the
+code listings. I&amp;#8217;ll have to try to take on smaller/more targeted chunks in future episodes.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Anyways. I&amp;#8217;m staring to feel I&amp;#8217;m getting somewhere now. Both with Haskell and Elm. Learning Haskell is
+by far the most challenging but getting my head around Functional Reactive Programming in Elm isn&amp;#8217;t without challenges either.
+My motivation is still strong and I&amp;#8217;m learning a ton of stuff.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Candidate areas to address for the next episode are; routing, validation, error handling and obviously more useful features.
+I&amp;#8217;m thinking perhaps routing comes first, but we&amp;#8217;ll see.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Managing and diagramming elm packages with d3 in Light Table</title>
       <link>http://rundis.github.io/blog/2016/elm_light_package.html</link>
