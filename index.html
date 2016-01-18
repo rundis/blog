@@ -71,6 +71,686 @@
 	<div class="page-header">
 		<h1>Blog</h1>
 	</div>
+  			<a href="/blog/2016/haskel_elm_spa_part3.html"><h1>Typed up CRUD SPA with Haskell and Elm - Part 3: Routing</h1></a>
+  			<p>19 January 2016</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/haskell.html">haskell</a>
+	      
+		      <a href="/blog/tags/elm.html">elm</a>
+	      
+		      <a href="/blog/tags/haskellelmspa.html">haskellelmspa</a>
+	      </p>
+        <a href="https://twitter.com/share"
+           class="twitter-share-button"
+           data-text="Typed up CRUD SPA with Haskell and Elm - Part 3: Routing"
+           data-url="http://rundis.github.io/blog/2016/haskel_elm_spa_part3.html"
+           data-via="mrundberget" data-lang="en">Tweet</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+  			<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Any serious Single Page Application needs to have routing. Right ? So before we add
+any further pages it&#8217;s time to add routing support to the Elm frontend.</p>
+</div>
+<div class="paragraph">
+<p>In <a href="http://rundis.github.io/blog/2015/haskell_elm_spa_part2.html">episode 2</a>, we implemented
+a Micky Mouse solution for page routing. Clearly that approach won&#8217;t scale. Now is a good time to
+implement something that can handle multiple pages, history navigation, direct linking etc.
+We could do it all from scratch, but lets opt for pulling in a library.
+In this episode we&#8217;ll introduce <a href="https://github.com/etaque/elm-transit-router">elm-transit-router</a>
+to the <a href="https://github.com/rundis/albums">Albums</a> sample application.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<div class="title">Useful resources</div>
+<ul>
+<li>
+<p>Check out the other <a href="http://rundis.github.io/blog/tags/haskellelmspa.html">episodes</a> in this blog series.</p>
+</li>
+<li>
+<p>The accompanying <a href="https://github.com/rundis/albums">Albums</a> sample app is on github, and there is a tag
+for each episode</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I decided pretty early on to try out the <a href="https://github.com/etaque/elm-transit-router">elm-transit-router</a> library.
+It seemed to cover most of what I was looking for. It even has some pretty cool support for animations when doing page transitions.</p>
+</div>
+<div class="paragraph">
+<p>Static typing is supposed to be really helpful when doing refactoring. Introducing routing should be a nice little excersize to
+see if that holds. Remember, there still isn&#8217;t a single test in our sample app, so it better hold.
+The elm-transit-router library github repo contains a great example app that proved very helpful
+in getting it up and running for the Albums app.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<a href="https://github.com/sporto/hop">Hop</a> is an alternative routing library you might want to check out too.
+</td>
+</tr>
+</table>
+</div>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/5o4sAxnk3U4" frameborder="0" allowfullscreen></iframe>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_implementation_changes">Implementation changes</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="title">frontend/elm-package.json</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-javascript" data-lang="javascript">  // (...
+  "source-directories": [
+        ".",
+        "src/"                                             <i class="conum" data-value="1"></i><b>(1)</b>
+    ],
+
+  // ...
+  "dependencies": {
+    //... others ommitted
+    "etaque/elm-route-parser": "2.1.0 &lt;= v &lt; 3.0.0",       <i class="conum" data-value="2"></i><b>(2)</b>
+    "etaque/elm-transit-style": "1.0.1 &lt;= v &lt; 2.0.0",      <i class="conum" data-value="3"></i><b>(3)</b>
+    "etaque/elm-transit-router": "1.0.1 &lt;= v &lt; 2.0.0"      <i class="conum" data-value="4"></i><b>(4)</b>
+
+  }
+  ...</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We&#8217;ve moved all elm files but Main.elm to the a src sub directory. So we need to add src to the list of source directories</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>A typed route parser with a nice DSL in Elm: We use it for defining our routes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Html animations for <a href="https://github.com/etaque/elm-transit">elm-transit</a></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Drop-in router with animated route transitions for single page apps in Elm. Drop in, as in fitting very nicely with <a href="https://github.com/evancz/start-app">elm start-app</a>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<div class="title">Album dependencies</div>
+<p><span class="image"><a class="image" href="http://rundis.github.io/blog/2016/albums_dependencies_large.png"><img src="http://rundis.github.io/blog/2016/albums_dependencies_small.png" alt="Click for larger diagram"></a></span></p>
+</div>
+<div class="paragraph">
+<p>The addition of the 3 new dependencies also adds quite a few transitive dependencies. The diagram
+above is automatically generated by the <a href="https://github.com/rundis/elm-light">elm-light</a> plugin for Light Table.</p>
+</div>
+<div class="listingblock">
+<div class="title">Defining routes (frontend/src/Routes.elm)</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Route                                                   <i class="conum" data-value="1"></i><b>(1)</b>
+  = Home
+  | ArtistListingPage
+  | ArtistDetailPage Int
+  | NewArtistPage
+  | EmptyRoute
+
+
+routeParsers : List (Matcher Route)
+routeParsers =
+  [ static Home "/"                                         <i class="conum" data-value="2"></i><b>(2)</b>
+  , static ArtistListingPage "/artists"
+  , static NewArtistPage "/artists/new"
+  , dyn1 ArtistDetailPage "/artists/" int ""                <i class="conum" data-value="3"></i><b>(3)</b>
+  ]
+
+
+decode : String -&gt; Route
+decode path =                                               <i class="conum" data-value="4"></i><b>(4)</b>
+  RouteParser.match routeParsers path
+    |&gt; Maybe.withDefault EmptyRoute
+
+
+encode : Route -&gt; String
+encode route =                                              <i class="conum" data-value="5"></i><b>(5)</b>
+  case route of
+    Home -&gt; "/"
+    ArtistListingPage   -&gt; "/artists"
+    NewArtistPage       -&gt; "/artists/new"
+    ArtistDetailPage  i -&gt; "/artists/" ++ toString i
+    EmptyRoute -&gt; ""</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Union type that defines the different routes for the application</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>A static route matcher (<code>static</code> is a function from the RouteParser dsl)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Dynamic route matcher with one dynamic param</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>We try to match a given path with the route matchers defined above. Returns route of first successful match, or the <code>EmptyRoute</code> route
+if no match is found.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Encode a given route as a path</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">A few handy router utils (frontend/src/Routes.elm)</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">redirect : Route -&gt; Effects ()
+redirect route =                                       <i class="conum" data-value="1"></i><b>(1)</b>
+  encode route
+    |&gt; Signal.send TransitRouter.pushPathAddress
+    |&gt; Effects.task
+
+
+clickAttr : Route -&gt; Attribute
+clickAttr route =                                     <i class="conum" data-value="2"></i><b>(2)</b>
+  on "click" Json.value (\_ -&gt;  Signal.message TransitRouter.pushPathAddress &lt;| encode route)
+
+
+linkAttrs : Route -&gt; List Attribute
+linkAttrs route =                                     <i class="conum" data-value="3"></i><b>(3)</b>
+  let
+    path = encode route
+  in
+    [ href path
+    , onWithOptions
+        "click"
+        { stopPropagation = True, preventDefault = True }
+        Json.value
+        (\_ -&gt;  Signal.message TransitRouter.pushPathAddress path)
+    ]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This function allows us to perform routing through a redirect kind of effect. Comes in handy when we need to switch
+routes as a result of performing a task or doing an update action of some sort.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Helper function that creates a click handler attribute. When clicked the signal is forwarded to an address of the internal mailbox for the
+elm-transit-router library. By means of delegation the internal TransitRouter.Action type is wrapped into our app&#8217;s Action type.
+We&#8217;ll get back to this when we wire it all together !</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Another helper function, similar to clickAttr, but this is more specific for links that also has a href attribute</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_changes_in_main_elm">Changes in Main.elm</h3>
+<div class="paragraph">
+<p>Too hook in elm-transit-router we need to make a couple of changes to how we wire up our model, actions, view and update function.
+It&#8217;s also worth noting that from episode 2 have removed all direct update delegation from ArtistListing to ArtistDetail, this now
+all will happen through route transitions. An immediate benefit of that is that the ArtistDetail page becomes much reusable.</p>
+</div>
+<div class="listingblock">
+<div class="title">Model, actions, transitions and initialization</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type alias Model = WithRoute Routes.Route                                <i class="conum" data-value="1"></i><b>(1)</b>
+  { homeModel : Home.Model
+  , artistListingModel : ArtistListing.Model
+  , artistDetailModel : ArtistDetail.Model
+  }
+
+
+type Action =
+    NoOp
+  | HomeAction Home.Action
+  | ArtistListingAction ArtistListing.Action
+  | ArtistDetailAction ArtistDetail.Action
+  | RouterAction (TransitRouter.Action Routes.Route)                    <i class="conum" data-value="2"></i><b>(2)</b>
+
+
+initialModel : Model
+initialModel =
+  { transitRouter = TransitRouter.empty Routes.EmptyRoute               <i class="conum" data-value="3"></i><b>(3)</b>
+  , homeModel = Home.init
+  , artistListingModel = ArtistListing.init
+  , artistDetailModel = ArtistDetail.init
+  }
+
+
+actions : Signal Action
+actions =
+  Signal.map RouterAction TransitRouter.actions                         <i class="conum" data-value="4"></i><b>(4)</b>
+
+
+mountRoute : Route -&gt; Route -&gt; Model -&gt; (Model, Effects Action)
+mountRoute prevRoute route model =                                      <i class="conum" data-value="5"></i><b>(5)</b>
+  case route of
+
+    Home -&gt;
+      (model, Effects.none)
+
+    ArtistListingPage -&gt;                                                <i class="conum" data-value="6"></i><b>(6)</b>
+      (model, Effects.map ArtistListingAction (ServerApi.getArtists ArtistListing.HandleArtistsRetrieved))
+
+    ArtistDetailPage artistId -&gt;
+      (model, Effects.map ArtistDetailAction (ServerApi.getArtist artistId ArtistDetail.ShowArtist))
+
+    NewArtistPage -&gt;
+      ({ model | artistDetailModel = ArtistDetail.init } , Effects.none)
+
+    EmptyRoute -&gt;
+      (model, Effects.none)
+
+
+routerConfig : TransitRouter.Config Routes.Route Action Model
+routerConfig =                                                          <i class="conum" data-value="7"></i><b>(7)</b>
+  { mountRoute = mountRoute
+  , getDurations = \_ _ _ -&gt; (50, 200)
+  , actionWrapper = RouterAction
+  , routeDecoder = Routes.decode
+  }
+
+
+init : String -&gt; (Model, Effects Action)
+init path =                                                             <i class="conum" data-value="8"></i><b>(8)</b>
+  TransitRouter.init routerConfig path initialModel</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We extend our model using <code>WithRoute</code> for our Route type in routes. This extends our type with a transitRouter property</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We add a RouteAction to our Action type. We will handle that explicitly in the update function we&#8217;ll cover in the next section</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>We define an initial model, which has the initial models for the various pages. In addition we initialize the transitRouter property
+with an empty state and EmptyRoute route (that didn&#8217;t read to well). Basically a route that shouldn&#8217;t render anything, because it will transition
+to an actual route. It&#8217;s just an intermediary</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Transformer for mapping TransitRouter actions to our own RouterAction. This allows start-app to map external input signals to inputs with an action type our application
+can recognize and process.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>mountRoute is a function that provides what we want to happen in our <code>update</code> when a new route is mounted. Currently we
+only pattern match on route to be mounted, but we could also match on the combination of previous route and new route to provide
+custom behaviour depending on where you came from and where your are going to. Very powerful !</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>When the ArtistListingPage route is mounted we return an effect to retrieve artists (when that effect returns the <code>ArtistListing.HandleArtistRetrieved</code> action is then eventually passed to the update function of ArtistListing)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td><code>routerConfig</code> wires together the various bits that TransitRouter needs to do it&#8217;s thing</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>The init function now just initializes the TransitRouter with our config, and initial path (which we receive from a port) and our Initial model</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>There&#8217;s quite a bit going on here, but once this is all in place, adding new routes is quite a breeze. I&#8217;d recommend reading
+through the Readme for <a href="https://github.com/etaque/elm-transit-router">elm-transit-router</a> to understand more about the details of each step</p>
+</div>
+<div class="listingblock">
+<div class="title">The update function</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">update : Action -&gt; Model -&gt; (Model, Effects Action)
+update action model =
+  case action of
+
+    NoOp -&gt;
+      (model, Effects.none)
+
+    HomeAction homeAction -&gt;
+      let (model', effects) = Home.update homeAction model.homeModel
+      in ( { model | homeModel = model' }
+         , Effects.map HomeAction effects )
+
+    ArtistListingAction act -&gt;                                                       <i class="conum" data-value="1"></i><b>(1)</b>
+      let (model', effects) = ArtistListing.update act model.artistListingModel
+      in ( { model | artistListingModel = model' }
+         , Effects.map ArtistListingAction effects )
+
+    ArtistDetailAction act -&gt;                                                        <i class="conum" data-value="2"></i><b>(2)</b>
+      let (model', effects) = ArtistDetail.update act model.artistDetailModel
+      in ( { model | artistDetailModel = model' }
+         , Effects.map ArtistDetailAction effects )
+
+    RouterAction routeAction -&gt;                                                      <i class="conum" data-value="3"></i><b>(3)</b>
+      TransitRouter.update routerConfig routeAction model</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>You should recognize this pattern from the previous episode. We delegate all actions tagged with ArtistListingAction
+to the update function for ArtistListing. The we update the model with the updated model from ArtistListing and
+map any effects returned.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>If you remember from <a href="http://rundis.github.io/blog/2016/haskel_elm_spa_part2.html">episode 2</a> this used to reside in ArtistListing, but
+has been moved here.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>RouterAction</code> action types are handled by the update function in TransitRouter. If you Debug.log this function you will see this
+is called repeadly when there is a transition from one route to the next. (To handle the animation effects most notably)</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">The main view/layout</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">menu : Signal.Address Action -&gt; Model -&gt; Html
+menu address model =                                                       <i class="conum" data-value="1"></i><b>(1)</b>
+  header [class "navbar navbar-default"] [
+    div [class "container"] [
+        div [class "navbar-header"] [
+          div [ class "navbar-brand" ] [
+            a (linkAttrs Home) [ text "Albums galore" ]
+          ]
+        ]
+      , ul [class "nav navbar-nav"] [
+          li [] [a (linkAttrs ArtistListingPage) [ text "Artists" ]]       <i class="conum" data-value="2"></i><b>(2)</b>
+      ]
+    ]
+  ]
+
+
+
+contentView : Signal.Address Action -&gt; Model -&gt; Html
+contentView address model =                                                <i class="conum" data-value="3"></i><b>(3)</b>
+  case (TransitRouter.getRoute model) of
+    Home -&gt;
+      Home.view (Signal.forwardTo address HomeAction) model.homeModel
+
+    ArtistListingPage -&gt;                                                   <i class="conum" data-value="4"></i><b>(4)</b>
+      ArtistListing.view (Signal.forwardTo address ArtistListingAction) model.artistListingModel
+
+    ArtistDetailPage i -&gt;
+      ArtistDetail.view (Signal.forwardTo address ArtistDetailAction) model.artistDetailModel
+
+    NewArtistPage  -&gt;
+      ArtistDetail.view (Signal.forwardTo address ArtistDetailAction) model.artistDetailModel
+
+    EmptyRoute -&gt;
+      text "Empty WHAT ?"
+
+
+view : Signal.Address Action -&gt; Model -&gt; Html
+view address model =
+  div [class "container-fluid"] [
+      menu address model
+    , div [ class "content"
+          , style (TransitStyle.fadeSlideLeft 100 (getTransition model))]  <i class="conum" data-value="5"></i><b>(5)</b>
+          [contentView address model]
+  ]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Menu view function for the app</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Here we use the <code>linkAttrs</code> util function from Routes.elm to get a click handler. When the link is click
+a route transition to the given page will occur (with addressbar update, history tracking and the whole shebang)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>We render the appropriate main content view based which route is current in our model.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Getting the view for a page is used in the typical start-app way. Call the view function of the sub component and make sure
+to provide a forwarding addres that main can handle in its update function !</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>We define the route transition animation using the style attribute (function) in elm-html. Here we use a transition style
+defined in <a href="https://github.com/etaque/elm-transit-style">elm-transit-style</a>.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_how_to_navigate_from_one_page_to_another">How to navigate from one page to another ?</h3>
+<div class="listingblock">
+<div class="title">Move from artistlisting to artistdetail (frontend/src/ArtistListing.elm)</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">artistRow : Signal.Address Action -&gt; Artist -&gt; Html
+artistRow address artist =
+  tr [] [
+     td [] [text artist.name]
+    ,td [] [button [ Routes.clickAttr &lt;| Routes.ArtistDetailPage artist.id ] [text "Edit"]]  <i class="conum" data-value="1"></i><b>(1)</b>
+    ,td [] [button [ onClick address (DeleteArtist (.id artist))] [ text "Delete!" ]]
+  ]
+
+
+view : Signal.Address Action -&gt; Model -&gt; Html
+view address model =
+  div [] [
+      h1 [] [text "Artists" ]
+    , button [
+            class "pull-right btn btn-default"
+          , Routes.clickAttr Routes.NewArtistPage                                            <i class="conum" data-value="2"></i><b>(2)</b>
+        ]
+        [text "New Artist"]
+    , table [class "table table-striped"] [
+          thead [] [
+            tr [] [
+               th [] [text "Name"]
+              ,th [] []
+              ,th [] []
+          ]
+        ]
+        , tbody [] (List.map (artistRow address) model.artists)
+    ]
+  ]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>For navigation using links we just use the util function <code>Routes.clickAttr</code> function we defined earlier. This will trigger the necessary
+route transition to the appropriate page (with params as necessary)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>It&#8217;s worth noting that we since episode 2 have introduced a separate route for handling NewArtist (<code>/artists/new</code>). We are still
+using the same behaviour otherwise, so it&#8217;s just a minor modification to have a separate transition for a new artist (since that doesn&#8217;t have a numeric id as part of its route path)</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Move to the artist listing after saving an artist (frontend/src/ArtistDetail.elm)</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">  -- ... inside update function
+
+  HandleSaved maybeArtist -&gt;
+      case maybeArtist of
+        Just artist -&gt;
+          ({ model | id = Just artist.id
+                   , name = artist.name }
+            , Effects.map (\_ -&gt; NoOp) (Routes.redirect Routes.ArtistListingPage)   <i class="conum" data-value="1"></i><b>(1)</b>
+          )
+
+        Nothing -&gt;
+          Debug.crash "Save failed... we're not handling it..."</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We use the <code>Routes.redirect</code> function we defined earlier. When the task fro saving is completed we trigger an effect
+that will transtion route to the ArtistListing page. To allow the effect to work in our update function we need to map it to
+an action that ArtistDetail knows about (we don&#8217;t have access to the RouterAction in main here!). That&#8217;s why we map the effect
+to a NoOp action.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_final_wiring">The final wiring</h3>
+<div class="listingblock">
+<div class="title">frontend/main.elm</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">app : StartApp.App Model
+app =
+  StartApp.start
+    { init = init initialPath                  <i class="conum" data-value="1"></i><b>(1)</b>
+    , update = update
+    , view = view
+    , inputs = [actions]                       <i class="conum" data-value="2"></i><b>(2)</b>
+    }
+
+
+main : Signal Html
+main =
+  app.html
+
+
+port tasks : Signal (Task.Task Never ())
+port tasks =
+  app.tasks
+
+
+port initialPath : String                      <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We call the init function previously defined with a initialPath (which we get from a port, see 3 below)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The inputs fields of the start-app config is for external signals. We wire it to our <code>actions</code> defintion defined earlier</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>We get the initialPath through a port from JavaScript. See the next section for how</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>INFO: Initially I forgot to wire up the inputs. The net result of that was that none of the links actually did anything.
+Was lost for a while there, but the author of elm-transit-router <a href="https://github.com/etaque">etaque</a> was able to spot it easily
+when I reached out in the <a href="http://elmlang.herokuapp.com/">elm-lang slack channel</a></p>
+</div>
+<div class="listingblock">
+<div class="title">frontend/index.html</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-html" data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;title&gt;Albums&lt;/title&gt;
+    &lt;link rel="stylesheet" href="assets/css/bootstrap.min.css"&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;script type="text/javascript" src="main.js"&gt;&lt;/script&gt;                 <i class="conum" data-value="1"></i><b>(1)</b>
+    &lt;script type="text/javascript" src="/_reactor/debug.js"&gt;&lt;/script&gt;      <i class="conum" data-value="2"></i><b>(2)</b>
+
+    &lt;script type="text/javascript"&gt;
+      var main = Elm.fullscreen(Elm.Main, {initialPath: "/"});             <i class="conum" data-value="3"></i><b>(3)</b>
+    &lt;/script&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This is the transpiled elm to js for our frontend app</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We don&#8217;t really need this one, but if reactor in debug mode had worked with ports this would be necessary for debug tracing etc</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>We start our elm app with an input param for our initialPath. This is sent to the port defined above. It&#8217;s currently hardcoded to <code>/</code> (home), but
+once we move to a proper web server we would probably use something like window.location.pathname to allow linking directly to
+a specific route within our Single Page App.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary_and_next_steps">Summary and next steps</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This was an all Elm episode. Hopefully I didn&#8217;t loose all Haskellites along the way because of that. We&#8217;ve added a crucial
+feature for any Single Page (Web) Application in this episode. The end result was pretty neat and tidy too.</p>
+</div>
+<div class="paragraph">
+<p>So how was the refactoring experience this time ? Well the compiler was certainly my best buddy along the way. Obviously I also
+had to consult the documentation of elm-transit-router quite often. i had a few times where things appeared to be compiling fine
+in Light Table, but actually there was some error in a Module referred by Main. I&#8217;m not sure if it&#8217;s make&#8217;s fault or just that there is
+something missing in the elm-light plugin. I&#8217;ll certainly look into that. Always handy to have the command line available when you&#8217;re
+not sure about whether your IDE/Editor is tripping you up or not. I don&#8217;t think tests would have caught many of the issues I encountered.
+Forgetting to wire up inputs to startapp was probably my biggest blunder, and I&#8217;m sure no test would have covered that. I needed to know that this
+was something I had to wire up for it to work. RTFM etc.</p>
+</div>
+<div class="paragraph">
+<p>Next up I think we will look at how much effort there is to add additional features. The hypothesis is that it should be
+fairly straighforward, but who knows !</p>
+</div>
+</div>
+</div></p>
   			<a href="/blog/2016/haskel_elm_spa_part2.html"><h1>Typed up CRUD SPA with Haskell and Elm - Part 2: Persistence up and running</h1></a>
   			<p>14 January 2016</p>
         <p><em>Tags: </em>
