@@ -93,7 +93,7 @@
 any further pages it&#8217;s time to add routing support to the Elm frontend.</p>
 </div>
 <div class="paragraph">
-<p>In <a href="http://rundis.github.io/blog/2015/haskell_elm_spa_part2.html">episode 2</a>, we implemented
+<p>In <a href="http://rundis.github.io/blog/2016/haskel_elm_spa_part2.html">episode 2</a>, we implemented
 a Micky Mouse solution for page routing. Clearly that approach won&#8217;t scale. Now is a good time to
 implement something that can handle multiple pages, history navigation, direct linking etc.
 We could do it all from scratch, but lets opt for pulling in a library.
@@ -133,7 +133,7 @@ for each episode</p>
 It seemed to cover most of what I was looking for. It even has some pretty cool support for animations when doing page transitions.</p>
 </div>
 <div class="paragraph">
-<p>Static typing is supposed to be really helpful when doing refactoring. Introducing routing should be a nice little excersize to
+<p>Static typing is supposed to be really helpful when doing refactoring. Introducing routing should be a nice little excercise to
 see if that holds. Remember, there still isn&#8217;t a single test in our sample app, so it better hold.
 The elm-transit-router library github repo contains a great example app that proved very helpful
 in getting it up and running for the Albums app.</p>
@@ -318,7 +318,7 @@ We&#8217;ll get back to this when we wire it all together !</td>
 <div class="paragraph">
 <p>Too hook in elm-transit-router we need to make a couple of changes to how we wire up our model, actions, view and update function.
 It&#8217;s also worth noting that from episode 2 have removed all direct update delegation from ArtistListing to ArtistDetail, this now
-all will happen through route transitions. An immediate benefit of that is that the ArtistDetail page becomes much reusable.</p>
+all will happen through route transitions. An immediate benefit of that is that the ArtistDetail page becomes much more reusable.</p>
 </div>
 <div class="listingblock">
 <div class="title">Model, actions, transitions and initialization</div>
@@ -680,10 +680,19 @@ port initialPath : String                      <i class="conum" data-value="3"><
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>INFO: Initially I forgot to wire up the inputs. The net result of that was that none of the links actually did anything.
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Initially I forgot to wire up the inputs. The net result of that was that none of the links actually did anything.
 Was lost for a while there, but the author of elm-transit-router <a href="https://github.com/etaque">etaque</a> was able to spot it easily
-when I reached out in the <a href="http://elmlang.herokuapp.com/">elm-lang slack channel</a></p>
+when I reached out in the <a href="http://elmlang.herokuapp.com/">elm-lang slack channel</a>
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="title">frontend/index.html</div>

@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Tue, 19 Jan 2016 00:27:20 +0100</pubDate>
-    <lastBuildDate>Tue, 19 Jan 2016 00:27:20 +0100</lastBuildDate>
+    <pubDate>Wed, 20 Jan 2016 12:39:42 +0100</pubDate>
+    <lastBuildDate>Wed, 20 Jan 2016 12:39:42 +0100</lastBuildDate>
 
     <item>
       <title>Typed up CRUD SPA with Haskell and Elm - Part 3: Routing</title>
@@ -22,7 +22,7 @@
 any further pages it&amp;#8217;s time to add routing support to the Elm frontend.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;In &lt;a href=&quot;http://rundis.github.io/blog/2015/haskell_elm_spa_part2.html&quot;&gt;episode 2&lt;/a&gt;, we implemented
+&lt;p&gt;In &lt;a href=&quot;http://rundis.github.io/blog/2016/haskel_elm_spa_part2.html&quot;&gt;episode 2&lt;/a&gt;, we implemented
 a Micky Mouse solution for page routing. Clearly that approach won&amp;#8217;t scale. Now is a good time to
 implement something that can handle multiple pages, history navigation, direct linking etc.
 We could do it all from scratch, but lets opt for pulling in a library.
@@ -62,7 +62,7 @@ for each episode&lt;/p&gt;
 It seemed to cover most of what I was looking for. It even has some pretty cool support for animations when doing page transitions.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;Static typing is supposed to be really helpful when doing refactoring. Introducing routing should be a nice little excersize to
+&lt;p&gt;Static typing is supposed to be really helpful when doing refactoring. Introducing routing should be a nice little excercise to
 see if that holds. Remember, there still isn&amp;#8217;t a single test in our sample app, so it better hold.
 The elm-transit-router library github repo contains a great example app that proved very helpful
 in getting it up and running for the Albums app.&lt;/p&gt;
@@ -247,7 +247,7 @@ We&amp;#8217;ll get back to this when we wire it all together !&lt;/td&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;Too hook in elm-transit-router we need to make a couple of changes to how we wire up our model, actions, view and update function.
 It&amp;#8217;s also worth noting that from episode 2 have removed all direct update delegation from ArtistListing to ArtistDetail, this now
-all will happen through route transitions. An immediate benefit of that is that the ArtistDetail page becomes much reusable.&lt;/p&gt;
+all will happen through route transitions. An immediate benefit of that is that the ArtistDetail page becomes much more reusable.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;title&quot;&gt;Model, actions, transitions and initialization&lt;/div&gt;
@@ -609,10 +609,19 @@ port initialPath : String                      &lt;i class=&quot;conum&quot; dat
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;INFO: Initially I forgot to wire up the inputs. The net result of that was that none of the links actually did anything.
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Initially I forgot to wire up the inputs. The net result of that was that none of the links actually did anything.
 Was lost for a while there, but the author of elm-transit-router &lt;a href=&quot;https://github.com/etaque&quot;&gt;etaque&lt;/a&gt; was able to spot it easily
-when I reached out in the &lt;a href=&quot;http://elmlang.herokuapp.com/&quot;&gt;elm-lang slack channel&lt;/a&gt;&lt;/p&gt;
+when I reached out in the &lt;a href=&quot;http://elmlang.herokuapp.com/&quot;&gt;elm-lang slack channel&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;title&quot;&gt;frontend/index.html&lt;/div&gt;
