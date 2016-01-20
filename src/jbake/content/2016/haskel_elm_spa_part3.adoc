@@ -36,7 +36,7 @@ for each episode
 I decided pretty early on to try out the https://github.com/etaque/elm-transit-router[elm-transit-router] library.
 It seemed to cover most of what I was looking for. It even has some pretty cool support for animations when doing page transitions.
 
-Static typing is supposed to be really helpful when doing refactoring. Introducing routing should be a nice little excersize to
+Static typing is supposed to be really helpful when doing refactoring. Introducing routing should be a nice little excercise to
 see if that holds. Remember, there still isn't a single test in our sample app, so it better hold.
 The elm-transit-router library github repo contains a great example app that proved very helpful
 in getting it up and running for the Albums app.
@@ -171,7 +171,7 @@ We'll get back to this when we wire it all together !
 === Changes in Main.elm
 Too hook in elm-transit-router we need to make a couple of changes to how we wire up our model, actions, view and update function.
 It's also worth noting that from episode 2 have removed all direct update delegation from ArtistListing to ArtistDetail, this now
-all will happen through route transitions. An immediate benefit of that is that the ArtistDetail page becomes much reusable.
+all will happen through route transitions. An immediate benefit of that is that the ArtistDetail page becomes much more reusable.
 
 
 .Model, actions, transitions and initialization
@@ -449,7 +449,7 @@ port initialPath : String                      // <3>
 <3> We get the initialPath through a port from JavaScript. See the next section for how
 
 
-INFO: Initially I forgot to wire up the inputs. The net result of that was that none of the links actually did anything.
+NOTE: Initially I forgot to wire up the inputs. The net result of that was that none of the links actually did anything.
 Was lost for a while there, but the author of elm-transit-router https://github.com/etaque[etaque] was able to spot it easily
 when I reached out in the http://elmlang.herokuapp.com/[elm-lang slack channel]
 
