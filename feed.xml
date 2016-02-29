@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 29 Feb 2016 22:42:39 +0100</pubDate>
-    <lastBuildDate>Mon, 29 Feb 2016 22:42:39 +0100</lastBuildDate>
+    <pubDate>Mon, 29 Feb 2016 22:49:34 +0100</pubDate>
+    <lastBuildDate>Mon, 29 Feb 2016 22:49:34 +0100</lastBuildDate>
 
     <item>
       <title>Typed up CRUD SPA with Haskell and Elm - Part 4: Feature creep</title>
