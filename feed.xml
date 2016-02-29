@@ -6,9 +6,1397 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Wed, 20 Jan 2016 12:39:42 +0100</pubDate>
-    <lastBuildDate>Wed, 20 Jan 2016 12:39:42 +0100</lastBuildDate>
+    <pubDate>Mon, 29 Feb 2016 22:42:39 +0100</pubDate>
+    <lastBuildDate>Mon, 29 Feb 2016 22:42:39 +0100</lastBuildDate>
 
+    <item>
+      <title>Typed up CRUD SPA with Haskell and Elm - Part 4: Feature creep</title>
+      <link>http://rundis.github.io/blog/2016/haskel_elm_spa_part4.html</link>
+      <pubDate>Tue, 1 Mar 2016 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2016/haskel_elm_spa_part4.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So the hypothesis from &lt;a href=&quot;http://rundis.github.io/blog/2016/haskel_elm_spa_part3.html&quot;&gt;episode 3&lt;/a&gt; was that it should
+be relatively easy to add new features. In this episode we&amp;#8217;ll put that hypothesis to the test and add CRUD features
+for Albums. There will be a little refactoring, no testing, premature optimizations and plenty of &quot;let the friendly Elm and Haskell compilers guide us along the way&quot;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Useful resources&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Check out the other &lt;a href=&quot;http://rundis.github.io/blog/tags/haskellelmspa.html&quot;&gt;episodes&lt;/a&gt; in this blog series.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The accompanying &lt;a href=&quot;https://github.com/rundis/albums&quot;&gt;Albums&lt;/a&gt; sample app is on github, and there is a tag
+for each episode&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div id=&quot;toc&quot; class=&quot;toc&quot;&gt;
+&lt;div id=&quot;toctitle&quot; class=&quot;title&quot;&gt;Table of Contents&lt;/div&gt;
+&lt;ul class=&quot;sectlevel1&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_introduction&quot;&gt;Introduction&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_backend&quot;&gt;Backend&lt;/a&gt;
+&lt;ul class=&quot;sectlevel2&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_stack&quot;&gt;Stack&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_datamodel&quot;&gt;Datamodel&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_bootstrapping&quot;&gt;Bootstrapping&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_new_endpoints_for_albums&quot;&gt;New endpoints for Albums&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_backend_summary&quot;&gt;Backend summary&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_frontend&quot;&gt;Frontend&lt;/a&gt;
+&lt;ul class=&quot;sectlevel2&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_new_routes&quot;&gt;New routes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_service_api&quot;&gt;Service API&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_the_album_page&quot;&gt;The album page&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_track_row&quot;&gt;Track row&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_main_elm_wiring_it_all_up&quot;&gt;Main.elm wiring it all up&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_frontend_summary&quot;&gt;Frontend summary&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_concluding_remarks&quot;&gt;Concluding remarks&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;When I set out to implement the features for this episode I didn&amp;#8217;t really reflect on how I would then later
+go about blogging about it. It turns out I probably did way to many changes to fit nicely into a blog episode.
+Let&amp;#8217;s just say I got caught up in a coding frenzy, but let me assure you I had a blast coding for this episode !
+This means I wont be going into detail about every change I&amp;#8217;ve made since the last episode, but rather try to highlight
+the most important/interesting ones.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;A highlevel summary of changes includes:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://docs.haskellstack.org/en/stable/README/&quot;&gt;Haskell stack&lt;/a&gt; has been introduced to the backend&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Implemented REST endpoints for Albums CRUD&lt;/p&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Backend now composes endpoints for Artists and Albums&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Data model changed to account for Album and Track entities&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Bootstrapping of sample data extended and refactored to a separate module&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Implemented UI for listing, deleting, creating, updating and displaying album details&lt;/p&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;In particular the the features for creating/updating Albums and associated tracks, gives a glimpse
+of the compasability powers of the &lt;a href=&quot;https://github.com/evancz/elm-architecture-tutorial&quot;&gt;Elm Architecture&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/RU0NB2xaQIg&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_backend&quot;&gt;Backend&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_stack&quot;&gt;Stack&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Working with Cabal and Cabal sandboxes is a bit of a pain. &lt;a href=&quot;http://docs.haskellstack.org/en/stable/README/&quot;&gt;Stack&lt;/a&gt; promises to alleviate some of those pains, so I figured
+I&amp;#8217;d give it a go. There are probably tutorials/blog posts out there going into how you should go about migrating
+to use stack in your Haskell projects, so I won&amp;#8217;t go into any details here.
+Basically I installed stack and added a stack configuration file &lt;code&gt;stack.yml&lt;/code&gt;. After that I was pretty much up and running.
+The instructions for running the sample app with stack can be found in the Albums &lt;a href=&quot;https://github.com/rundis/albums&quot;&gt;README&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_datamodel&quot;&gt;Datamodel&lt;/h3&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;http://rundis.github.io/blog/2016/albums_db_part4.png&quot; alt=&quot;albums db part4&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The datamodel contains a little bit of flexibility so that a track can be potentially be included in many albums
+(hence the album_track entity). For this episode though, we&amp;#8217;re not using that and of course that innocent bit of flexibility
+comes with a cost of added complexity. I considered removing the album_track entity, but decided against it. I figured
+that in a real project this is a typical example of things you have to deal with (say you have a DBA or even more relevant&amp;#8230;&amp;#8203; and exisiting datamodel you have to live with).
+Let&amp;#8217;s run with it, and try to deal with it along the way.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_bootstrapping&quot;&gt;Bootstrapping&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The code for schema creation and bootstrapping test data has been moved to a separate module.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/src/Bootstrap.hs&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;bootstrapDB :: Sql.Connection -&amp;gt; IO ()
+bootstrapDB conn = do
+  createSchema conn
+  populateSampleData conn
+
+
+createSchema :: Sql.Connection -&amp;gt; IO ()
+createSchema conn = do
+  executeDB &quot;PRAGMA foreign_keys = ON&quot;
+  executeDB &quot;create table artist (id integer primary key asc, name varchar2(255))&quot;
+  executeDB &quot;create table track (id integer primary key asc, name varchar2(255), duration integer)&quot;
+  executeDB &quot;create table album (id integer primary key asc, artist_id integer, name varchar2(255), FOREIGN KEY(artist_id) references artist(id))&quot;
+  executeDB &quot;create table album_track (track_no integer, album_id, track_id, primary key(track_no, album_id, track_id), foreign key(album_id) references album(id), foreign key(track_id) references track(id))&quot;
+
+  where
+    executeDB = Sql.execute_ conn
+
+
+-- definition of sample data omitted for brevity
+
+populateSampleData :: Sql.Connection -&amp;gt; IO ()
+populateSampleData conn = do
+  mapM_ insertArtist artists
+  mapM_ insertTrack tracks
+  mapM_ insertAlbum albums
+  mapM_ insertAlbumTrack albumTracks
+
+  where
+    insertArtist a = Sql.execute conn &quot;insert into artist (id, name) values (?, ?)&quot; a
+    insertTrack t = Sql.execute conn &quot;insert into track (id, name, duration) values (?, ?, ?)&quot; t
+    insertAlbum a = Sql.execute conn &quot;insert into album (id, artist_id, name) values (?, ?, ?)&quot; a
+    insertAlbumTrack at = Sql.execute conn &quot;insert into album_track (track_no, album_id, track_id) values (?, ?, ?)&quot; at&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Somewhat amusing that foreign key constraints are not turned on by default in SQLite, but hey.
+What&amp;#8217;s less amusing is that foreign key exceptions are very unspecific about which contraints are violated (:&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_new_endpoints_for_albums&quot;&gt;New endpoints for Albums&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_model_additions&quot;&gt;Model additions&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/src/Model.hs&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;data Track = Track                       &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { trackId :: Maybe Int
+  , trackName :: String
+  , trackDuration :: Int -- seconds
+  } deriving (Eq, Show, Generic)
+
+
+data Album = Album                       &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  { albumId :: Maybe Int
+  , albumName :: String
+  , albumArtistId :: Int
+  , albumTracks :: [Track]
+  } deriving (Eq, Show, Generic)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Our Track type doesn&amp;#8217;t care about the distiction between the album and album_track entities&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;It was tempting to add Artist as a property to the Album type, but opted for just the id of an Artist entity.
+I didn&amp;#8217;t want to be forced to return a full artist instance for every Album returned. You gotta draw the line somewhere right ?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_albums_crud_functions&quot;&gt;Albums CRUD functions&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In order to keep this blog post from becoming to extensive we&amp;#8217;ve only included the functions to
+list and create new albums. You can view the update, findById and delete functions in the
+&lt;a href=&quot;https://github.com/rundis/albums/blob/master/backend/src/Storage.hs&quot;&gt;album sample repo&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;findAlbums :: Sql.Connection -&amp;gt; IO [M.Album]                                                         &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+findAlbums conn = do
+  rows &amp;lt;- Sql.query_ conn (albumsQuery &quot;&quot;) :: IO [(Int, String, Int, Int, String, Int)]
+  return $ Map.elems $ foldl groupAlbum Map.empty rows
+
+
+findAlbumsByArtist :: Sql.Connection -&amp;gt; Int -&amp;gt; IO [M.Album]                                          &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+findAlbumsByArtist conn artistId = do
+  rows &amp;lt;- Sql.query conn (albumsQuery &quot; where artist_id = ?&quot;) (Sql.Only artistId) :: IO [(Int, String, Int, Int, String, Int)]
+  return $ Map.elems $ foldl groupAlbum Map.empty rows
+
+
+albumsQuery :: String -&amp;gt; SqlTypes.Query                                                              &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+albumsQuery whereClause =
+  SqlTypes.Query $ Txt.pack $
+    &quot;select a.id, a.name, a.artist_id, t.id, t.name, t.duration \
+    \ from album a inner join album_track at on a.id = at.album_id \
+    \ inner join track t on at.track_id = t.id&quot;
+    ++ whereClause
+    ++ &quot; order by a.id, at.track_no&quot;
+
+
+groupAlbum :: Map.Map Int M.Album -&amp;gt; (Int, String, Int, Int, String, Int) -&amp;gt; Map.Map Int M.Album     &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+groupAlbum acc (albumId, albumName, artistId, trackId, trackName, trackDuration) =
+  case (Map.lookup albumId acc) of
+    Nothing -&amp;gt; Map.insert albumId (M.Album (Just albumId) albumName artistId [M.Track (Just trackId) trackName trackDuration]) acc
+    Just _ -&amp;gt; Map.update (\a -&amp;gt; Just (addTrack a (trackId, trackName, trackDuration))) albumId acc
+              where
+                addTrack album (trackId, trackName, trackDuration) =
+                  album {M.albumTracks = (M.albumTracks album) ++ [M.Track (Just trackId) trackName trackDuration]}
+
+
+
+newAlbum :: Sql.Connection -&amp;gt; M.Album -&amp;gt; IO M.Album                                                  &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+newAlbum conn album = do
+  Sql.executeNamed conn &quot;insert into album (name, artist_id) values (:name, :artistId)&quot; [&quot;:name&quot; := (M.albumName album), &quot;:artistId&quot; := (M.albumArtistId album)]
+  albumId &amp;lt;- lastInsertRowId conn
+  tracks &amp;lt;- zipWithM (\t i -&amp;gt; newTrack conn (i, fromIntegral albumId, (M.albumArtistId album), t)) (M.albumTracks album) [0..]
+
+  return album { M.albumId = Just $ fromIntegral albumId
+               , M.albumTracks = tracks
+               }
+
+
+newTrack :: Sql.Connection -&amp;gt; (Int, Int, Int, M.Track) -&amp;gt; IO M.Track                                 &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+newTrack conn (trackNo, albumId, artistId, track) = do
+  Sql.executeNamed conn &quot;insert into track (name, duration) values (:name, :duration)&quot; [&quot;:name&quot; := (M.trackName track), &quot;:duration&quot; := (M.trackDuration track)]
+  trackId &amp;lt;- lastInsertRowId conn
+  Sql.execute conn &quot;insert into album_track (track_no, album_id, track_id) values (?, ?, ?)&quot; (trackNo, albumId, trackId)
+
+  return track {M.trackId = Just $ fromIntegral trackId}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Function to list all albums&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Function to list albums filtered by artist&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Helper function to construct an album query with an optional where clause. The query returns a product
+of albums and their tracks. Let&amp;#8217;s just call this a performance optimization to avoid n+1 queries :-)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Since album information is repeated for each track, we need to group tracks per album. This part was a fun challenge
+for a Haskell noob. I&amp;#8217;m sure it could be done eveny more succinct, but I&amp;#8217;m reasonably happy with the way it turned out.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This is the function to create a new album with all it&amp;#8217;s tracks. We assume the tracks are sorted in the order they
+should be persisted and uses zipWith to get a mapIndexed kind of function so that we can generate the appropriate track_no
+for each album_track in the db.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Working with tracks we have to consider both the track and album_track entities in the db. As it is, the
+album_track table is just overhead, but we knew that allready given the design decission taken earlier. Once we need to support
+the fact that a track can be included in more that one album, we need to rethink this implementation.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_adding_albums_to_the_api&quot;&gt;Adding albums to the API&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/src/Api.hs&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;type AlbumAPI =                                                                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+       QueryParam &quot;artistId&quot; Int :&amp;gt; Get &apos;[JSON] [M.Album]                           &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  :&amp;lt;|&amp;gt; ReqBody &apos;[JSON] M.Album :&amp;gt; Post &apos;[JSON] M.Album
+  :&amp;lt;|&amp;gt; Capture &quot;albumId&quot; Int :&amp;gt; ReqBody &apos;[JSON] M.Album :&amp;gt; Put &apos;[JSON] M.Album
+  :&amp;lt;|&amp;gt; Capture &quot;albumId&quot; Int :&amp;gt; Get &apos;[JSON] M.Album
+  :&amp;lt;|&amp;gt; Capture &quot;albumId&quot; Int :&amp;gt; Delete &apos;[] ()
+
+
+albumsServer :: Sql.Connection -&amp;gt; Server AlbumAPI
+albumsServer conn =
+  getAlbums :&amp;lt;|&amp;gt; postAlbum :&amp;lt;|&amp;gt; updateAlbum :&amp;lt;|&amp;gt; getAlbum :&amp;lt;|&amp;gt; deleteAlbum
+
+  where
+    getAlbums artistId            = liftIO $ case artistId of                       &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+                                              Nothing -&amp;gt; S.findAlbums conn
+                                              Just x -&amp;gt; S.findAlbumsByArtist conn x
+    postAlbum album               = liftIO $ Sql.withTransaction conn $ S.newAlbum conn album
+    updateAlbum albumId album     = liftIOMaybeToEither err404 $ Sql.withTransaction conn $ S.updateAlbum conn album albumId
+    getAlbum albumId              = liftIOMaybeToEither err404 $ S.albumById conn albumId
+    deleteAlbum albumId           = liftIO $ Sql.withTransaction conn $ S.deleteAlbum conn albumId
+
+
+type API = &quot;artists&quot; :&amp;gt; ArtistAPI :&amp;lt;|&amp;gt; &quot;albums&quot; :&amp;gt; AlbumAPI                         &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+
+combinedServer :: Sql.Connection -&amp;gt; Server API                                      &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+combinedServer conn = artistsServer conn :&amp;lt;|&amp;gt; albumsServer conn&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We&amp;#8217;ve added a new API type for Albums&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;For listing albums we support an optional query param to allow us to filter albums by artist&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This implementation is quite simplistic, we probably want to provide a more generic way to handle multiple
+filter criteria in the future.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The API for our backend is now a composition of the api for artists and the api for albums&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;As Servant allows us to compose apis it also allows us to compose servers (ie the implementations of the apis).
+We create a combined server, which is what we ultimately expose from our backend server&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+The really observant reader might have noticed that the update function for albums is a little bit more
+restrictive/solid than the corresponding function for artist. Here we actually check if the given album id
+corresponds to a album in the DB. If it doesn&amp;#8217;t we return a 404.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;backend/Main.hs&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;app :: Sql.Connection -&amp;gt; Application
+app conn = serve A.api (A.combinedServer conn)          &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+
+
+
+main :: IO ()
+main = do
+  withTestConnection $ \conn -&amp;gt;  do
+    B.bootstrapDB conn                                  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    run 8081 $ albumCors $ app conn&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Rather than serve the just the albumServer, we now serve the combined server.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We&amp;#8217;ve updated bootstrapping to use the the new bootstrap module&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_backend_summary&quot;&gt;Backend summary&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;That wasn&amp;#8217;t to hard now was it ? Adding additional end points was quite straightforward, the hard part
+was overcoming analysis paralysis. Settling on data types and db design took some time, and in hindsight I might
+have opted for a more simplistic db design. I&amp;#8217;m also curious about how the design would have been had I started top down (frontend first)
+and backend last. I have a strong suspicion it would have been different.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Haskell IO&lt;/div&gt;
+&lt;p&gt;The thing I probably spent most time struggling with was working with IO actions. Apparantly I shouldn&amp;#8217;t
+use the term &lt;a href=&quot;http://blog.jle.im/entry/io-monad-considered-harmful&quot;&gt;IO Monad&lt;/a&gt;. Anyways I can&amp;#8217;t wrap my head around
+when I&amp;#8217;m &quot;inside&quot; the IO thingie and when I&amp;#8217;m not. It&amp;#8217;s obvious that &lt;code&gt;do&lt;/code&gt;, &lt;code&gt;&amp;#8592;&lt;/code&gt;, &lt;code&gt;let&lt;/code&gt; and &lt;code&gt;return&lt;/code&gt; is something
+I have to sit down and understand (in the context of IO things). My strategy of trial and error doesn&amp;#8217;t scale
+all that well, and whatsmore It feels ackward not having a clue on the reasoning on why something is working or not.
+Note to self, read up on Haskell IO.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;REST concerns&lt;/div&gt;
+&lt;p&gt;Even with this simple example I started to run into the same old beef I have with generic rest endpoints.
+They rarely fit nicely with a Single Page Application. They work ok when it comes to adding and updating data,
+but when it comes to querying it all becomes much more limiting. In a SPA you typically want much more flexibility
+in terms of what you query by and what you get in return.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;In an album listing for a given artist I might just want to display the name, release date, number of songs and album length
+I&amp;#8217;m not interested in the tracks.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;In an album listing / album search outside of an artist context I probably want to display the artist name&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;For a mobile client I might just want to display the album name (size of payloads might actually be important for mobile&amp;#8230;&amp;#8203;)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Likewise when listing artists I might want to display number of albums&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Or when searching I might want to search album name, artist name and/or track name&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Reading about &lt;a href=&quot;https://facebook.github.io/graphql/&quot;&gt;GraphQL&lt;/a&gt;, &lt;a href=&quot;http://netflix.github.io/falcor/&quot;&gt;Falcor&lt;/a&gt;
+and more recently &lt;a href=&quot;https://github.com/omcljs/om/wiki&quot;&gt;Om next&lt;/a&gt; has been an eye-opener to me.
+The ideas here rings true and bodes well for the frontend, probably soonish something will materialize for Elm too.
+But what to do on the server side I wonder ?
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_frontend&quot;&gt;Frontend&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_new_routes&quot;&gt;New routes&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;frontend/src/Routes.elm&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Route                      &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  = Home
+  -- ...
+  | AlbumDetailPage Int
+  | NewArtistAlbumPage Int
+  | EmptyRoute
+
+
+routeParsers =                 &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  [ static Home &quot;/&quot;
+  -- ...
+  , dyn1 AlbumDetailPage &quot;/albums/&quot; int &quot;&quot;
+  , dyn1 NewArtistAlbumPage &quot;/artists/&quot; int &quot;/albums/new&quot;
+  ]
+
+encode route =                 &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  case route of
+    Home -&amp;gt; &quot;/&quot;
+    -- ...
+    AlbumDetailPage   i   -&amp;gt; &quot;/albums/&quot; ++ toString i
+    NewArtistAlbumPage i  -&amp;gt; &quot;/artists/&quot; ++ (toString i) ++ &quot;/albums/new&quot;
+    EmptyRoute -&amp;gt; &quot;&quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We have added 2 new routes, one for edit/create albums, one for creating a new album (for a given artist)
+(actually there is a 3 for creating an album without selecting an artist, but it&amp;#8217;s not wired up yet)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We need to add route matchers for the new routes.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We also need to add encoders for our new routes.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_service_api&quot;&gt;Service API&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To call our new REST api for albums we need to implement a few new functions and json decoders.
+We&amp;#8217;ll only show two of the api related functions.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type alias AlbumRequest a =    &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { a | name : String
+      , artistId : Int
+      , tracks : List Track
+  }
+
+type alias Album =             &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  { id : Int
+  , name : String
+  , artistId : Int
+  , tracks : List Track
+  }
+
+type alias Track =             &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  { name : String
+  , duration : Int
+  }
+
+
+getAlbumsByArtist : Int -&amp;gt; (Maybe (List Album) -&amp;gt; a) -&amp;gt; Effects a               &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+getAlbumsByArtist artistId action =
+  Http.get albumsDecoder (baseUrl ++ &quot;/albums?artistId=&quot; ++ toString artistId)
+    |&amp;gt; Task.toMaybe
+    |&amp;gt; Task.map action
+    |&amp;gt; Effects.task
+
+createAlbum : AlbumRequest a -&amp;gt; (Maybe Album -&amp;gt; b) -&amp;gt; Effects.Effects b         &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+createAlbum album action =
+  Http.send Http.defaultSettings
+        { verb = &quot;POST&quot;
+        , url = baseUrl ++ &quot;/albums&quot;
+        , body = Http.string (encodeAlbum album)
+        , headers = [(&quot;Content-Type&quot;, &quot;application/json&quot;)]
+        }
+    |&amp;gt; Http.fromJson albumDecoder
+    |&amp;gt; Task.toMaybe
+    |&amp;gt; Task.map action
+    |&amp;gt; Effects.task
+
+-- other functions left out for brevity. Check out the sample code or have a look at episode 2 for inspiration
+
+
+
+-- Decoders/encoders for albums/tracks                                         &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+
+albumsDecoder : JsonD.Decoder (List Album)
+albumsDecoder =
+  JsonD.list albumDecoder
+
+
+albumDecoder : JsonD.Decoder Album
+albumDecoder =
+  JsonD.object4 Album
+    (&quot;albumId&quot; := JsonD.int)
+    (&quot;albumName&quot; := JsonD.string)
+    (&quot;albumArtistId&quot; := JsonD.int)
+    (&quot;albumTracks&quot; := JsonD.list trackDecoder)
+
+
+trackDecoder : JsonD.Decoder Track
+trackDecoder =
+  JsonD.object2 Track
+    (&quot;trackName&quot; := JsonD.string)
+    (&quot;trackDuration&quot; := JsonD.int)
+
+
+encodeAlbum : AlbumRequest a -&amp;gt; String
+encodeAlbum album =
+  JsonE.encode 0 &amp;lt;|
+    JsonE.object
+      [ (&quot;albumName&quot;, JsonE.string album.name)
+      , (&quot;albumArtistId&quot;, JsonE.int album.artistId)
+      , (&quot;albumTracks&quot;, JsonE.list &amp;lt;| List.map encodeTrack album.tracks)
+      ]
+
+
+encodeTrack : Track -&amp;gt; JsonE.Value
+encodeTrack track =
+    JsonE.object
+      [ (&quot;trackName&quot;, JsonE.string track.name)
+      , (&quot;trackDuration&quot;, JsonE.int track.duration)
+      ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We use the AlbumRequest type when dealing with new albums&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The Album type represents a persisted album&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We aren&amp;#8217;t really interested in the id of tracks so we only need one Track type&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;For finding albums for an artist we can use the Http.get function with default settings&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;To implement createAlbum we need to use Http.Send so that we can provide custom settings&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Decoding/Encoding Json to/from types isn&amp;#8217;t particularily difficult, but it is a bit of boilerplate involved&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_the_album_page&quot;&gt;The album page&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We&amp;#8217;ve made some changes to the ArtistDetail page which we won&amp;#8217;t show in this episode.
+These changes include:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;List all albums for an artist&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Add features to remove album and link from each album in listin to edit the album&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;A button to initation the Album detail page in &quot;Create New&quot; mode&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;http://rundis.github.io/blog/2016/albumdetails.png&quot; alt=&quot;albumdetails&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We consider an Album and it&amp;#8217;s tracks to be an aggregate. This is also reflected in the implementation
+of the ArlbumDetail module in the frontend code. You&amp;#8217;ll hopefully see that it&amp;#8217;s not that hard
+to implement a semi advanced page by using the composability of the elm architecture.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Ok lets look at how we&amp;#8217;ve implemented the Album detail page and it&amp;#8217;s associated track listing.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_types&quot;&gt;Types&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type alias Model =                                  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { id : Maybe Int
+  , artistId : Maybe Int
+  , name : String
+  , tracks : List ( TrackRowId, TrackRow.Model )
+  , nextTrackRowId : TrackRowId
+  , artists : List Artist
+  }
+
+
+type alias TrackRowId =                             &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  Int
+
+
+type Action                                         &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  = NoOp
+  | GetAlbum (Int)
+  | ShowAlbum (Maybe Album)
+  | HandleArtistsRetrieved (Maybe (List Artist))
+  | SetAlbumName (String)
+  | SaveAlbum
+  | HandleSaved (Maybe Album)
+  | ModifyTrack TrackRowId TrackRow.Action
+  | RemoveTrack TrackRowId
+  | MoveTrackUp TrackRowId
+  | MoveTrackDown TrackRowId&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The model kind of reflects the Album type we saw in the previous chapter, but it&amp;#8217;s
+bespoke for use in this view. Most notably we keep a list of Artists (for an artist dropdown) and
+tracks are represented as a list of trackrow models from the TrackRow.elm module.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;To be able to forward updates to the appropriate TrackRow instance we are using a sequence type&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;There are quite a few actions, But the last 4 are related to the list of TrackRows.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;AlbumDetails can be seen as holding an AlbumListing, updates that concerns the list is handled
+by AlbumDetails whilst updates that concerns individual TrackRows are forwarded to the appropriate
+TrackRow instance.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_the_update_function&quot;&gt;The update function&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Action -&amp;gt; Model -&amp;gt; ( Model, Effects Action )
+update action model =
+  case action of
+    NoOp -&amp;gt;
+      ( model, Effects.none )
+
+    GetAlbum id -&amp;gt;                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+      ( model
+      , Effects.batch
+          [ getAlbum id ShowAlbum
+          , getArtists HandleArtistsRetrieved
+          ]
+      )
+
+    ShowAlbum maybeAlbum -&amp;gt;             &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+      case maybeAlbum of
+        Just album -&amp;gt;
+          ( createAlbumModel model album, Effects.none )
+
+        -- TODO: This could be an error if returned from api !
+        Nothing -&amp;gt;
+          ( maybeAddPristine model, getArtists HandleArtistsRetrieved )
+
+    HandleArtistsRetrieved xs -&amp;gt;        &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+      ( { model | artists = (Maybe.withDefault [] xs) }
+      , Effects.none
+      )
+
+    SetAlbumName txt -&amp;gt;                 &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+      ( { model | name = txt }
+      , Effects.none
+      )
+
+    SaveAlbum -&amp;gt;                        &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+      case (model.id, model.artistId) of
+        (Just albumId, Just artistId) -&amp;gt;
+          ( model
+          , updateAlbum (Album albumId model.name artistId (createTracks model.tracks)) HandleSaved
+          )
+        (Nothing, Just artistId) -&amp;gt;
+          ( model
+          , createAlbum { name = model.name
+                          , artistId = artistId
+                          , tracks = (createTracks model.tracks)
+                          } HandleSaved
+          )
+        (_, _) -&amp;gt;
+          Debug.crash &quot;Missing artist.id, needs to be handled by validation&quot;
+
+
+    HandleSaved maybeAlbum -&amp;gt;          &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+      case maybeAlbum of
+        Just album -&amp;gt;
+          ( createAlbumModel model album
+          , Effects.map (\_ -&amp;gt; NoOp) (Routes.redirect &amp;lt;| Routes.ArtistDetailPage album.artistId)
+          )
+
+        Nothing -&amp;gt;
+          Debug.crash &quot;Save failed... we&apos;re not handling it...&quot;
+
+    RemoveTrack id -&amp;gt;                  &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+      ( { model | tracks = List.filter (\( rowId, _ ) -&amp;gt; rowId /= id) model.tracks }
+      , Effects.none
+      )
+
+    MoveTrackUp id -&amp;gt;                  &lt;i class=&quot;conum&quot; data-value=&quot;8&quot;&gt;&lt;/i&gt;&lt;b&gt;(8)&lt;/b&gt;
+      let
+        track =
+          ListX.find (\( rowId, _ ) -&amp;gt; rowId == id) model.tracks
+      in
+        case track of
+          Nothing -&amp;gt;
+            ( model, Effects.none )
+
+          Just t -&amp;gt;
+            ( { model | tracks = moveUp model.tracks t }
+            , Effects.none
+            )
+
+    MoveTrackDown id -&amp;gt;                &lt;i class=&quot;conum&quot; data-value=&quot;9&quot;&gt;&lt;/i&gt;&lt;b&gt;(9)&lt;/b&gt;
+      let
+        track =
+          ListX.find (\( rowId, _ ) -&amp;gt; rowId == id) model.tracks
+
+        mayMoveDown t =
+          let
+            idx =
+              ListX.elemIndex t model.tracks
+          in
+            case idx of
+              Nothing -&amp;gt;
+                False
+
+              Just i -&amp;gt;
+                i &amp;lt; ((List.length model.tracks) - 2)
+      in
+        case track of
+          Nothing -&amp;gt;
+            ( model, Effects.none )
+
+          Just t -&amp;gt;
+            ( { model
+                | tracks =
+                    if (mayMoveDown t) then
+                      moveDown model.tracks t
+                    else
+                      model.tracks
+              }
+            , Effects.none
+            )
+
+    ModifyTrack id trackRowAction -&amp;gt;  &lt;i class=&quot;conum&quot; data-value=&quot;10&quot;&gt;&lt;/i&gt;&lt;b&gt;(10)&lt;/b&gt;
+      let
+        updateTrack ( trackId, trackModel ) =
+          if trackId == id then
+            ( trackId, TrackRow.update trackRowAction trackModel )
+          else
+            ( trackId, trackModel )
+      in
+        ( maybeAddPristine { model | tracks = List.map updateTrack model.tracks }
+        , Effects.none
+        )&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When we mount the route for an existing album, we need to retrieve both the album and
+all artists (for the artist dropdown). To do both in one go we can use &lt;code&gt;Effects.batch&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We use the album param to differntiate between &quot;update&quot; and &quot;new&quot; mode for albums. If show album is called with an album we update our inital model with the information
+contained in the given album (this also involves initating TrackRow.models for each album track.
+If there is no album, we just add an empty track row and the initiate the retrieval of artists for the artists dropdown.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Once artists are retrieved we update our model to hold these&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This action is executed when the user changes the value of the name field&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The save action either calls update or create in the server api based on whether the model has an albumId or not.
+In both instances it needs to convert the model to an Album/AlbumRequest as this is what the signature of the ServerApi functions require&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;A successful save will give an Album type back, we update the model and in this instance we
+also redirect the user to the artist detail page.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This action is called when the user clicks on the remove button for a track row. We&amp;#8217;ll get back to this when
+in just a little while&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;8&quot;&gt;&lt;/i&gt;&lt;b&gt;8&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Action to move a track one step up in the track listing. If it&amp;#8217;s already at the top
+it&amp;#8217;s a no op. The &quot;heavy&quot; lifting is done in the &lt;code&gt;moveUp&lt;/code&gt; generic helper function&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;9&quot;&gt;&lt;/i&gt;&lt;b&gt;9&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Similar to &lt;code&gt;MoveTrackUp&lt;/code&gt; but it has addtional logic to ensure we don&amp;#8217;t move a track below the
+always present empty (Pristine) row in the track listing&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;10&quot;&gt;&lt;/i&gt;&lt;b&gt;10&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The ModifyTrack action forwards to the update function for the TrackRow in question. Each track row is
+tagged with an Id (TrackRowId)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_the_view&quot;&gt;The view&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;view : Signal.Address Action -&amp;gt; Model -&amp;gt; Html                                  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+view address model =
+  div
+    []
+    [ h1 [] [ text &amp;lt;| pageTitle model ]
+    , Html.form
+        [ class &quot;form-horizontal&quot; ]
+        [ div
+            [ class &quot;form-group&quot; ]
+            [ label [ class &quot;col-sm-2 control-label&quot; ] [ text &quot;Name&quot; ]
+            , div
+                [ class &quot;col-sm-10&quot; ]
+                [ input
+                    [ class &quot;form-control&quot;
+                    , value model.name
+                    , on &quot;input&quot; targetValue (\str -&amp;gt; Signal.message address (SetAlbumName str))
+                    ]
+                    []
+                ]
+            ]
+        , ( artistDropDown address model )
+        , div
+            [ class &quot;form-group&quot; ]
+            [ div
+                [ class &quot;col-sm-offset-2 col-sm-10&quot; ]
+                [ button
+                    [ class &quot;btn btn-default&quot;
+                    , type&apos; &quot;button&quot;
+                    , onClick address SaveAlbum
+                    ]
+                    [ text &quot;Save&quot; ]
+                ]
+            ]
+        ]
+    , h2 [] [ text &quot;Tracks&quot; ]
+    , trackListing address model
+    ]
+
+
+artistDropDown : Signal.Address Action -&amp;gt; Model -&amp;gt; Html                        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+artistDropDown address model =
+  let
+    val =
+      Maybe.withDefault (-1) model.artistId
+
+    opt a =
+        option [ value &amp;lt;| toString a.id, selected (a.id == val) ] [ text a.name ]
+  in
+    div
+      [ class &quot;form-group&quot; ]
+      [ label [ class &quot;col-sm-2 control-label&quot; ] [ text &quot;Artist&quot; ]
+      , div
+          [ class &quot;col-sm-10&quot; ]
+          [ select
+              [ class &quot;form-control&quot; ]
+              (List.map opt model.artists)
+          ]
+      ]
+
+
+trackListing : Signal.Address Action -&amp;gt; Model -&amp;gt; Html                          &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+trackListing address model =
+  table
+    [ class &quot;table table-striped&quot; ]
+    [ thead
+        []
+        [ tr
+            []
+            [ th [] []
+            , th [] []
+            , th [] [ text &quot;Name&quot; ]
+            , th [] [ text &quot;Duration&quot; ]
+            , th [] []
+            ]
+        ]
+    , tbody [] (List.map (trackRow address) model.tracks)
+    ]
+
+
+trackRow : Signal.Address Action -&amp;gt; ( TrackRowId, TrackRow.Model ) -&amp;gt; Html    &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+trackRow address ( id, rowModel ) =
+  let
+    context =
+      TrackRow.Context
+        (Signal.forwardTo address (ModifyTrack id))
+        (Signal.forwardTo address (always (RemoveTrack id)))
+        (Signal.forwardTo address (always (MoveTrackUp id)))
+        (Signal.forwardTo address (always (MoveTrackDown id)))
+  in
+    TrackRow.view context rowModel&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The view function for the page.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The artist dropdown (a github star for the observant reader that can spot what&amp;#8217;s missing :-) )&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Generates the track listing for the album&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The rendering of each individual TrackRow is forwarded to the TrackRow module. We pass on a
+context so that a TrackRow is able to &quot;signal back&quot; to the AlbumDetails page for the actions
+that are owned by AlbumDetails (RemoveTrack, MoveTrackUp and MoveTrackDown). You&amp;#8217;ll see how that
+plays out when we look at the TrackRow implementation in the next secion.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;strong&gt;Why the context thingie ?&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Well we can&amp;#8217;t have the AlbumDetails depending on TrackRows and the TrackRow component having a dependency
+back to AlbumDetails. To solve that we pass on the tagged forwarding addresses so that TrackRows can signal
+AlbumDetails with the appropriate actions. I guess you can sort of think of them as callbacks, but it&amp;#8217;s not quite that.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Another slightly more elaborate explantion might be that when a user performs something on a track row that
+we capture (say a click on the remove button). The view from the track row returns a signal (wrapped as an effect) to album details which
+in turn returns a signal back to main. The signal is processed by the startapp &quot;event-loop&quot; and flows back through
+the update functions (main &amp;#8594; AlbumDetails) and since it&amp;#8217;s tagged to as an action to be handled by AlbumDetails is handled
+in AlbumDetails update function (and doesn&amp;#8217;t flow further.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Clear as mud or perhaps it makes sort of sense ?&lt;/p&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_track_row&quot;&gt;Track row&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_types_2&quot;&gt;Types&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type alias Model =                        &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { name : String
+  , durationMin : Maybe Int
+  , durationSec : Maybe Int
+  , status : Status
+  }
+
+
+type alias Context =                      &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  { actions : Signal.Address Action
+  , remove : Signal.Address ()
+  , moveUp : Signal.Address ()
+  , moveDown : Signal.Address ()
+  }
+
+
+type Status                               &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+  = Saved
+  | Modified
+  | Error
+  | Pristine                              &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+
+
+type Action                               &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+  = SetTrackName String
+  | SetMinutes String
+  | SetSeconds String&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The model captures information about an album track. Duration is separated into
+minutes and seconds to be more presentable and easier for the user to input. In addition
+we have a status flag to be able to give the user feedback and handle some conditional logic.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Here you see the type definition for the Context we previously mentioned we used in the when
+forwarding view rendering for each individual track row in the Album Details page. (Btw it could be any
+component as long as they pass on a context with the given signature of Context).&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The possible status types a row can be in.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Prisitine has a special meaning in the track listing in AlbumDetails. It should always be just one and it should be the last row.
+However that&amp;#8217;s not the responsibility of TrackRow. TrackRow should just ensure the status is correct at all times.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The possible actions that TrackRow handles internally&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_update_function&quot;&gt;Update function&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Action -&amp;gt; Model -&amp;gt; Model
+update action model =
+  case action of
+    SetTrackName v -&amp;gt;        &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+      { model | name = v, status = Modified }
+
+    SetMinutes str -&amp;gt;        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+      let
+        maybeMinutes = Result.toMaybe &amp;lt;| String.toInt str
+      in
+        case maybeMinutes of
+          Just m -&amp;gt;
+            { model | durationMin = maybeMinutes, status = Modified }
+
+          Nothing -&amp;gt;
+            if String.isEmpty str then
+              { model | durationMin = Nothing, status = Modified}
+            else
+              model
+
+
+    SetSeconds str -&amp;gt;        &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+      let
+        maybeSeconds = Result.toMaybe &amp;lt;| String.toInt str
+      in
+        case maybeSeconds of
+          Just m -&amp;gt;
+            if m &amp;lt; 60 then
+              { model | durationSec = maybeSeconds, status = Modified }
+            else
+              model
+
+          Nothing -&amp;gt;
+            if String.isEmpty str then
+              { model | durationSec = Nothing, status = Modified}
+            else
+              model&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Updates the trackname model property when user inputs into the trackname field&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Updates the minutes property if a valid number is entered. Also blanks the field
+when the text input field becomes empty&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Similar to minutes, but also ensures that you don&amp;#8217;t enter more than 59 !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_view&quot;&gt;View&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We&amp;#8217;ll only show parts of the view to limit the amount of code you need to scan through.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;view : Context -&amp;gt; Model -&amp;gt; Html
+view context model =
+  tr
+    []
+    [ td [] [ statusView model ]
+    , td [] [ moveView context model ]
+    , td [] [ nameView context model ]
+    , td [] [ durationView context model ]
+    , td [] [ removeView context model ]
+    ]
+
+
+nameView : Context -&amp;gt; Model -&amp;gt; Html
+nameView context model =
+  input
+    [ class &quot;form-control&quot;
+    , value model.name
+    , on &quot;input&quot; targetValue (\str -&amp;gt; Signal.message context.actions (SetTrackName str))  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+    ]
+    []
+
+
+removeView : Context -&amp;gt; Model -&amp;gt; Html
+removeView context model =
+  button
+    [ onClick context.remove ()                                                           &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    , class &amp;lt;| &quot;btn btn-sm btn-danger &quot; ++ if isPristine model then &quot;disabled&quot; else &quot;&quot;
+    ]
+    [ text &quot;Remove&quot; ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When a user causes an input event on the name input field we create a message using the address in context.actions with action SetTrackName
+So this message will cause an update eventually forwarded to the update function of TrackRow&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When a user clicks on the remove button we use the address given by context.remove with a payload of () (ie void).
+This message will always be forwarded to the address for AlbumDetails with the payload set to &lt;code&gt;RemoveTrack&lt;/code&gt; with the given track row id.
+All of which TrackRow is blissfully unaware of.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_main_elm_wiring_it_all_up&quot;&gt;Main.elm wiring it all up&lt;/h3&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type alias Model =
+  WithRoute
+    Routes.Route
+    { --....
+    , albumDetailModel : AlbumDetail.Model
+    }
+
+
+type Action
+  = NoOp
+  -- ...
+  | AlbumDetailAction AlbumDetail.Action
+  | RouterAction (TransitRouter.Action Routes.Route)
+
+
+initialModel =
+  { transitRouter = TransitRouter.empty Routes.EmptyRoute
+  -- ...
+  , albumDetailModel = AlbumDetail.init
+  }
+
+
+mountRoute prevRoute route model =
+  case route of
+    -- ...
+
+    AlbumDetailPage albumId -&amp;gt;         &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+      let
+        (model&apos;, effects) =
+          AlbumDetail.update (AlbumDetail.GetAlbum albumId) AlbumDetail.init
+      in
+        ( { model | albumDetailModel = model&apos; }
+        , Effects.map AlbumDetailAction effects)
+
+
+    NewArtistAlbumPage artistId -&amp;gt;     &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+      let
+        (model&apos;, effects) =
+          AlbumDetail.update (AlbumDetail.ShowAlbum Nothing) (AlbumDetail.initForArtist artistId)
+      in
+        ( { model | albumDetailModel = model&apos; }
+        , Effects.map AlbumDetailAction effects)
+
+    -- ...
+
+
+update action model =
+  case action of
+    -- ..
+
+    AlbumDetailAction act -&amp;gt;           &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+      let
+        ( model&apos;, effects ) =
+          AlbumDetail.update act model.albumDetailModel
+      in
+        ( { model | albumDetailModel = model&apos; }
+        , Effects.map AlbumDetailAction effects
+        )
+
+    -- ..&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When we mount the route for the AlbumDetailsPage (&quot;/albums/:albumId&quot;) we call the
+update function of AlbuDetail with a &lt;code&gt;GetAlbum&lt;/code&gt; action. You might remember that this in turn calls the functions
+for retrieving an Album and the function for retrieving artists as a batch.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When the user performs an action that results in the NewArtistAlbumPage being mounted (&quot;/artists/:artistId/albums/new&quot;)
+, we call the update on AlbumDetail with &lt;code&gt;ShowAlbum&lt;/code&gt; action and a reinitialized model where artistId is set.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;In the update function of Main we forward any actions particular to AlbumDetail&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_frontend_summary&quot;&gt;Frontend summary&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Working with the frontend code in Elm has been mostly plain sailing. I struggled a bit to get
+all my ducks(/effects) in a row and I&amp;#8217;m not too happy with some of the interactions related to new vs update.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Unfortunately the elm-reactor isn&amp;#8217;t working all that well with 0.16, certainly not on my machine.
+It also doesn&amp;#8217;t work particularily well with single page apps that changes the url. I looked at and tried a couple of
+alternatives and settled on using &lt;a href=&quot;https://github.com/maxgurewitz/elm-server&quot;&gt;elm-server&lt;/a&gt;. I had to make some modifications
+to make it work nicely with an SPA. I submitted a PR that seems to work nicely for my use case atleast.
+With that in place, the roundtrip from change to feedback became very schneizz indeed !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Undoubtably there is quite a bit that feels like boiler plate. The addition of routing also introduces yet another thing you have
+to keep in mind in several places. Boilerplate it might be, but it&amp;#8217;s also quite explicit.  I would imagine that in a large app you might grow a bit weary of some of the boilerplate and start looking for ways to reduce it.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;d be lying if I said I&amp;#8217;ve fully grasped; signals, tasks, ports, effects and mailboxes. But it&amp;#8217;s gradually becoming clearer
+and it&amp;#8217;s very nice that you can produce pretty cool things without investing to much up front.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_concluding_remarks&quot;&gt;Concluding remarks&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I utterly failed to make a shorter blog post yet again. To my defence, the default formatting of Elm
+do favor newlines bigtime. Most of the Elm code has been formatted by &lt;a href=&quot;https://github.com/avh4/elm-format&quot;&gt;elm-format&lt;/a&gt; btw.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m really starting to see the benefits of statically (strongly) typed functional languages. The journey
+so far has been a massive learing experience. Heck this stuff has been so much fun, I ended up taking a day off work so that
+I could work on this for a whole day with most of my good brain cells still at acceptable performance levels.
+Shame I can&amp;#8217;t use this stuff at work, but I&amp;#8217;m starting to accumulate quite a substantial collection of selling points.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Whats next ?&lt;/div&gt;
+&lt;p&gt;The sample app has started to accumulate quite a bit of technical dept, so I suppose the next episode(s)
+should start to address some of that.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Typed up CRUD SPA with Haskell and Elm - Part 3: Routing</title>
       <link>http://rundis.github.io/blog/2016/haskel_elm_spa_part3.html</link>
