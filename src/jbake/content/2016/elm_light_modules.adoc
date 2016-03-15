@@ -1,0 +1,646 @@
+= Elm and ClojureScript joining forces in the elm-light plugin
+Magnus Rundberget
+2016-03-14
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: elm, clojurescript, lighttable
+:imagesdir: /blog/2016/
+:icons: font
+:id: elm_light_modules
+
+
+The https://github.com/rundis/elm-light[elm-light] plugin provides a pretty useful
+featureset for developing elm applications. Until now all features have been implemented
+using a combination of ClojureScript and JavaScript. But wouldn't it be cool if the plugin
+implemented Elm features using Elm where that's feasible ? Elm compiles to JavaScript and
+JavaScript interop in ClojureScript is quite easy so it shouldn't be that hard really.
+
+If nothing else I thought it would be a fun challenge, so I set forth and decided to implemented
+a simple module browser for Elm projects.
+
+
+
+== Elm for the UI
+
+In Elm it's recommended that you follow https://github.com/evancz/elm-architecture-tutorial[The Elm Architecture] (AKA: TEA).
+You model your Elm application and components into 3 separate parts; Model, View and Update.
+The easiest way to get started with implementing something following TEA is using the https://github.com/evancz/start-app[start-app] package.
+
+
+=== Model
+Quite often you'll find that you start by thinking about how to design your model.
+This was also the case for me when developing the module browser.
+
+
+[source,elm]
+----
+type alias Model =                     // <1>
+  { allModules : List Modul
+  , filteredModules : List Modul
+  , searchStr : String
+  , selected : Maybe Modul
+  }
+
+
+type alias Modul =                     // <2>
+  { name : String
+  , file : String
+  , packageName : String
+  , version : String
+  }
+
+----
+<1> The model is quite simple and contains; a list of all modules, the currently filtered modules, the search string entered by the user and the currently selected module
+<2> Since Module is a reserved word in Elm the type used for representing a project Module is doofily named `Modul`.
+
+
+NOTE: For more info about what Elm modules are check out the https://github.com/elm-guides/elm-for-js/blob/master/Modules%2C%20Exports%2C%20and%20Imports.md#modules-and-files[elm-guides]
+
+
+=== UPDATE
+Update is where we actually implement the logic of our Elm application. I won't cover
+all the details, but let's walk through the most important bits.
+
+
+[source,elm]
+----
+type Action                                             // <1>
+  = NoOp
+  | Filter String
+  | Prev
+  | Next
+  | Select
+  | ClickSelect String
+  | Close
+  | Refresh (List Modul)
+
+
+update : Action -> Model -> ( Model, Effects Action )  // <2>
+update action model =
+  case action of
+    NoOp ->                                            // <3>
+      ( model, Effects.none )
+
+    Filter str ->                                      // <4>
+      let
+        filtered =
+          filterModules str model.allModules
+
+        sel =
+          List.head filtered
+      in
+        ( { model
+            | searchStr = str
+            , filteredModules = filtered
+            , selected = sel
+          }
+        , Effects.none
+        )
+
+    Prev ->                                           // <5>
+      ( { model | selected = prevModule model }
+      , notifyChangeSelection
+      )
+
+    Next ->
+      ( { model | selected = nextModule model }
+      , notifyChangeSelection
+      )
+
+    Select ->                                         // <6>
+      case model.selected of
+        Nothing ->
+          ( model, Effects.none )
+
+        Just x ->
+          ( model
+          , notifySelect x.file
+          )
+
+    ClickSelect file ->                               // <7>
+      ( model
+      , notifySelect file
+      )
+
+    Close ->                                          // <8>
+      ( model, notifyClose )
+
+    Refresh modules ->                                // <9>
+      ( Model modules modules "" (List.head modules)
+      , Effects.none
+      )
+----
+<1> The actions that causes changes to the model is represented by a https://en.wikipedia.org/wiki/Union_type[Union Type] called `Action`.
+If you're not sure what union type means, think of it as a Enum on stereoids.
+<2> The update function takes an action and the current model as parameters and returns
+a tuple of an (possibly) updated model and an Effect. Effects are basically things that have side-effects (http/ajax, interacting with the browser etc).
+We treat an effect like a value in the application, the Elm runtime takes care of actually executing it.
+<3> `NoOp` is just that. It's handy when initializing the app and also for mapping effects to when there are
+effects that we don't care about in the context of this update function
+<4> Whenever the user changes the search string input the Filter action is called. It uses a  `filterModules` helper function
+to filter modules with names starting with the given search string. We default the selected
+module to the first in the filtered results. The model is NOT mutated, rather we return a new updated model.
+Elm keeps track of our global model state !
+<5> `Prev` and `Next` selects/highlights the next/previous module given the currently selected one.
+The `notifyChangeSelection` function call results in an effect that allows us to communicate with the ClojureScript part
+of the module browser feature. We'll get back to that further on.
+<6> The `Select` action is triggered when the users presses Enter. It selects the module and should
+ultimately result in opening the Elm Module file. Again to make that happen we need to communicate
+with our ClojureScript backend. This is achived through the `notifySelect` helper function.
+<7> `ClickSelect` is similar to `Select` but handles when the user uses the mouse to select a module.
+<8> `Close` - When the user presses the escape key, the module browser should close. Again we
+need to notify the ClojureScript backend
+<9> To populate the Module browser ui with modules the `Refresh` action is called. This action
+is actually triggered by our ClojureScript backend.
+
+
+Before we dive into more details about the interop with ClojureScript, let's quickly go through
+the view rendering logic.
+
+=== VIEW
+
+The view part in Elm is also entirely functional and you as an application developer
+never touches the DOM directly. Given the current `Model` you tell Elm what the view should look
+like, and Elm (through the use of https://github.com/Matt-Esch/virtual-dom[Virtual DOM]) takes care of efficiently
+updating the DOM for you.
+
+
+The view for the module browser is really quite simple and consist of a search input field
+and an ul for listing the modules.
+
+image::http://rundis.github.io/blog/2016/modulebrowser.png[]
+
+
+[source,elm]
+----
+view : Signal.Address Action -> Model -> Html                                     // <1>
+view address model =
+  div
+    [ class "filter-list" ]                                                       // <2>
+    [ searchInputView address model
+    , ul
+        []
+        (List.map (\m -> itemView address m model) model.filteredModules)         // <3>
+    ]
+
+
+searchInputView : Signal.Address Action -> Model -> Html                          // <4>
+searchInputView address model =
+  let
+    options =
+      { preventDefault = True, stopPropagation = False }
+
+    keyActions =
+      Dict.fromList [ ( 38, Prev ), ( 40, Next ), ( 13, Select ), ( 27, Close ) ] // <5>
+
+    dec =
+      (Json.customDecoder                                                         // <6>
+        keyCode
+        (\k ->
+          if Dict.member k keyActions then
+            Ok k
+          else
+            Err "not handling that key"
+        )
+      )
+
+    handleKeydown k =                                                             // <7>
+      Maybe.withDefault NoOp (Dict.get k keyActions) |> Signal.message address
+  in
+    input                                                                         // <8>
+      [ value model.searchStr
+      , class "search"
+      , type' "text"
+      , placeholder "search"
+      , on "input" targetValue (\str -> Signal.message address (Filter str))
+      , onWithOptions "keydown" options dec handleKeydown
+      ]
+      []
+
+
+itemView : Signal.Address Action -> Modul -> Model -> Html
+itemView address mod model =                                                     // <9>
+  let
+    pipeM =                                                                      // <10>
+      flip Maybe.andThen
+
+    itemClass =                                                                  // <11>
+      model.selected
+        |> pipeM
+            (\sel ->
+              if (sel == mod) then
+                Just "selected"
+              else
+                Nothing
+            )
+        |> Maybe.withDefault ""
+  in
+    li
+      [ class itemClass
+      , onClick address (ClickSelect mod.file)
+      ]
+      [ p [] [ text mod.name ]
+      , p [ class "binding" ] [ text (mod.packageName ++ " - " ++ mod.version) ]
+      ]
+----
+<1> The main `view` function takes an Address and the current Model as input and returns
+a virtual `HTML` that represents the UI we want rendered. In Elm we use something called mailboxes
+to respond to user interactions. Check out the note section below for more details if you're interested.
+In short the address param is the address to a given mailbox. Elm picks up any messages in the mailbox, handles them
+and ultimately the results flow back to our application through the previously described `update` function.
+<2> All HTML tags have a corresponding function and all follow the same pattern. The first argument is a list of attributes,
+the second is a list of sub elements.
+<3> The beauty of everything being a function (as opposed to templating languages) is that you have the full power of the language
+to construct your view. Map, filter, reduce etc to your heart's content.
+<4> The `searchInputView` function renders the search input field. This is where most of the user interaction stuff happens
+so it's naturally the most complex part of the UI.
+<5> We use the Dict type to represent key/values. Think map if you're from a Clojure background! The `keyActions`
+map lists the keycode and update action combo we are interested in handling.
+<6> We want to intercept just the given keyCodes everything else should flow through and update the searchStr in our model.
+To support that we need to implement a custom decoder for the keydown event.
+<7> You can read `handleKeydown` as follows, if the keyCode lookup for the given k returns an `Action` use that
+otherwise use the default `NoOp` action. The result from that is used as the last param of the `Signal.message` function.
+(In Clojure terms you can think of `|>` as thread-last). Signal.message sends the given action to the given address.
+<8> The search input handles changes to the input by triggering the `Filter` action with a payload
+which is the current value of the input. To handle the special characters we handle the keydown event using
+the local helper function we outlined in <7>.
+<9> `itemView` constructs the view for each individual item. Most of the logic here is related to giving the
+currently selected item it's own css class.
+<10> Maybe.andThen is a function to help you chain http://elm-lang.org/guide/model-the-problem#banishing-null[maybes].
+(There is no such thing as null/nil in Elm !). `flip` flips the order of the two first arguments, and we do it to allow us to chain calls using the `|>` operator
+<11> If an item is selected and the selected item is the same as the current module being rendered then the class should be `selected` in all other cases
+the class is an empty string.
+
+
+
+NOTE: To understand more about Mailboxes, Addresses and the term Signal in Elm. You might want
+to check out the relevant  http://elm-lang.org/guide/reactivity[Elm docs] or maybe this https://medium.com/@diamondgfx/understanding-elm-signals-mailboxes-addresses-and-actions-7932781396ef#.hsyq1b5c9[nice blog post]
+
+
+=== Interop with ClojureScript using Ports
+Interop with JavaScript in Elm goes through strict boundaries and use a mechanism called http://elm-lang.org/guide/interop#ports[ports].
+The strict boundary is in place to ensure that you can't get runtime exceptions in Elm (due to nulls, undefined is not a function, type mismatches etc etc).
+At first it feels a little bit cumbersome, but really the guarantees given from Elm makes up for it in the long run. Big time.
+
+
+
+TIP: The following blog post really helped me out when doing the ports stuff; http://danielbachler.de/2016/02/26/ports-in-elm.html["Ports in Elm"]
+
+
+
+[source,elm]
+----
+-- Inbound
+
+modzSignal : Signal Action                     // <1>
+modzSignal =
+  Signal.map Refresh modzPort
+
+
+port modzPort : Signal (List Modul)            // <2>
+
+
+
+-- Outbound
+
+selectMailbox : Signal.Mailbox String          // <3>
+selectMailbox =
+  Signal.mailbox ""
+
+
+port select : Signal String                    // <4>
+port select =
+  selectMailbox.signal
+
+
+changeSelectionMailbox : Signal.Mailbox ()     // <5>
+changeSelectionMailbox =
+  Signal.mailbox ()
+
+
+port changeSelection : Signal ()               // <6>
+port changeSelection =
+  changeSelectionMailbox.signal
+
+
+closeMailbox : Signal.Mailbox ()
+closeMailbox =
+  Signal.mailbox ()
+
+
+port close : Signal ()
+port close =
+  closeMailbox.signal
+----
+<1> Signals are basically values that changes over time. A signal always has a value.
+If you remember our `update` function, it takes an `Action` as the first argument. To allow
+our incoming module list to trigger an update we need to convert the value we receive from the
+`modzPort` to a `Refresh` action (with a payload which is a List of `Modul` records)
+<2> `modzPort` is a port which is a Signal that receives values from outside of Elm. Typically JavaScript
+or in our instance ClojureScript. A Signal always has a value, so you will see that we need to provide an initial value
+when we start the elm app from ClojureScript later on.
+<3> When using the https://github.com/evancz/start-app[Elm start app package] we typically use mailboxes to
+achieve (side-) effects. So to send messages to JavaScript (or ClojureScript!) we create an intermediary mailbox
+to communicate through an outgoing port. When we select a module in the module browser we send the file name of the module
+we wish to open and the type of the file name is `String`. Hence the Mailbox is a mailbox for string messages.
+<4> The `select` port is a Signal of Strings (file names) that we can subscribe to from JavaScript(/ClojureScript).
+You can think of it as an Observable (in RxJs terms) or maybe simpler an event emitter if you like.
+<5> `()` in Elm means the same as `void` or no value.
+<6> When the user changes which module is selected/hightlighted we don't care about the value, in this instance we just need to know that the user changed their selection
+
+
+
+=== Wiring up Elm with Start app
+
+[source,elm]
+----
+app : StartApp.App Model                       // <1>
+app =
+  StartApp.start
+    { init = init
+    , update = update
+    , view = view
+    , inputs = [ modzSignal ]                  // <2>
+    }
+
+
+main : Signal Html                             // <3>
+main =
+  app.html
+
+
+port tasks : Signal (Task.Task Never ())       // <4>
+port tasks =
+  app.tasks
+----
+<1> `StartApp.start` takes care of wiring up our Elm application. `init` creates an initial empty Model, the other functions
+we have already described.
+<2> StartApp also takes an inputs argument, here we need to remember to add our `modzSignal` so that it
+is picked up and handled by StartApp.
+<3> `main` is the entry point for any Elm application.
+<4> Elm executes side effects through something called http://elm-lang.org/guide/reactivity#tasks[tasks]
+I won't go into details here, but just remember to add this incantation when using StartApp.
+
+
+=== Wrapping up the Elm part
+Right so that wes pretty much all there is to the Elm part. Of course we also need to remember to compile
+the Elm code to JavaScript before we can use it from Light Table.
+To do that we use the `elm-make` executable that comes with the http://elm-lang.org/install[elm-platform installation]
+
+I can assure you that I didn't get a single run time exception whilst developing the Elm part. It did
+get lots of helpful compiler errors along the way, but as soon as the compiler was happy the Elm application ran just as expected.
+It's hard to describe the experience, but trust me, it's certainly worth a try !
+To be able to easily test and get visual feedback along the way I set up a dummy html page.
+
+Ok let's move on to the ClojureScript part were we hook the ui up to the Light Table plugin.
+
+
+== ClojureScript and Light Table
+
+=== Generating the list of Elm Modules
+
+Unfortunately there isn't any API AFAIK that provides the information I wished to present
+(ideally all modules and for each module, all it's publicly exposed functions/types/values).
+So I had to go down a route where I use a combination of the elm project file (elm-package.json) and
+artifacts (files) generated when you run `elm-make` on your elm project.
+
+
+[source,clojure]
+----
+(defn- resolve-module-file [project-path pck-json package module version]                   // <1>
+  (->> pck-json
+       :source-directories
+       (map #(files/join project-path
+                         "elm-stuff/packages"
+                         package
+                         version
+                         %
+                         (str (s/replace module "." files/separator) ".elm")))
+       (some #(if (files/exists? %) % nil))))
+
+
+(defn- get-exposed-modules [project-path {:keys [package exact]}]                          // <2>
+  (let [pck-json (u/parse-json-file (files/join project-path
+                                                "elm-stuff/packages"
+                                                package exact
+                                                "elm-package.json"))]
+    (->> pck-json
+         :exposed-modules
+         (map (fn [x]
+                {:name x
+                 :packageName package
+                 :version exact
+                 :file (resolve-module-file project-path pck-json package x exact)})))))
+
+
+(defn- get-package-modules [project-path]                                                 // <3>
+  (->> (u/get-project-deps project-path)
+       (filter :exact)
+       (mapcat (partial get-exposed-modules project-path))
+       (sort-by :name)))
+
+
+(defn- deduce-module-name [root-path elm-file-path]                                       // <4>
+  (-> elm-file-path
+      (s/replace root-path "")
+      (s/replace ".elm" "")
+      (s/replace #"^/" "")
+      (s/replace files/separator ".")))
+
+
+(defn- get-project-modules [project-path]                                                 // <5>
+  (let [pck-json (u/parse-json-file (files/join project-path "elm-package.json"))]
+    (->> (:source-directories pck-json)
+         (mapcat (fn [dir]
+                   (if (= dir ".")
+                     (->> (files/ls project-path) ;; fixme: no nesting allowed to avoid elm-stuff etc
+                          (filter #(= (files/ext %) "elm"))
+                          (map (fn [x]
+                                 {:name (deduce-module-name "" x)
+                                  :file (files/join project-path x)})))
+                     (->> (files/filter-walk #(= (files/ext %) "elm") (files/join project-path dir))
+                          (map (fn [x]
+                                 {:name (deduce-module-name (files/join project-path dir) x)
+                                  :file x}))))))
+         (map (fn [m]
+                (assoc m :packageName (files/basename project-path) :version (:version pck-json))))
+         (sort-by :name))))
+
+
+
+(defn get-all-modules [project-path]                                                      // <6>
+  (concat
+    (get-project-modules project-path)
+    (get-package-modules project-path)))
+
+----
+<1> Helper function which tries to resolve the file for a Module from a 3rd party library
+<2> Every 3rd party library also comes with a elm-package.json that lists which module are
+publicly exposed. This helper function generates module info for all exposed modules from a 3rd party library
+<3> Given all defined project dependencies for a project at a given project-path this function generates
+module informaation for all this packages. It will only try to resolve modules which has a resolved version `:exact`, so there is a precondition
+that you have run either `elm-package` install or `elm-make` successfully on your project first.
+<4> `deduce-module-name` is a helper function which tries to deduce the module name for an Elm file in your project
+<5> Helper function that takes a simplistic approach to try to find all modules in you project and generate module information for them
+It uses the "source-directories" key in your project's `elm-package.json` as a starting point.
+<6> The complete list of modules is a concatination of 3rd party modules and your project modules.
+
+
+WARNING: There are a few simplifications in this implementation that might yield incomplete results (and sometimes erronous).
+However for the majority of cases it should work fine.
+
+
+=== Light Table sidebar
+
+The module browser will live in the right sidebar in Light Table. The following code will
+construct the wrapper view and a Light Table object that will allow us to wire up the appropriate
+behaviors.
+
+[source,clojure]
+----
+
+(defui wrapper [this]                                             // <1>
+   [:div {:id "elm-module-browser"} "Retrieving modules..."])
+
+
+(object/object* ::modulebrowser                                   // <2>
+                :tags #{:elm.modulebrowser}
+                :label "Elm module browser"
+                :order 2
+                :init (fn [this]
+                        (wrapper this)))
+
+(def module-bar (object/create ::modulebrowser))                  // <3>
+
+(sidebar/add-item sidebar/rightbar module-bar)                    // <4>
+----
+<1> Helper function to create a wrapper div which will host our module browser
+<2> A Light Table object (basically an ClojureScript atom) that allows us to tag behaviors.
+<3> The object above is instantiated at start up
+<4> We add the module bar to the right hand sidebar in Light Table
+
+
+
+=== Light Table behaviors
+
+[source, clojure]
+----
+(behavior ::clear!                                              // <1>
+          :triggers #{:clear!}
+          :reaction (fn [this]
+                      (cmd/exec! :close-sidebar)))
+
+(behavior ::focus!                                              // <2>
+          :triggers #{:focus!}
+          :reaction (fn [this]
+                      (let [input (dom/$ "#elm-module-browser input")]
+                        (.focus input))))
+
+(behavior ::ensure-visible                                      // <3>
+          :triggers #{:ensure-visible}
+          :reaction (fn [this]
+                      (sidebar-cmd/ensure-visible this)))
+
+(behavior ::show-project-modules                                // <4>
+          :triggers #{:show-project-modules}
+          :reaction (fn [this prj-path]
+                      (let [modules (get-all-modules prj-path)
+                            el (dom/$ "#elm-module-browser")
+                            mod-browser (.embed js/Elm js/Elm.ModuleBrowser el (clj->js {:modzPort []}))] // <5>
+
+                        (.send (.-modzPort (.-ports mod-browser)) (clj->js modules))   // <6>
+
+                        ;; set up port subscriptions
+
+                        (.subscribe (.-changeSelection (.-ports mod-browser))          // <7>
+                                    (fn []
+                                      (object/raise this :ensure-visible)))
+
+                        (.subscribe (.-select (.-ports mod-browser))
+                                    (fn [file]
+                                      (cmd/exec! :open-path file)
+                                      (object/raise this :clear!)))
+
+                        (.subscribe (.-close (.-ports mod-browser))
+                                    (fn []
+                                      (object/raise this :clear!)))
+
+
+                        (object/raise this :focus!))))
+
+
+
+(behavior ::list-modules                                     // <8>
+          :triggers #{:editor.elm.list-modules}
+          :reaction (fn [ed]
+                      (when-let [prj-path (u/project-path (-> @ed :info :path))]
+                        (do
+                          (object/raise sidebar/rightbar :toggle module-bar)
+                          (object/raise module-bar :show-project-modules prj-path)))))
+
+
+(cmd/command {:command :show-modulebrowser                  // <9>
+              :desc "Elm: Show module-browser"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (object/raise ed :editor.elm.list-modules)))})
+----
+<1> This behavior basically closes the module browser sidebar when triggered
+<2> We need to be able to set focus to the search input field when we open the module browser
+<3> Helper behavior that ensures that the currently selected item in the module browser is visible
+on the screen. Ie it will scroll the div contents accordingly using a LT core helper function.
+<4> This is were we hook everything up. We gather the module information for the given project
+instantiate the Elm app, subscribe to outgoing messages(/signals!) and populate the module browser
+with the module list.
+<5> We start the elm app here and tells it to render in the wrapper div defined previously. We provide
+an initial value for the modzPort with an empty list. (Could have provided the gathered list modules here, but wanted to show how you send messages to a inbound Elm port explicitly. See next step)
+<6> To populate the module browser we send a message to the modzPort. Elm port thinks in JavaScript so we need to convert our list of ClojureScript maps to a list of JavaScript objects
+<7> To listen to events from the Elm app we call subscribe with a given callback function. In this example
+we trigger the ensure-visible behavior when the users moves the selection up or down, to ensure the selected item stays visible.
+<8> The behaviors above was tied(tagged) to the `module-bar` object, however this behavior is tagged to
+a currently opened and active elm editor object. Light Table has no concept of projects, so to deduce which project we should
+open the module browser for we need a starting point. Any elm file in your project will do. Based on that
+we can deduce the root project path. If we find a project we display the module bar view and trigger the behavior
+for populating the module browser.
+<9> Commands are the user interfacing functions that responds to user actions. They can be listed in the command bar in Light Table
+and you can assign shortcuts to them. The `show-modulebrowser` command triggers the `list-modules` behavior.
+Commands are available regardless of which editor you trigger them from, this is why we introduced the intermediary 'list-modules` behavior
+because that allows us to declaritly filter when this behavior will be triggered. You'll see how when we describe behaviors wiring in Light Table.
+
+
+==== Wiring up LT behaviors
+In our plugin behaviors file we need to wire up our behaviors.
+
+[source, clojure]
+----
+[:editor.elm :lt.plugins.elm-light.modulebrowser/list-modules]       // <1>
+[:elm.modulebrowser :lt.plugins.elm-light.modulebrowser/clear!]      // <2>
+[:elm.modulebrowser :lt.plugins.elm-light.modulebrowser/show-project-modules]
+[:elm.modulebrowser :lt.plugins.elm-light.modulebrowser/focus!]
+[:elm.modulebrowser :lt.plugins.elm-light.modulebrowser/ensure-visible]
+----
+
+<1> Here we tell Light Table that only editor objects with the tag `:editor.elm`
+will respond with the list-modules behavior we described earlier
+<2> Similaritly the other behaviors will only be triggerd by objects tagged with `:elm-modulebrowser`.
+In our case that would be the `module-bar` object we defined.
+
+
+.Why all this ceremony with behaviors ?
+Flexibility! It allows us to easily turn on/off features while Light Table is running. If you wish you could quite easily
+create your own implementation for a behavior and replace the one supplied by the plugin.
+Or maybe you'd like to do something in addition for a given behavior trigger.
+
+
+
+== Conclusion
+Okay let's be honest. We haven't set the world alight with a killer feature that couldn't
+be accomplished quite easily without Elm. Neither have we created an advanced demo for Elm and ClojureScript integration.
+But we've certainly proven that it's possible and it wasn't particularily difficult.
+It somehow feels better with an Elm plugin that has Elm as part of it's implementation.
+
+You can do some pretty awesomly advanced UI's with Elm and combing it with ClojureScript is definitely feasible.
+I'll leave it to you to evaluate if that would ever make sense to do though !
+
+
+
