@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Elm and ClojureScript joining forces in the elm-light plugin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/blog/css/prettify.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse bs-navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/blog/archive.html">Archive</a></li>
+                <li><a href="/blog/about.html">About</a></li>
+                <li><a href="/blog/feed.xml">Subscribe</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="https://github.com/rundis/blog"><i class="fa fa-lg fa-github"></i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="container">
+
+	<div class="page-header">
+		<h1>Elm and ClojureScript joining forces in the elm-light plugin</h1>
+	</div>
+
+	<p><em>14 March 2016</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/elm.html">elm</a>
+  </em>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
+  </em>
+    <a href="/blog/tags/lighttable.html">lighttable</a>
+  </p>
+  <a href="https://twitter.com/share" class="twitter-share-button"
+    data-url="http://rundis.github.io/blog/2016/elm_light_modules.html"
+    data-via="mrundberget"
+    data-lang="en">Tweet</a>
+  <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+	<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <a href="https://github.com/rundis/elm-light">elm-light</a> plugin provides a pretty useful
+featureset for developing elm applications. Until now all features have been implemented
+using a combination of ClojureScript and JavaScript. But wouldn&#8217;t it be cool if the plugin
+implemented Elm features using Elm where that&#8217;s feasible ? Elm compiles to JavaScript and
+JavaScript interop in ClojureScript is quite easy so it shouldn&#8217;t be that hard really.</p>
+</div>
+<div class="paragraph">
+<p>If nothing else I thought it would be a fun challenge, so I set forth and decided to implemented
+a simple module browser for Elm projects.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_elm_for_the_ui">Elm for the UI</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In Elm it&#8217;s recommended that you follow <a href="https://github.com/evancz/elm-architecture-tutorial">The Elm Architecture</a> (AKA: TEA).
+You model your Elm application and components into 3 separate parts; Model, View and Update.
+The easiest way to get started with implementing something following TEA is using the <a href="https://github.com/evancz/start-app">start-app</a> package.</p>
+</div>
+<div class="sect2">
+<h3 id="_model">Model</h3>
+<div class="paragraph">
+<p>Quite often you&#8217;ll find that you start by thinking about how to design your model.
+This was also the case for me when developing the module browser.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type alias Model =                     <i class="conum" data-value="1"></i><b>(1)</b>
+  { allModules : List Modul
+  , filteredModules : List Modul
+  , searchStr : String
+  , selected : Maybe Modul
+  }
+
+
+type alias Modul =                     <i class="conum" data-value="2"></i><b>(2)</b>
+  { name : String
+  , file : String
+  , packageName : String
+  , version : String
+  }</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The model is quite simple and contains; a list of all modules, the currently filtered modules, the search string entered by the user and the currently selected module</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Since Module is a reserved word in Elm the type used for representing a project Module is doofily named <code>Modul</code>.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+For more info about what Elm modules are check out the <a href="https://github.com/elm-guides/elm-for-js/blob/master/Modules%2C%20Exports%2C%20and%20Imports.md#modules-and-files">elm-guides</a>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_update">UPDATE</h3>
+<div class="paragraph">
+<p>Update is where we actually implement the logic of our Elm application. I won&#8217;t cover
+all the details, but let&#8217;s walk through the most important bits.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Action                                             <i class="conum" data-value="1"></i><b>(1)</b>
+  = NoOp
+  | Filter String
+  | Prev
+  | Next
+  | Select
+  | ClickSelect String
+  | Close
+  | Refresh (List Modul)
+
+
+update : Action -&gt; Model -&gt; ( Model, Effects Action )  <i class="conum" data-value="2"></i><b>(2)</b>
+update action model =
+  case action of
+    NoOp -&gt;                                            <i class="conum" data-value="3"></i><b>(3)</b>
+      ( model, Effects.none )
+
+    Filter str -&gt;                                      <i class="conum" data-value="4"></i><b>(4)</b>
+      let
+        filtered =
+          filterModules str model.allModules
+
+        sel =
+          List.head filtered
+      in
+        ( { model
+            | searchStr = str
+            , filteredModules = filtered
+            , selected = sel
+          }
+        , Effects.none
+        )
+
+    Prev -&gt;                                           <i class="conum" data-value="5"></i><b>(5)</b>
+      ( { model | selected = prevModule model }
+      , notifyChangeSelection
+      )
+
+    Next -&gt;
+      ( { model | selected = nextModule model }
+      , notifyChangeSelection
+      )
+
+    Select -&gt;                                         <i class="conum" data-value="6"></i><b>(6)</b>
+      case model.selected of
+        Nothing -&gt;
+          ( model, Effects.none )
+
+        Just x -&gt;
+          ( model
+          , notifySelect x.file
+          )
+
+    ClickSelect file -&gt;                               <i class="conum" data-value="7"></i><b>(7)</b>
+      ( model
+      , notifySelect file
+      )
+
+    Close -&gt;                                          <i class="conum" data-value="8"></i><b>(8)</b>
+      ( model, notifyClose )
+
+    Refresh modules -&gt;                                <i class="conum" data-value="9"></i><b>(9)</b>
+      ( Model modules modules "" (List.head modules)
+      , Effects.none
+      )</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The actions that causes changes to the model is represented by a <a href="https://en.wikipedia.org/wiki/Union_type">Union Type</a> called <code>Action</code>.
+If you&#8217;re not sure what union type means, think of it as a Enum on stereoids.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The update function takes an action and the current model as parameters and returns
+a tuple of an (possibly) updated model and an Effect. Effects are basically things that have side-effects (http/ajax, interacting with the browser etc).
+We treat an effect like a value in the application, the Elm runtime takes care of actually executing it.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>NoOp</code> is just that. It&#8217;s handy when initializing the app and also for mapping effects to when there are
+effects that we don&#8217;t care about in the context of this update function</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Whenever the user changes the search string input the Filter action is called. It uses a  <code>filterModules</code> helper function
+to filter modules with names starting with the given search string. We default the selected
+module to the first in the filtered results. The model is NOT mutated, rather we return a new updated model.
+Elm keeps track of our global model state !</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td><code>Prev</code> and <code>Next</code> selects/highlights the next/previous module given the currently selected one.
+The <code>notifyChangeSelection</code> function call results in an effect that allows us to communicate with the ClojureScript part
+of the module browser feature. We&#8217;ll get back to that further on.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>The <code>Select</code> action is triggered when the users presses Enter. It selects the module and should
+ultimately result in opening the Elm Module file. Again to make that happen we need to communicate
+with our ClojureScript backend. This is achived through the <code>notifySelect</code> helper function.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td><code>ClickSelect</code> is similar to <code>Select</code> but handles when the user uses the mouse to select a module.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td><code>Close</code> - When the user presses the escape key, the module browser should close. Again we
+need to notify the ClojureScript backend</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>To populate the Module browser ui with modules the <code>Refresh</code> action is called. This action
+is actually triggered by our ClojureScript backend.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Before we dive into more details about the interop with ClojureScript, let&#8217;s quickly go through
+the view rendering logic.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_view">VIEW</h3>
+<div class="paragraph">
+<p>The view part in Elm is also entirely functional and you as an application developer
+never touches the DOM directly. Given the current <code>Model</code> you tell Elm what the view should look
+like, and Elm (through the use of <a href="https://github.com/Matt-Esch/virtual-dom">Virtual DOM</a>) takes care of efficiently
+updating the DOM for you.</p>
+</div>
+<div class="paragraph">
+<p>The view for the module browser is really quite simple and consist of a search input field
+and an ul for listing the modules.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="http://rundis.github.io/blog/2016/modulebrowser.png" alt="modulebrowser">
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">view : Signal.Address Action -&gt; Model -&gt; Html                                     <i class="conum" data-value="1"></i><b>(1)</b>
+view address model =
+  div
+    [ class "filter-list" ]                                                       <i class="conum" data-value="2"></i><b>(2)</b>
+    [ searchInputView address model
+    , ul
+        []
+        (List.map (\m -&gt; itemView address m model) model.filteredModules)         <i class="conum" data-value="3"></i><b>(3)</b>
+    ]
+
+
+searchInputView : Signal.Address Action -&gt; Model -&gt; Html                          <i class="conum" data-value="4"></i><b>(4)</b>
+searchInputView address model =
+  let
+    options =
+      { preventDefault = True, stopPropagation = False }
+
+    keyActions =
+      Dict.fromList [ ( 38, Prev ), ( 40, Next ), ( 13, Select ), ( 27, Close ) ] <i class="conum" data-value="5"></i><b>(5)</b>
+
+    dec =
+      (Json.customDecoder                                                         <i class="conum" data-value="6"></i><b>(6)</b>
+        keyCode
+        (\k -&gt;
+          if Dict.member k keyActions then
+            Ok k
+          else
+            Err "not handling that key"
+        )
+      )
+
+    handleKeydown k =                                                             <i class="conum" data-value="7"></i><b>(7)</b>
+      Maybe.withDefault NoOp (Dict.get k keyActions) |&gt; Signal.message address
+  in
+    input                                                                         <i class="conum" data-value="8"></i><b>(8)</b>
+      [ value model.searchStr
+      , class "search"
+      , type' "text"
+      , placeholder "search"
+      , on "input" targetValue (\str -&gt; Signal.message address (Filter str))
+      , onWithOptions "keydown" options dec handleKeydown
+      ]
+      []
+
+
+itemView : Signal.Address Action -&gt; Modul -&gt; Model -&gt; Html
+itemView address mod model =                                                     <i class="conum" data-value="9"></i><b>(9)</b>
+  let
+    pipeM =                                                                      <i class="conum" data-value="10"></i><b>(10)</b>
+      flip Maybe.andThen
+
+    itemClass =                                                                  <i class="conum" data-value="11"></i><b>(11)</b>
+      model.selected
+        |&gt; pipeM
+            (\sel -&gt;
+              if (sel == mod) then
+                Just "selected"
+              else
+                Nothing
+            )
+        |&gt; Maybe.withDefault ""
+  in
+    li
+      [ class itemClass
+      , onClick address (ClickSelect mod.file)
+      ]
+      [ p [] [ text mod.name ]
+      , p [ class "binding" ] [ text (mod.packageName ++ " - " ++ mod.version) ]
+      ]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The main <code>view</code> function takes an Address and the current Model as input and returns
+a virtual <code>HTML</code> that represents the UI we want rendered. In Elm we use something called mailboxes
+to respond to user interactions. Check out the note section below for more details if you&#8217;re interested.
+In short the address param is the address to a given mailbox. Elm picks up any messages in the mailbox, handles them
+and ultimately the results flow back to our application through the previously described <code>update</code> function.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>All HTML tags have a corresponding function and all follow the same pattern. The first argument is a list of attributes,
+the second is a list of sub elements.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The beauty of everything being a function (as opposed to templating languages) is that you have the full power of the language
+to construct your view. Map, filter, reduce etc to your heart&#8217;s content.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The <code>searchInputView</code> function renders the search input field. This is where most of the user interaction stuff happens
+so it&#8217;s naturally the most complex part of the UI.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>We use the Dict type to represent key/values. Think map if you&#8217;re from a Clojure background! The <code>keyActions</code>
+map lists the keycode and update action combo we are interested in handling.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>We want to intercept just the given keyCodes everything else should flow through and update the searchStr in our model.
+To support that we need to implement a custom decoder for the keydown event.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>You can read <code>handleKeydown</code> as follows, if the keyCode lookup for the given k returns an <code>Action</code> use that
+otherwise use the default <code>NoOp</code> action. The result from that is used as the last param of the <code>Signal.message</code> function.
+(In Clojure terms you can think of <code>|&gt;</code> as thread-last). Signal.message sends the given action to the given address.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>The search input handles changes to the input by triggering the <code>Filter</code> action with a payload
+which is the current value of the input. To handle the special characters we handle the keydown event using
+the local helper function we outlined in &lt;7&gt;.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td><code>itemView</code> constructs the view for each individual item. Most of the logic here is related to giving the
+currently selected item it&#8217;s own css class.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="10"></i><b>10</b></td>
+<td>Maybe.andThen is a function to help you chain <a href="http://elm-lang.org/guide/model-the-problem#banishing-null">maybes</a>.
+(There is no such thing as null/nil in Elm !). <code>flip</code> flips the order of the two first arguments, and we do it to allow us to chain calls using the <code>|&gt;</code> operator</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="11"></i><b>11</b></td>
+<td>If an item is selected and the selected item is the same as the current module being rendered then the class should be <code>selected</code> in all other cases
+the class is an empty string.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+To understand more about Mailboxes, Addresses and the term Signal in Elm. You might want
+to check out the relevant  <a href="http://elm-lang.org/guide/reactivity">Elm docs</a> or maybe this <a href="https://medium.com/@diamondgfx/understanding-elm-signals-mailboxes-addresses-and-actions-7932781396ef#.hsyq1b5c9">nice blog post</a>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_interop_with_clojurescript_using_ports">Interop with ClojureScript using Ports</h3>
+<div class="paragraph">
+<p>Interop with JavaScript in Elm goes through strict boundaries and use a mechanism called <a href="http://elm-lang.org/guide/interop#ports">ports</a>.
+The strict boundary is in place to ensure that you can&#8217;t get runtime exceptions in Elm (due to nulls, undefined is not a function, type mismatches etc etc).
+At first it feels a little bit cumbersome, but really the guarantees given from Elm makes up for it in the long run. Big time.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The following blog post really helped me out when doing the ports stuff; <a href="http://danielbachler.de/2016/02/26/ports-in-elm.html">"Ports in Elm"</a>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">-- Inbound
+
+modzSignal : Signal Action                     <i class="conum" data-value="1"></i><b>(1)</b>
+modzSignal =
+  Signal.map Refresh modzPort
+
+
+port modzPort : Signal (List Modul)            <i class="conum" data-value="2"></i><b>(2)</b>
+
+
+
+-- Outbound
+
+selectMailbox : Signal.Mailbox String          <i class="conum" data-value="3"></i><b>(3)</b>
+selectMailbox =
+  Signal.mailbox ""
+
+
+port select : Signal String                    <i class="conum" data-value="4"></i><b>(4)</b>
+port select =
+  selectMailbox.signal
+
+
+changeSelectionMailbox : Signal.Mailbox ()     <i class="conum" data-value="5"></i><b>(5)</b>
+changeSelectionMailbox =
+  Signal.mailbox ()
+
+
+port changeSelection : Signal ()               <i class="conum" data-value="6"></i><b>(6)</b>
+port changeSelection =
+  changeSelectionMailbox.signal
+
+
+closeMailbox : Signal.Mailbox ()
+closeMailbox =
+  Signal.mailbox ()
+
+
+port close : Signal ()
+port close =
+  closeMailbox.signal</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Signals are basically values that changes over time. A signal always has a value.
+If you remember our <code>update</code> function, it takes an <code>Action</code> as the first argument. To allow
+our incoming module list to trigger an update we need to convert the value we receive from the
+<code>modzPort</code> to a <code>Refresh</code> action (with a payload which is a List of <code>Modul</code> records)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>modzPort</code> is a port which is a Signal that receives values from outside of Elm. Typically JavaScript
+or in our instance ClojureScript. A Signal always has a value, so you will see that we need to provide an initial value
+when we start the elm app from ClojureScript later on.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>When using the <a href="https://github.com/evancz/start-app">Elm start app package</a> we typically use mailboxes to
+achieve (side-) effects. So to send messages to JavaScript (or ClojureScript!) we create an intermediary mailbox
+to communicate through an outgoing port. When we select a module in the module browser we send the file name of the module
+we wish to open and the type of the file name is <code>String</code>. Hence the Mailbox is a mailbox for string messages.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The <code>select</code> port is a Signal of Strings (file names) that we can subscribe to from JavaScript(/ClojureScript).
+You can think of it as an Observable (in RxJs terms) or maybe simpler an event emitter if you like.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td><code>()</code> in Elm means the same as <code>void</code> or no value.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>When the user changes which module is selected/hightlighted we don&#8217;t care about the value, in this instance we just need to know that the user changed their selection</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wiring_up_elm_with_start_app">Wiring up Elm with Start app</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">app : StartApp.App Model                       <i class="conum" data-value="1"></i><b>(1)</b>
+app =
+  StartApp.start
+    { init = init
+    , update = update
+    , view = view
+    , inputs = [ modzSignal ]                  <i class="conum" data-value="2"></i><b>(2)</b>
+    }
+
+
+main : Signal Html                             <i class="conum" data-value="3"></i><b>(3)</b>
+main =
+  app.html
+
+
+port tasks : Signal (Task.Task Never ())       <i class="conum" data-value="4"></i><b>(4)</b>
+port tasks =
+  app.tasks</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>StartApp.start</code> takes care of wiring up our Elm application. <code>init</code> creates an initial empty Model, the other functions
+we have already described.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>StartApp also takes an inputs argument, here we need to remember to add our <code>modzSignal</code> so that it
+is picked up and handled by StartApp.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>main</code> is the entry point for any Elm application.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Elm executes side effects through something called <a href="http://elm-lang.org/guide/reactivity#tasks">tasks</a>
+I won&#8217;t go into details here, but just remember to add this incantation when using StartApp.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wrapping_up_the_elm_part">Wrapping up the Elm part</h3>
+<div class="paragraph">
+<p>Right so that wes pretty much all there is to the Elm part. Of course we also need to remember to compile
+the Elm code to JavaScript before we can use it from Light Table.
+To do that we use the <code>elm-make</code> executable that comes with the <a href="http://elm-lang.org/install">elm-platform installation</a></p>
+</div>
+<div class="paragraph">
+<p>I can assure you that I didn&#8217;t get a single run time exception whilst developing the Elm part. It did
+get lots of helpful compiler errors along the way, but as soon as the compiler was happy the Elm application ran just as expected.
+It&#8217;s hard to describe the experience, but trust me, it&#8217;s certainly worth a try !
+To be able to easily test and get visual feedback along the way I set up a dummy html page.</p>
+</div>
+<div class="paragraph">
+<p>Ok let&#8217;s move on to the ClojureScript part were we hook the ui up to the Light Table plugin.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_clojurescript_and_light_table">ClojureScript and Light Table</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_generating_the_list_of_elm_modules">Generating the list of Elm Modules</h3>
+<div class="paragraph">
+<p>Unfortunately there isn&#8217;t any API AFAIK that provides the information I wished to present
+(ideally all modules and for each module, all it&#8217;s publicly exposed functions/types/values).
+So I had to go down a route where I use a combination of the elm project file (elm-package.json) and
+artifacts (files) generated when you run <code>elm-make</code> on your elm project.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defn- resolve-module-file [project-path pck-json package module version]                   <i class="conum" data-value="1"></i><b>(1)</b>
+  (-&gt;&gt; pck-json
+       :source-directories
+       (map #(files/join project-path
+                         "elm-stuff/packages"
+                         package
+                         version
+                         %
+                         (str (s/replace module "." files/separator) ".elm")))
+       (some #(if (files/exists? %) % nil))))
+
+
+(defn- get-exposed-modules [project-path {:keys [package exact]}]                          <i class="conum" data-value="2"></i><b>(2)</b>
+  (let [pck-json (u/parse-json-file (files/join project-path
+                                                "elm-stuff/packages"
+                                                package exact
+                                                "elm-package.json"))]
+    (-&gt;&gt; pck-json
+         :exposed-modules
+         (map (fn [x]
+                {:name x
+                 :packageName package
+                 :version exact
+                 :file (resolve-module-file project-path pck-json package x exact)})))))
+
+
+(defn- get-package-modules [project-path]                                                 <i class="conum" data-value="3"></i><b>(3)</b>
+  (-&gt;&gt; (u/get-project-deps project-path)
+       (filter :exact)
+       (mapcat (partial get-exposed-modules project-path))
+       (sort-by :name)))
+
+
+(defn- deduce-module-name [root-path elm-file-path]                                       <i class="conum" data-value="4"></i><b>(4)</b>
+  (-&gt; elm-file-path
+      (s/replace root-path "")
+      (s/replace ".elm" "")
+      (s/replace #"^/" "")
+      (s/replace files/separator ".")))
+
+
+(defn- get-project-modules [project-path]                                                 <i class="conum" data-value="5"></i><b>(5)</b>
+  (let [pck-json (u/parse-json-file (files/join project-path "elm-package.json"))]
+    (-&gt;&gt; (:source-directories pck-json)
+         (mapcat (fn [dir]
+                   (if (= dir ".")
+                     (-&gt;&gt; (files/ls project-path) ;; fixme: no nesting allowed to avoid elm-stuff etc
+                          (filter #(= (files/ext %) "elm"))
+                          (map (fn [x]
+                                 {:name (deduce-module-name "" x)
+                                  :file (files/join project-path x)})))
+                     (-&gt;&gt; (files/filter-walk #(= (files/ext %) "elm") (files/join project-path dir))
+                          (map (fn [x]
+                                 {:name (deduce-module-name (files/join project-path dir) x)
+                                  :file x}))))))
+         (map (fn [m]
+                (assoc m :packageName (files/basename project-path) :version (:version pck-json))))
+         (sort-by :name))))
+
+
+
+(defn get-all-modules [project-path]                                                      <i class="conum" data-value="6"></i><b>(6)</b>
+  (concat
+    (get-project-modules project-path)
+    (get-package-modules project-path)))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Helper function which tries to resolve the file for a Module from a 3rd party library</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Every 3rd party library also comes with a elm-package.json that lists which module are
+publicly exposed. This helper function generates module info for all exposed modules from a 3rd party library</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Given all defined project dependencies for a project at a given project-path this function generates
+module informaation for all this packages. It will only try to resolve modules which has a resolved version <code>:exact</code>, so there is a precondition
+that you have run either <code>elm-package</code> install or <code>elm-make</code> successfully on your project first.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><code>deduce-module-name</code> is a helper function which tries to deduce the module name for an Elm file in your project</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Helper function that takes a simplistic approach to try to find all modules in you project and generate module information for them
+It uses the "source-directories" key in your project&#8217;s <code>elm-package.json</code> as a starting point.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>The complete list of modules is a concatination of 3rd party modules and your project modules.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+There are a few simplifications in this implementation that might yield incomplete results (and sometimes erronous).
+However for the majority of cases it should work fine.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_light_table_sidebar">Light Table sidebar</h3>
+<div class="paragraph">
+<p>The module browser will live in the right sidebar in Light Table. The following code will
+construct the wrapper view and a Light Table object that will allow us to wire up the appropriate
+behaviors.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(defui wrapper [this]                                             <i class="conum" data-value="1"></i><b>(1)</b>
+   [:div {:id "elm-module-browser"} "Retrieving modules..."])
+
+
+(object/object* ::modulebrowser                                   <i class="conum" data-value="2"></i><b>(2)</b>
+                :tags #{:elm.modulebrowser}
+                :label "Elm module browser"
+                :order 2
+                :init (fn [this]
+                        (wrapper this)))
+
+(def module-bar (object/create ::modulebrowser))                  <i class="conum" data-value="3"></i><b>(3)</b>
+
+(sidebar/add-item sidebar/rightbar module-bar)                    <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Helper function to create a wrapper div which will host our module browser</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>A Light Table object (basically an ClojureScript atom) that allows us to tag behaviors.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The object above is instantiated at start up</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>We add the module bar to the right hand sidebar in Light Table</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_light_table_behaviors">Light Table behaviors</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">(behavior ::clear!                                              <i class="conum" data-value="1"></i><b>(1)</b>
+          :triggers #{:clear!}
+          :reaction (fn [this]
+                      (cmd/exec! :close-sidebar)))
+
+(behavior ::focus!                                              <i class="conum" data-value="2"></i><b>(2)</b>
+          :triggers #{:focus!}
+          :reaction (fn [this]
+                      (let [input (dom/$ "#elm-module-browser input")]
+                        (.focus input))))
+
+(behavior ::ensure-visible                                      <i class="conum" data-value="3"></i><b>(3)</b>
+          :triggers #{:ensure-visible}
+          :reaction (fn [this]
+                      (sidebar-cmd/ensure-visible this)))
+
+(behavior ::show-project-modules                                <i class="conum" data-value="4"></i><b>(4)</b>
+          :triggers #{:show-project-modules}
+          :reaction (fn [this prj-path]
+                      (let [modules (get-all-modules prj-path)
+                            el (dom/$ "#elm-module-browser")
+                            mod-browser (.embed js/Elm js/Elm.ModuleBrowser el (clj-&gt;js {:modzPort []}))] <i class="conum" data-value="5"></i><b>(5)</b>
+
+                        (.send (.-modzPort (.-ports mod-browser)) (clj-&gt;js modules))   <i class="conum" data-value="6"></i><b>(6)</b>
+
+                        ;; set up port subscriptions
+
+                        (.subscribe (.-changeSelection (.-ports mod-browser))          <i class="conum" data-value="7"></i><b>(7)</b>
+                                    (fn []
+                                      (object/raise this :ensure-visible)))
+
+                        (.subscribe (.-select (.-ports mod-browser))
+                                    (fn [file]
+                                      (cmd/exec! :open-path file)
+                                      (object/raise this :clear!)))
+
+                        (.subscribe (.-close (.-ports mod-browser))
+                                    (fn []
+                                      (object/raise this :clear!)))
+
+
+                        (object/raise this :focus!))))
+
+
+
+(behavior ::list-modules                                     <i class="conum" data-value="8"></i><b>(8)</b>
+          :triggers #{:editor.elm.list-modules}
+          :reaction (fn [ed]
+                      (when-let [prj-path (u/project-path (-&gt; @ed :info :path))]
+                        (do
+                          (object/raise sidebar/rightbar :toggle module-bar)
+                          (object/raise module-bar :show-project-modules prj-path)))))
+
+
+(cmd/command {:command :show-modulebrowser                  <i class="conum" data-value="9"></i><b>(9)</b>
+              :desc "Elm: Show module-browser"
+              :exec (fn []
+                      (when-let [ed (pool/last-active)]
+                        (object/raise ed :editor.elm.list-modules)))})</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This behavior basically closes the module browser sidebar when triggered</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We need to be able to set focus to the search input field when we open the module browser</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Helper behavior that ensures that the currently selected item in the module browser is visible
+on the screen. Ie it will scroll the div contents accordingly using a LT core helper function.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>This is were we hook everything up. We gather the module information for the given project
+instantiate the Elm app, subscribe to outgoing messages(/signals!) and populate the module browser
+with the module list.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>We start the elm app here and tells it to render in the wrapper div defined previously. We provide
+an initial value for the modzPort with an empty list. (Could have provided the gathered list modules here, but wanted to show how you send messages to a inbound Elm port explicitly. See next step)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>To populate the module browser we send a message to the modzPort. Elm port thinks in JavaScript so we need to convert our list of ClojureScript maps to a list of JavaScript objects</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>To listen to events from the Elm app we call subscribe with a given callback function. In this example
+we trigger the ensure-visible behavior when the users moves the selection up or down, to ensure the selected item stays visible.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>The behaviors above was tied(tagged) to the <code>module-bar</code> object, however this behavior is tagged to
+a currently opened and active elm editor object. Light Table has no concept of projects, so to deduce which project we should
+open the module browser for we need a starting point. Any elm file in your project will do. Based on that
+we can deduce the root project path. If we find a project we display the module bar view and trigger the behavior
+for populating the module browser.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>Commands are the user interfacing functions that responds to user actions. They can be listed in the command bar in Light Table
+and you can assign shortcuts to them. The <code>show-modulebrowser</code> command triggers the <code>list-modules</code> behavior.
+Commands are available regardless of which editor you trigger them from, this is why we introduced the intermediary 'list-modules` behavior
+because that allows us to declaritly filter when this behavior will be triggered. You&#8217;ll see how when we describe behaviors wiring in Light Table.</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_wiring_up_lt_behaviors">Wiring up LT behaviors</h4>
+<div class="paragraph">
+<p>In our plugin behaviors file we need to wire up our behaviors.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-clojure" data-lang="clojure">[:editor.elm :lt.plugins.elm-light.modulebrowser/list-modules]       <i class="conum" data-value="1"></i><b>(1)</b>
+[:elm.modulebrowser :lt.plugins.elm-light.modulebrowser/clear!]      <i class="conum" data-value="2"></i><b>(2)</b>
+[:elm.modulebrowser :lt.plugins.elm-light.modulebrowser/show-project-modules]
+[:elm.modulebrowser :lt.plugins.elm-light.modulebrowser/focus!]
+[:elm.modulebrowser :lt.plugins.elm-light.modulebrowser/ensure-visible]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Here we tell Light Table that only editor objects with the tag <code>:editor.elm</code>
+will respond with the list-modules behavior we described earlier</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Similaritly the other behaviors will only be triggerd by objects tagged with <code>:elm-modulebrowser</code>.
+In our case that would be the <code>module-bar</code> object we defined.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<div class="title">Why all this ceremony with behaviors ?</div>
+<p>Flexibility! It allows us to easily turn on/off features while Light Table is running. If you wish you could quite easily
+create your own implementation for a behavior and replace the one supplied by the plugin.
+Or maybe you&#8217;d like to do something in addition for a given behavior trigger.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Okay let&#8217;s be honest. We haven&#8217;t set the world alight with a killer feature that couldn&#8217;t
+be accomplished quite easily without Elm. Neither have we created an advanced demo for Elm and ClojureScript integration.
+But we&#8217;ve certainly proven that it&#8217;s possible and it wasn&#8217;t particularily difficult.
+It somehow feels better with an Elm plugin that has Elm as part of it&#8217;s implementation.</p>
+</div>
+<div class="paragraph">
+<p>You can do some pretty awesomly advanced UI&#8217;s with Elm and combing it with ClojureScript is definitely feasible.
+I&#8217;ll leave it to you to evaluate if that would ever make sense to do though !</p>
+</div>
+</div>
+</div></p>
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'elm_light_modules';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 Magnus Rundberget
+          <a class="pull-right btn btn-xs" href="https://twitter.com/mrundberget"><i class="fa fa-twitter"></i></a>
+          <a class="pull-right btn btn-xs" href="https://github.com/rundis"><i class="fa fa-github"></i></a>
+          <a class="pull-right btn btn-xs" href="http://no.linkedin.com/in/mrundberget"><i class="fa fa-linkedin"></i></a>
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+  </body>
+</html>
