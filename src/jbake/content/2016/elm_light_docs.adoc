@@ -1,0 +1,42 @@
+= Elm package docs preview in Light Table
+Magnus Rundberget
+2016-03-28
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: elm, clojurescript, lighttable
+:imagesdir: /blog/2016/
+:icons: font
+:id: elm_light_docs
+
+
+Maybe you are a package author for Elm packages you wish to publish to http://package.elm-lang.org/
+. Or maybe you are thinking about authoring a package. Before you publish something to the package repo
+you have to write documentation for your package. Wouldn't it be sweet if you could preview the
+generated documentation from the comfort of your editor ?
+
+The good news is that with the latest (0.3.6) edition of the https://github.com/rundis/elm-light[elm-light] plugin
+you can !
+
+== Demo
+
+https://youtu.be/1yk8nsjJxb0[Link to demo]
+
+++++
+<iframe width="420" height="315" src="https://www.youtube.com/embed/pAwdVM888wQ" frameborder="0" allowfullscreen></iframe>
+++++
+
+
+.Feature highlights
+* Preview how the docs will look for each individual module
+* The preview is updated whenever you save your (exposed) Elm module file
+* Layout pretty close to how it will look on http://package.elm-lang.org/ once published
+* Fast (at least on my machine !)
+* Minor detail, but the entire preview UI is also implemented in Elm (ultimate dogfooding). It's
+basically a modified and simplified implementation of the package preview code for http://package.elm-lang.org/
+
+
+
+== Resources
+* http://package.elm-lang.org/
+* https://github.com/elm-lang/package.elm-lang.org for most of the Elm ui code used
+* Check out the plugin: https://github.com/rundis/elm-light[elm-light]
