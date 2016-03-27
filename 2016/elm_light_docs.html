@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Elm package docs preview in Light Table</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/blog/css/prettify.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse bs-navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/blog/archive.html">Archive</a></li>
+                <li><a href="/blog/about.html">About</a></li>
+                <li><a href="/blog/feed.xml">Subscribe</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="https://github.com/rundis/blog"><i class="fa fa-lg fa-github"></i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="container">
+
+	<div class="page-header">
+		<h1>Elm package docs preview in Light Table</h1>
+	</div>
+
+	<p><em>28 March 2016</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/elm.html">elm</a>
+  </em>
+    <a href="/blog/tags/clojurescript.html">clojurescript</a>
+  </em>
+    <a href="/blog/tags/lighttable.html">lighttable</a>
+  </p>
+  <a href="https://twitter.com/share" class="twitter-share-button"
+    data-url="http://rundis.github.io/blog/2016/elm_light_docs.html"
+    data-via="mrundberget"
+    data-lang="en">Tweet</a>
+  <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+	<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Maybe you are a package author for Elm packages you wish to publish to <a href="http://package.elm-lang.org/" class="bare">http://package.elm-lang.org/</a>
+. Or maybe you are thinking about authoring a package. Before you publish something to the package repo
+you have to write documentation for your package. Wouldn&#8217;t it be sweet if you could preview the
+generated documentation from the comfort of your editor ?</p>
+</div>
+<div class="paragraph">
+<p>The good news is that with the latest (0.3.6) edition of the <a href="https://github.com/rundis/elm-light">elm-light</a> plugin
+you can !</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_demo">Demo</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="https://youtu.be/1yk8nsjJxb0">Link to demo</a></p>
+</div>
+<iframe width="420" height="315" src="https://www.youtube.com/embed/pAwdVM888wQ" frameborder="0" allowfullscreen></iframe>
+<div class="ulist">
+<div class="title">Feature highlights</div>
+<ul>
+<li>
+<p>Preview how the docs will look for each individual module</p>
+</li>
+<li>
+<p>The preview is updated whenever you save your (exposed) Elm module file</p>
+</li>
+<li>
+<p>Layout pretty close to how it will look on <a href="http://package.elm-lang.org/" class="bare">http://package.elm-lang.org/</a> once published</p>
+</li>
+<li>
+<p>Fast (at least on my machine !)</p>
+</li>
+<li>
+<p>Minor detail, but the entire preview UI is also implemented in Elm (ultimate dogfooding). It&#8217;s
+basically a modified and simplified implementation of the package preview code for <a href="http://package.elm-lang.org/" class="bare">http://package.elm-lang.org/</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_resources">Resources</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="http://package.elm-lang.org/" class="bare">http://package.elm-lang.org/</a></p>
+</li>
+<li>
+<p><a href="https://github.com/elm-lang/package.elm-lang.org" class="bare">https://github.com/elm-lang/package.elm-lang.org</a> for most of the Elm ui code used</p>
+</li>
+<li>
+<p>Check out the plugin: <a href="https://github.com/rundis/elm-light">elm-light</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div></p>
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'elm_light_docs';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 Magnus Rundberget
+          <a class="pull-right btn btn-xs" href="https://twitter.com/mrundberget"><i class="fa fa-twitter"></i></a>
+          <a class="pull-right btn btn-xs" href="https://github.com/rundis"><i class="fa fa-github"></i></a>
+          <a class="pull-right btn btn-xs" href="http://no.linkedin.com/in/mrundberget"><i class="fa fa-linkedin"></i></a>
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+  </body>
+</html>

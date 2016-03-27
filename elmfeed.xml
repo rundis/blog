@@ -6,9 +6,79 @@
     <atom:link href="http://rundis.github.io/blog/elmfeed.xml" rel="self" type="application/rss+xml" />
     <description>Elm feed from rundis.github.com/blog</description>
     <language>en-gb</language>
-    <pubDate>Tue, 15 Mar 2016 07:00:07 +0100</pubDate>
-    <lastBuildDate>Tue, 15 Mar 2016 07:00:07 +0100</lastBuildDate>
+    <pubDate>Mon, 28 Mar 2016 01:49:20 +0200</pubDate>
+    <lastBuildDate>Mon, 28 Mar 2016 01:49:20 +0200</lastBuildDate>
 
+      <item>
+        <title>Elm package docs preview in Light Table</title>
+        <link>http://rundis.github.io/blog/2016/elm_light_docs.html</link>
+        <pubDate>Mon, 28 Mar 2016 00:00:00 +0200</pubDate>
+        <guid isPermaLink="false">2016/elm_light_docs.html</guid>
+          <description>
+  	       &lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Maybe you are a package author for Elm packages you wish to publish to &lt;a href=&quot;http://package.elm-lang.org/&quot; class=&quot;bare&quot;&gt;http://package.elm-lang.org/&lt;/a&gt;
+. Or maybe you are thinking about authoring a package. Before you publish something to the package repo
+you have to write documentation for your package. Wouldn&amp;#8217;t it be sweet if you could preview the
+generated documentation from the comfort of your editor ?&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The good news is that with the latest (0.3.6) edition of the &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;elm-light&lt;/a&gt; plugin
+you can !&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_demo&quot;&gt;Demo&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://youtu.be/1yk8nsjJxb0&quot;&gt;Link to demo&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/pAwdVM888wQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Feature highlights&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Preview how the docs will look for each individual module&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The preview is updated whenever you save your (exposed) Elm module file&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Layout pretty close to how it will look on &lt;a href=&quot;http://package.elm-lang.org/&quot; class=&quot;bare&quot;&gt;http://package.elm-lang.org/&lt;/a&gt; once published&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Fast (at least on my machine !)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Minor detail, but the entire preview UI is also implemented in Elm (ultimate dogfooding). It&amp;#8217;s
+basically a modified and simplified implementation of the package preview code for &lt;a href=&quot;http://package.elm-lang.org/&quot; class=&quot;bare&quot;&gt;http://package.elm-lang.org/&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_resources&quot;&gt;Resources&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://package.elm-lang.org/&quot; class=&quot;bare&quot;&gt;http://package.elm-lang.org/&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/elm-lang/package.elm-lang.org&quot; class=&quot;bare&quot;&gt;https://github.com/elm-lang/package.elm-lang.org&lt;/a&gt; for most of the Elm ui code used&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Check out the plugin: &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;elm-light&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+  	       </description>
+      </item>
       <item>
         <title>Elm and ClojureScript joining forces in the elm-light plugin</title>
         <link>http://rundis.github.io/blog/2016/elm_light_modules.html</link>
