@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 28 Mar 2016 01:49:20 +0200</pubDate>
-    <lastBuildDate>Mon, 28 Mar 2016 01:49:20 +0200</lastBuildDate>
+    <pubDate>Mon, 28 Mar 2016 02:15:54 +0200</pubDate>
+    <lastBuildDate>Mon, 28 Mar 2016 02:15:54 +0200</lastBuildDate>
 
     <item>
       <title>Elm package docs preview in Light Table</title>
@@ -33,7 +33,7 @@ you can !&lt;/p&gt;
 &lt;h2 id=&quot;_demo&quot;&gt;Demo&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;&lt;a href=&quot;https://youtu.be/1yk8nsjJxb0&quot;&gt;Link to demo&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://youtu.be/pAwdVM888wQ&quot;&gt;Link to demo&lt;/a&gt;&lt;/p&gt;
 &lt;/div&gt;
 &lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/pAwdVM888wQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
 &lt;div class=&quot;ulist&quot;&gt;
