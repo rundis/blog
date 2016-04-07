@@ -255,40 +255,21 @@ The value is unwrapped using something called pattern matching. In JavaScript te
 of handy functions that makes it handy to work with Maybe types in various scenarios.</p>
 </div>
 <div class="listingblock">
+<div class="title">Some sample data setup</div>
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">myList = ["First", "Second", "Third"]
 
 first = List.head myList
 second = List.head (List.drop 1 myList)
-tail = List.tail myList -- Just ["Second","Third"] : Maybe (List String)
-
--- Maybe.withDefault : a -&gt; Maybe a -&gt; a                                         <i class="conum" data-value="1"></i><b>(1)</b>
+tail = List.tail myList -- Just ["Second","Third"] : Maybe (List String)</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Handling defaults</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">-- Maybe.withDefault : a -&gt; Maybe a -&gt; a                                         <i class="conum" data-value="1"></i><b>(1)</b>
 Maybe.withDefault "No val" first -- -&gt; "First"                                   <i class="conum" data-value="2"></i><b>(2)</b>
-Maybe.withDefault "No val" (List.head []) -- -&gt; "No val"
-
--- Maybe.map : (a -&gt; b) -&gt; Maybe a -&gt; Maybe b                                    <i class="conum" data-value="3"></i><b>(3)</b>
-Maybe.map String.toUpper first -- -&gt; Just "FIRST"                                <i class="conum" data-value="4"></i><b>(4)</b>
-Maybe.map String.toUpper Nothing -- -&gt; Nothing
-
-
--- Maybe.map2 (a -&gt; b -&gt; c) -&gt; Maybe a -&gt; Maybe b -&gt; Maybe c                     <i class="conum" data-value="5"></i><b>(5)</b>
-Maybe.map2 (\a b -&gt; a ++ ", " b) first second -- -&gt; Just "First, Second"         <i class="conum" data-value="6"></i><b>(6)</b>
-Maybe.map2 (\a b -&gt; a ++ ", " b) first Nothing -- -&gt; Nothing
-Maybe.map2 (++) first second -- -&gt; Just "First, Second"                          <i class="conum" data-value="7"></i><b>(7)</b>
-
-
--- Maybe.andThen Maybe.Maybe a -&gt; (a -&gt; Maybe b) -&gt; Maybe b                      <i class="conum" data-value="8"></i><b>(8)</b>
-Maybe.andThen tail List.head  -- -&gt; Just "Second"                                <i class="conum" data-value="9"></i><b>(9)</b>
-tail `Maybe.andThen` List.head -- -&gt; Just "Second"                               <i class="conum" data-value="10"></i><b>(10)</b>
-
-tail
-  `Maybe.andThen` List.head
-  `Maybe.andThen` (\s -&gt; Just (String.toUpper s))   -- -&gt; Just "SECOND"          <i class="conum" data-value="11"></i><b>(11)</b>
-
-
-Just []
-  `Maybe.andThen` List.head
-  `Maybe.andThen` (\s -&gt; Just (String.toUpper s))   -- -&gt; Nothing                <i class="conum" data-value="12"></i><b>(12)</b></code></pre>
+Maybe.withDefault "No val" (List.head []) -- -&gt; "No val"</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -301,44 +282,83 @@ Just []
 <td><i class="conum" data-value="2"></i><b>2</b></td>
 <td>In the first example first is <code>Just "First"</code> so it unwraps the value and returns that. In the second example there is no value so it returns the provided default</td>
 </tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Mapping</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">-- Maybe.map : (a -&gt; b) -&gt; Maybe a -&gt; Maybe b                                    <i class="conum" data-value="1"></i><b>(1)</b>
+Maybe.map String.toUpper first -- -&gt; Just "FIRST"                                <i class="conum" data-value="2"></i><b>(2)</b>
+Maybe.map String.toUpper Nothing -- -&gt; Nothing
+
+
+-- Maybe.map2 (a -&gt; b -&gt; c) -&gt; Maybe a -&gt; Maybe b -&gt; Maybe c                     <i class="conum" data-value="3"></i><b>(3)</b>
+Maybe.map2 (\a b -&gt; a ++ ", " b) first second -- -&gt; Just "First, Second"         <i class="conum" data-value="4"></i><b>(4)</b>
+Maybe.map2 (\a b -&gt; a ++ ", " b) first Nothing -- -&gt; Nothing
+Maybe.map2 (++) first second -- -&gt; Just "First, Second"                          <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
 <tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
 <td><code>Maybe.map</code> takes a function which has the signature (a &#8594; b), that means a function that takes any value of type a and return a value of type b (which can be the same type or a completely different type). The second argument is a Maybe (of type <code>a</code>). The return value is a Maybe of type <code>b</code>. So Maybe.map unwraps the second argument, applies the provided function and wraps the result of that in a Maybe which in turn is returned.</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
 <td>String.toUpper takes a String (<code>a</code> if you like) and returns a String (<code>b</code> if you like). String.toUpper doesn&#8217;t understand Maybe values, so to use it on a Maybe value we can use Maybe.map</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
 <td><code>Maybe.map2</code> is similar to <code>Maybe.map</code> but the function in the first argument takes two in parameters. In addition to the function param we provide two Maybe values. These two doesn&#8217;t need to be of the same type, but happens to be so in our example. There is also map3, map4 etc up to map8</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
 <td>If any or both of the two Maybe params are <code>Nothing</code> the result will be Nothing.</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
 <td>In the example above we used an anonymous function (lambda). However <code>++</code> is actually a function that takes two arguments so we can use that as the function argument</td>
 </tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="title">Piping</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">-- Maybe.andThen Maybe.Maybe a -&gt; (a -&gt; Maybe b) -&gt; Maybe b                      <i class="conum" data-value="1"></i><b>(1)</b>
+Maybe.andThen tail List.head  -- -&gt; Just "Second"                                <i class="conum" data-value="2"></i><b>(2)</b>
+tail `Maybe.andThen` List.head -- -&gt; Just "Second"                               <i class="conum" data-value="3"></i><b>(3)</b>
+
+tail
+  `Maybe.andThen` List.head
+  `Maybe.andThen` (\s -&gt; Just (String.toUpper s))   -- -&gt; Just "SECOND"          <i class="conum" data-value="4"></i><b>(4)</b>
+
+
+Just []
+  `Maybe.andThen` List.head
+  `Maybe.andThen` (\s -&gt; Just (String.toUpper s))   -- -&gt; Nothing                <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
 <tr>
-<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
 <td><code>Maybe.andThen</code> resembles <code>Maybe.map</code> but there are two vital differences. The function argument comes as the second param (we&#8217;ll come back to why), secondly the function in the function argument must return a Maybe rather than a plain value.</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
 <td>The first argument <code>tail</code> is a Maybe, the second argument is List.head which is a function that takes a list as an argument and returns a Maybe, so that conforms to the function params signature required by Maybe.andThen</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="10"></i><b>10</b></td>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>In this version we use the infix version of <code>andThen</code> (marked by backticks before and after). This is the reason the function argument comes second, so you typically use <code>Maybe.andThen</code> when you you need to work with maybes in a pipeline sort of fashion.</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="11"></i><b>11</b></td>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
 <td>This is an example of piping values when dealing with Maybe values. We start with the tail of our list and then we pick out the head of that list and then we convert the value of that to uppercase</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="12"></i><b>12</b></td>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
 <td>You can almost think of <code>andThen</code> as a callback. If any step of the chain returns Nothing, the chain is terminated and Nothing is returned</td>
 </tr>
 </table>
