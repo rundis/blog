@@ -6,11 +6,11 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Thu, 7 Apr 2016 07:05:59 +0200</pubDate>
-    <lastBuildDate>Thu, 7 Apr 2016 07:05:59 +0200</lastBuildDate>
+    <pubDate>Thu, 7 Apr 2016 07:44:23 +0200</pubDate>
+    <lastBuildDate>Thu, 7 Apr 2016 07:44:23 +0200</lastBuildDate>
 
     <item>
-      <title>Just JavaScript null or Elm Maybe</title>
+      <title>Elm Maybe - Dealing with null/Nothing</title>
       <link>http://rundis.github.io/blog/2016/elm_maybe.html</link>
       <pubDate>Thu, 7 Apr 2016 00:00:00 +0200</pubDate>
       <guid isPermaLink="false">2016/elm_maybe.html</guid>
