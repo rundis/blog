@@ -6,9 +6,507 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 28 Mar 2016 02:15:54 +0200</pubDate>
-    <lastBuildDate>Mon, 28 Mar 2016 02:15:54 +0200</lastBuildDate>
+    <pubDate>Thu, 7 Apr 2016 07:05:59 +0200</pubDate>
+    <lastBuildDate>Thu, 7 Apr 2016 07:05:59 +0200</lastBuildDate>
 
+    <item>
+      <title>Just JavaScript null or Elm Maybe</title>
+      <link>http://rundis.github.io/blog/2016/elm_maybe.html</link>
+      <pubDate>Thu, 7 Apr 2016 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">2016/elm_maybe.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;If you have worked with JavaScript (or quite a few other languages that embrace null) I bet you have had one or two errors that can be
+traced back to an unexpected null reference. Some of them are obvious, but others are really tricky to
+track down. I&amp;#8217;m sure most of you are well aware that quite a few other languages banishes null and introduces a Maybe or Option type to handle nothingness.
+Elm is one of those languages. Before I started looking at Elm I hadn&amp;#8217;t really worked with Maybe types. In this blogpost
+I thought I&amp;#8217;d share a little more insight on how to work with them in Elm. I&amp;#8217;ll also briefly cover how they might be (or not) used in JavaScript for reference.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_elm_maybe&quot;&gt;Elm Maybe&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Elm is a statically typed language which compiles down to JavaScript. Types is a core ingredient of Elm, that&amp;#8217;s not the case with JavaScript obviously.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Maybe a = Just a | Nothing&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The Maybe type in Elm looks deceivingly simple. And actually it is.
+The type is parameterized and the &lt;code&gt;&lt;strong&gt;a&lt;/strong&gt;&lt;/code&gt; is a placeholder for a concrete type in your program.
+So &lt;code&gt;&lt;strong&gt;a&lt;/strong&gt;&lt;/code&gt; here means any type (Int, String, Float etc). A Maybe can have one of two values; either &lt;code&gt;Just&lt;/code&gt; some value of type &lt;code&gt;a&lt;/code&gt; or it is &lt;code&gt;Nothing&lt;/code&gt;.
+Where does &lt;code&gt;Just&lt;/code&gt; and &lt;code&gt;Nothing&lt;/code&gt; come from ? Are they defined somewhere else ? They are part of the type definition, think of them as tags. The name of these &quot;tags&quot;
+must start with an upper case letter in Elm.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;x = Just 0.0 -- Just 0.0 : Maybe.Maybe Float   &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+
+y = Nothing  -- Nothing : Maybe.Maybe a        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The variable x Maybe with the tag Just and the Float value 0.0 (Maybe lives in a namespace or rather module in Elm called Maybe, that&amp;#8217;s why the actual type definitions states &lt;strong&gt;Maybe.&lt;/strong&gt;Maybe)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The variable y becomes a Maybe with the tag Nothing. Nothing has no value, and hence no value type associated. Nothing is Nothing, but it&amp;#8217;s still a Maybe though :-)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_quick_detour_type_annotations&quot;&gt;Quick detour - Type annotations&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Elm is a statically typed language, everything is represented through types. So before
+we carry on I&amp;#8217;d like to briefly cover the concept of type annotations.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Since JavaScript doesn&amp;#8217;t have types, I&amp;#8217;ll use Java as a comparable example&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Sample Java functions&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-java&quot; data-lang=&quot;java&quot;&gt;public int increment(int value) {
+  return value++;
+}
+
+public int add (int x, int y) {
+  return x + y;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Type annotated equivalents in Elm&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;increment : Int -&amp;gt; Int         &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+increment value =
+  value = value + 1
+
+
+add : Int -&amp;gt; Int -&amp;gt; Int        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+add x y =
+  x + y&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The type annotation for increment tells us it is a function which takes an argument of type &lt;code&gt;Int&lt;/code&gt; and returns an &lt;code&gt;Int&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;add takes two arguments of type Int and returns a an &lt;code&gt;Int&lt;/code&gt;. So think of the last one as return type.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Type annotations in Elm are optional, because the compiler is able to infer the types statically.
+Most people tend to use type annotations because they provide very useful documentation.
+When working with Elm it&amp;#8217;s really something you quickly have to learn, because most documentation will use them
+and the Elm compiler will most certainly expose you to them.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_getting_the_actual_values_from_a_maybe&quot;&gt;Getting the actual values from a Maybe&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Ok so I have this maybe thing which can be a Just some value or Nothing. But how do I get
+hold of the value so I can work with it ?&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Pattern matching&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;myList : List String                      &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+myList = [&quot;First&quot;, &quot;Second&quot;]              &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+
+
+-- List.head : List a -&amp;gt; Maybe.Maybe a    &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+
+
+case List.head myList of                  &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+  Nothing -&amp;gt;                              &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+    &quot;So you gave me an empty list!&quot;
+
+  Just val -&amp;gt;                             &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+    val
+
+-- returns &quot;First&quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Type annotation for myList. It is a List of String. It&amp;#8217;s just a value, so that&amp;#8217;s why there is no arrows in the type annotation&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We are using a list literal to define our list. Each list item must be separated by a comma. It&amp;#8217;s also worth noting, that every item in the list must be of the same type. You can&amp;#8217;t mix Strings with Ints etc. The Elm compiler will yell at you if you try&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;I&amp;#8217;ve added the type annotation for the List.head function. Given a List of values with type &lt;code&gt;a&lt;/code&gt; it will return a Maybe of type &lt;code&gt;a&lt;/code&gt;. &lt;code&gt;List.head&lt;/code&gt; returns the first item of a List. The reason it returns a Maybe is because the List might be empty.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;You can think of &lt;code&gt;case&lt;/code&gt; as a switch statement on stereoids. Since List.head return a Maybe we have to possible case&amp;#8217;s we need to handle&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;In this instance we can see from the code this case will never happen, we know myList contains items. The Elm compiler is really smart, but not that smart so it doesn&amp;#8217;t know the list is empty.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This case unwraps the value in our Just so that we can use it. We just return the value, which would be &quot;First&quot;.
+The value is unwrapped using something called pattern matching. In JavaScript terms you might think of it as destructuring&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;The Maybe module&lt;/div&gt;
+&lt;p&gt;The Maybe type is defined in a module called &lt;code&gt;Maybe&lt;/code&gt;. In addition to the Maybe type it also includes a collection
+of handy functions that makes it handy to work with Maybe types in various scenarios.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;myList = [&quot;First&quot;, &quot;Second&quot;, &quot;Third&quot;]
+
+first = List.head myList
+second = List.head (List.drop 1 myList)
+tail = List.tail myList -- Just [&quot;Second&quot;,&quot;Third&quot;] : Maybe (List String)
+
+-- Maybe.withDefault : a -&amp;gt; Maybe a -&amp;gt; a                                         &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+Maybe.withDefault &quot;No val&quot; first -- -&amp;gt; &quot;First&quot;                                   &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+Maybe.withDefault &quot;No val&quot; (List.head []) -- -&amp;gt; &quot;No val&quot;
+
+-- Maybe.map : (a -&amp;gt; b) -&amp;gt; Maybe a -&amp;gt; Maybe b                                    &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+Maybe.map String.toUpper first -- -&amp;gt; Just &quot;FIRST&quot;                                &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+Maybe.map String.toUpper Nothing -- -&amp;gt; Nothing
+
+
+-- Maybe.map2 (a -&amp;gt; b -&amp;gt; c) -&amp;gt; Maybe a -&amp;gt; Maybe b -&amp;gt; Maybe c                     &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+Maybe.map2 (\a b -&amp;gt; a ++ &quot;, &quot; b) first second -- -&amp;gt; Just &quot;First, Second&quot;         &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+Maybe.map2 (\a b -&amp;gt; a ++ &quot;, &quot; b) first Nothing -- -&amp;gt; Nothing
+Maybe.map2 (++) first second -- -&amp;gt; Just &quot;First, Second&quot;                          &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+
+
+-- Maybe.andThen Maybe.Maybe a -&amp;gt; (a -&amp;gt; Maybe b) -&amp;gt; Maybe b                      &lt;i class=&quot;conum&quot; data-value=&quot;8&quot;&gt;&lt;/i&gt;&lt;b&gt;(8)&lt;/b&gt;
+Maybe.andThen tail List.head  -- -&amp;gt; Just &quot;Second&quot;                                &lt;i class=&quot;conum&quot; data-value=&quot;9&quot;&gt;&lt;/i&gt;&lt;b&gt;(9)&lt;/b&gt;
+tail `Maybe.andThen` List.head -- -&amp;gt; Just &quot;Second&quot;                               &lt;i class=&quot;conum&quot; data-value=&quot;10&quot;&gt;&lt;/i&gt;&lt;b&gt;(10)&lt;/b&gt;
+
+tail
+  `Maybe.andThen` List.head
+  `Maybe.andThen` (\s -&amp;gt; Just (String.toUpper s))   -- -&amp;gt; Just &quot;SECOND&quot;          &lt;i class=&quot;conum&quot; data-value=&quot;11&quot;&gt;&lt;/i&gt;&lt;b&gt;(11)&lt;/b&gt;
+
+
+Just []
+  `Maybe.andThen` List.head
+  `Maybe.andThen` (\s -&amp;gt; Just (String.toUpper s))   -- -&amp;gt; Nothing                &lt;i class=&quot;conum&quot; data-value=&quot;12&quot;&gt;&lt;/i&gt;&lt;b&gt;(12)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Maybe.withDefault&lt;/code&gt; takes a default value of type &lt;code&gt;a&lt;/code&gt; a Maybe of type &lt;code&gt;a&lt;/code&gt;. It returns the value of the maybe if it has a value (tagged &lt;code&gt;Just&lt;/code&gt;) otherwise it returns the provided default value&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;In the first example first is &lt;code&gt;Just &quot;First&quot;&lt;/code&gt; so it unwraps the value and returns that. In the second example there is no value so it returns the provided default&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Maybe.map&lt;/code&gt; takes a function which has the signature (a &amp;#8594; b), that means a function that takes any value of type a and return a value of type b (which can be the same type or a completely different type). The second argument is a Maybe (of type &lt;code&gt;a&lt;/code&gt;). The return value is a Maybe of type &lt;code&gt;b&lt;/code&gt;. So Maybe.map unwraps the second argument, applies the provided function and wraps the result of that in a Maybe which in turn is returned.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;String.toUpper takes a String (&lt;code&gt;a&lt;/code&gt; if you like) and returns a String (&lt;code&gt;b&lt;/code&gt; if you like). String.toUpper doesn&amp;#8217;t understand Maybe values, so to use it on a Maybe value we can use Maybe.map&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Maybe.map2&lt;/code&gt; is similar to &lt;code&gt;Maybe.map&lt;/code&gt; but the function in the first argument takes two in parameters. In addition to the function param we provide two Maybe values. These two doesn&amp;#8217;t need to be of the same type, but happens to be so in our example. There is also map3, map4 etc up to map8&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If any or both of the two Maybe params are &lt;code&gt;Nothing&lt;/code&gt; the result will be Nothing.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;In the example above we used an anonymous function (lambda). However &lt;code&gt;++&lt;/code&gt; is actually a function that takes two arguments so we can use that as the function argument&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;8&quot;&gt;&lt;/i&gt;&lt;b&gt;8&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Maybe.andThen&lt;/code&gt; resembles &lt;code&gt;Maybe.map&lt;/code&gt; but there are two vital differences. The function argument comes as the second param (we&amp;#8217;ll come back to why), secondly the function in the function argument must return a Maybe rather than a plain value.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;9&quot;&gt;&lt;/i&gt;&lt;b&gt;9&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The first argument &lt;code&gt;tail&lt;/code&gt; is a Maybe, the second argument is List.head which is a function that takes a list as an argument and returns a Maybe, so that conforms to the function params signature required by Maybe.andThen&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;10&quot;&gt;&lt;/i&gt;&lt;b&gt;10&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;In this version we use the infix version of &lt;code&gt;andThen&lt;/code&gt; (marked by backticks before and after). This is the reason the function argument comes second, so you typically use &lt;code&gt;Maybe.andThen&lt;/code&gt; when you you need to work with maybes in a pipeline sort of fashion.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;11&quot;&gt;&lt;/i&gt;&lt;b&gt;11&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This is an example of piping values when dealing with Maybe values. We start with the tail of our list and then we pick out the head of that list and then we convert the value of that to uppercase&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;12&quot;&gt;&lt;/i&gt;&lt;b&gt;12&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;You can almost think of &lt;code&gt;andThen&lt;/code&gt; as a callback. If any step of the chain returns Nothing, the chain is terminated and Nothing is returned&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Don&amp;#8217;t like the way Maybe sound, how about rolling your own ?&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Perhaps a = Absolutely a | NotSoMuch&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Of course interop with others will be an issue and &lt;code&gt;Maybe&lt;/code&gt; has some advantages being part of the core library. But still
+if you really really want to&amp;#8230;&amp;#8203;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_javascript_null_undefined&quot;&gt;JavaScript null/undefined&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;function headOfList(lst) {
+ if (lst &amp;amp;&amp;amp; lst.length &amp;gt; 0) {
+   return lst[0];
+ } else {
+   // hm... not sure. let&apos;s try null
+   return null;
+ }
+}
+
+function tailOfList(lst) {
+ if (lst &amp;amp;&amp;amp; lst.length &amp;gt; 1) then
+   return lst.slice(0);
+ } else {
+   // hm... not sure. let&apos;s try null
+   return null;
+ }
+}
+
+
+
+var myList = [&quot;First&quot;, &quot;Second&quot;, &quot;Third&quot;];
+var first =  headOfList(myList);  // &quot;First&quot;
+var second = headOfList(tailOfLIst(myList))   // &quot;Second&quot;
+var tail = tailOfList(lst); // [&quot;First&quot;, &quot;Second&quot;]
+
+
+first  // &quot;First&quot;
+
+headOfList([]) // null                                                                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+
+first.toUpperCase() // &quot;FIRST&quot;
+headOfList([]).toUpperCase() // Type Error: Cannot read property &apos;toUpperCase&apos; of null     &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+
+first + &quot;, &quot; + second // &quot;First, Second&quot;
+first + &quot;, &quot; + null // &quot;First, null&quot;                                                       &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+
+
+headOfList(tail).toUpperCase() // &quot;SECOND&quot;
+headOfList([]).toUpperCase() // Type Error: Cannot read property &apos;toUpperCase&apos; of null     &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;An empty list obviously doesn&amp;#8217;t have a first item.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If this was in a function you might guard against this. But what would you return ? Would you throw a exception ?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Doesn&amp;#8217;t look to cool, so you would have to make sure you guarded against this case. Let&amp;#8217;s hope you tested that code path, otherwise it&amp;#8217;s lurking there waiting to happen !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Same as 2&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Okay so most of this cases are pretty silly, we would have to come up with something more real life
+with functions calling functions calling functions etc. The bottom line is that you have to deal with it,
+but it&amp;#8217;s up to you all the time to make sure nulls or undefined doesn&amp;#8217;t sneak in. In most cases there are simple non verbose
+solutions to deal with them, but it&amp;#8217;s also quite easy to miss handling them. If you do it can sometimes be quite a challenge tracking down
+the root cause.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;It&amp;#8217;s undoubtably a little more ceremony in Elm, but in return you will not ever get nullpointer exceptions.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_introducing_maybe_in_javascript&quot;&gt;Introducing Maybe in JavaScript&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;If you are from a JavaScript background the blogpost &lt;a href=&quot;https://curiosity-driven.org/monads-in-javascript&quot;&gt;Monads in JavaScript&lt;/a&gt; gives you a little hint on how you could implement Maybe in JavaScript.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Let&amp;#8217;s borrow some code from there and see how some of the examples above might end up looking&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Defining Just and Nothing&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;function Just(value) {
+    this.value = value;
+}
+
+Just.prototype.bind = function(transform) {
+    return transform(this.value);
+};
+
+Just.prototype.map = function(transform) {
+    return new Just(transform(this.value));
+};
+
+
+Just.prototype.toString = function() {
+    return &apos;Just(&apos; +  this.value + &apos;)&apos;;
+};
+
+var Nothing = {
+    bind: function() {
+        return this;
+    },
+    map: function() {
+      return this;
+    },
+    toString: function() {
+        return &apos;Nothing&apos;;
+    }
+};&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;A few helper functions for dealing with JavaScript arrays&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;function listHead(lst) {
+  return lst &amp;amp;&amp;amp; list.length &amp;gt; 0 ? new Just(lst[0]) : Nothing;
+}
+
+function listTail() {
+  return lst &amp;amp;&amp;amp; list.length &amp;gt; 1 ? new Just(lst.slice[1]) : Nothing;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Elm examples in JavaScript with Maybe&amp;#8217;ish support&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;var myList = [&quot;First&quot;, &quot;Second&quot;, &quot;Third&quot;];
+var first =  listHead(myList);
+var second = listTail(myList).bind(t =&amp;gt; listHead(t));
+var tail =   listTail(myList);
+
+
+
+// Similar to Maybe.map in Elm
+first.map(a =&amp;gt; a.toUpperCase()) // Just {value: &quot;FIRST&quot;}                                        &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+Nothing.map(a =&amp;gt; a.toUpperCase()) // Nothing (object)                                           &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+
+// Similar to Maybe.map2 in Elm
+first.bind(a =&amp;gt; second.map( b =&amp;gt; a + &quot;, &quot; + b))  // Just { value: &apos;First, Second&apos; }             &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+first.bind(a =&amp;gt; Nothing.map( b =&amp;gt; a + &quot;, &quot; + b)) // Nothing (object)
+
+// Similar to Maybe.andThen in Elm
+tail.bind(a =&amp;gt; listHead(a)).bind(b =&amp;gt; new Just(b.toUpperCase()))   // Just { value: &apos;SECOND&apos; }  &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+new Just([]).bind(a =&amp;gt; listHead(a)).bind(b =&amp;gt; new Just(b.toUpperCase())) // Nothing (object)    &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;first&lt;/code&gt; is a Just object. Since it has a value the arrow function is run as expected&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When the value is Nothing (a Nothing object) toUpperCase is never run and the Nothing object is returned&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;In the arrow function of bind for first we ignore the unwrapped value and call map on second with a new arrow function which now has both the unwrapped value of both a and b. We concatenate the values and the map function ensures the result is wrapped up in a Just object
+If you remember the elm case for map2, that was a separate function. Here map is just a convenience to wrap up the innermost value in a Just.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;tail&lt;/code&gt; is a Just object with the value [&quot;First&quot;, &quot;Second&quot;] in the first level arrow function we pick out the head which returns a &lt;code&gt;Just&lt;/code&gt; object with the value &quot;Second&quot;. In the innermost arrow level function we do upperCase on the value and wrap in it a Just which is the end result.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We are starting with Just with a value of an empty array. In the first level arrow function we try to pick out the head of the list. Since that will return a Nothing object, Nothing passes straight through the second level arrow function, never executing the toUpperCase call.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So as you can see it is possible to introduce the notion of Maybe in JavaScript. There are several libraries out there to choose from
+I haven&amp;#8217;t really tried any of them. Regardless the issue you&amp;#8217;ll be facing is that the other libraries you are using probably won&amp;#8217;t be using your representation of Maybe if at all.
+But hey, maybe it&amp;#8217;s better with something than nothing. Or whatever.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_wrapping_up&quot;&gt;Wrapping up&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There is clearly a slight cost with explicitly handling nothingness everywhere. In Elm you basically don&amp;#8217;t even have a choice. The type system
+and the compiler will force you into being explcit about cases when you don&amp;#8217;t have a value. You can achieve the same as with null but
+you always have to handle them. In your entire program. The most obvious benefit you get, is that you simply will not get null reference related errors in Elm. When calling any function
+that accepts Maybe values as input params or return Maybe values you will be made well aware of that. The compiler will let you know, but typically you would also see type annotations stating this fact too.
+This explicitness is actually quite liberating once you get used to it.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In JavaScript you can try to be more explicit with nulls. You can even reduce the chances of null pointers ever happening by
+introducing a Maybe/Option like concept. Of course &lt;strong&gt;you&lt;/strong&gt; wouldn&amp;#8217;t introduce the possibility of null pointers in your code. However there&amp;#8217;s a pretty big chance
+some bozo,responsible for one of the 59 libs you somehow ended up with from npm, have though.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There are plenty of bigger challenges than null pointer exceptions out there, but if you could avoid them altogether,
+surely that must a be of some benefit. I&amp;#8217;ll round off with the obligatory quote from Tony Hoare as you do when one pays tribute to our belowed null.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;quoteblock&quot;&gt;
+&lt;blockquote&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I call it my billion-dollar mistake. It was the invention of the null reference in 1965. At that time, I was designing the first comprehensive type system for references in an object oriented language (ALGOL W). My goal was to ensure that all use of references should be absolutely safe, with checking performed automatically by the compiler. But I couldn&amp;#8217;t resist the temptation to put in a null reference, simply because it was so easy to implement. This has led to innumerable errors, vulnerabilities, and system crashes, which have probably caused a billion dollars of pain and damage in the last forty years.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;div class=&quot;attribution&quot;&gt;
+&amp;#8212; Tony Hoare
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Elm package docs preview in Light Table</title>
       <link>http://rundis.github.io/blog/2016/elm_light_docs.html</link>
