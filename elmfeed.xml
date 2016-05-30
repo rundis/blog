@@ -6,9 +6,1934 @@
     <atom:link href="http://rundis.github.io/blog/elmfeed.xml" rel="self" type="application/rss+xml" />
     <description>Elm feed from rundis.github.com/blog</description>
     <language>en-gb</language>
-    <pubDate>Thu, 7 Apr 2016 07:54:50 +0200</pubDate>
-    <lastBuildDate>Thu, 7 Apr 2016 07:54:50 +0200</lastBuildDate>
+    <pubDate>Tue, 31 May 2016 00:31:19 +0200</pubDate>
+    <lastBuildDate>Tue, 31 May 2016 00:31:19 +0200</lastBuildDate>
 
+      <item>
+        <title>Typed up CRUD SPA with Haskell and Elm - Part 5: Elm 0.17 Upgrade</title>
+        <link>http://rundis.github.io/blog/2016/haskel_elm_spa_part5.html</link>
+        <pubDate>Mon, 30 May 2016 00:00:00 +0200</pubDate>
+        <guid isPermaLink="false">2016/haskel_elm_spa_part5.html</guid>
+          <description>
+  	       &lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Elm version 0.17 was released a few weeks back. If haven&amp;#8217;t already, you should read the annoucement post
+&lt;a href=&quot;http://elm-lang.org/blog/farewell-to-frp&quot;&gt;A Farewell to FRP&lt;/a&gt;. So what does that mean for the Albums app ?
+Sounds like we&amp;#8217;re in for a massive rewrite. It turns out, since we were already using The Elm Architecture to
+structure our application, the impact isn&amp;#8217;t that big after all. Most of it is mechanical, and actually the biggest change
+is that we can no longer use the 3.rd party routing library we depended on.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Useful resources&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Check out the other &lt;a href=&quot;http://rundis.github.io/blog/tags/haskellelmspa.html&quot;&gt;episodes&lt;/a&gt; in this blog series.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The accompanying &lt;a href=&quot;https://github.com/rundis/albums&quot;&gt;Albums&lt;/a&gt; sample app is on github, and there is a tag
+for each episode&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div id=&quot;toc&quot; class=&quot;toc&quot;&gt;
+&lt;div id=&quot;toctitle&quot; class=&quot;title&quot;&gt;Table of Contents&lt;/div&gt;
+&lt;ul class=&quot;sectlevel1&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_introduction&quot;&gt;Introduction&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_upgrade_steps&quot;&gt;Upgrade steps&lt;/a&gt;
+&lt;ul class=&quot;sectlevel2&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_upgrading_packages&quot;&gt;Upgrading packages&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_mechanical_changes&quot;&gt;Mechanical changes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_routes_and_route_parsing_ehh_urls_if_you_like&quot;&gt;Routes and Route parsing (ehh&amp;#8230;&amp;#8203; URLs if you like)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_dealing_with_http&quot;&gt;Dealing with Http&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_nesting_components&quot;&gt;Nesting Components&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_wiring_it_all_together_in_frontend_src_main_elm&quot;&gt;Wiring it all together in frontend/src/Main.elm&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_summary&quot;&gt;Summary&lt;/a&gt;
+&lt;ul class=&quot;sectlevel2&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_appendix&quot;&gt;Appendix&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I would have done the upgrade to 0.17 sooner, but the Album application depended on a 3rd party package
+called &lt;a href=&quot;https://github.com/etaque/elm-transit-router&quot;&gt;elm-transit-router&lt;/a&gt;. It served us well and we even got some nice
+transition animations when changing pages. However as all the routing libraries that we&amp;#8217;re available for 0.16, it
+depended on a community package called elm-history. That package was never going to updated to support 0.17, in fact
+all support for the Web Platform APIs will eventually supported by the Elm language.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Last week &lt;a href=&quot;https://github.com/elm-lang/navigation&quot;&gt;Navigation&lt;/a&gt; was announced. This is library for managing navigation in a SPA. It provides nice abstractions over the History API.
+In tandem Evan released &lt;a href=&quot;https://github.com/evancz/url-parser&quot;&gt;URL Parser&lt;/a&gt; which is a simple parser for turning URLs into structured data.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;With that in place I felt confident we should be able to do the upgrade. Let&amp;#8217;s walk through the highlights !&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_upgrade_steps&quot;&gt;Upgrade steps&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_upgrading_packages&quot;&gt;Upgrading packages&lt;/h3&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 1. /frontend/elm-package.json&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-JavaScript&quot; data-lang=&quot;JavaScript&quot;&gt;&quot;dependencies&quot;: {
+  &quot;elm-community/elm-json-extra&quot;: &quot;1.0.0 &amp;lt;= v &amp;lt; 2.0.0&quot;,
+  &quot;elm-community/list-extra&quot;: &quot;2.0.0 &amp;lt;= v &amp;lt; 3.0.0&quot;,
+  &quot;elm-lang/core&quot;: &quot;4.0.0 &amp;lt;= v &amp;lt; 5.0.0&quot;,
+  &quot;elm-lang/html&quot;: &quot;1.0.0 &amp;lt;= v &amp;lt; 2.0.0&quot;,
+  &quot;elm-lang/navigation&quot;: &quot;1.0.0 &amp;lt;= v &amp;lt; 2.0.0&quot;,
+  &quot;evancz/elm-http&quot;: &quot;3.0.1 &amp;lt;= v &amp;lt; 4.0.0&quot;,
+  &quot;evancz/url-parser&quot;: &quot;1.0.0 &amp;lt;= v &amp;lt; 2.0.0&quot;
+},
+&quot;elm-version&quot;: &quot;0.17.0 &amp;lt;= v &amp;lt; 0.18.0&quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-JavaScript&quot; data-lang=&quot;JavaScript&quot;&gt;&quot;dependencies&quot;: {
+    &quot;circuithub/elm-list-extra&quot;: &quot;3.9.0 &amp;lt;= v &amp;lt; 4.0.0&quot;,   &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+    &quot;elm-lang/core&quot;: &quot;3.0.0 &amp;lt;= v &amp;lt; 4.0.0&quot;,
+    &quot;etaque/elm-route-parser&quot;: &quot;2.1.0 &amp;lt;= v &amp;lt; 3.0.0&quot;,
+    &quot;etaque/elm-transit-router&quot;: &quot;1.0.1 &amp;lt;= v &amp;lt; 2.0.0&quot;,   &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    &quot;etaque/elm-transit-style&quot;: &quot;1.0.1 &amp;lt;= v &amp;lt; 2.0.0&quot;,
+    &quot;evancz/elm-effects&quot;: &quot;2.0.1 &amp;lt;= v &amp;lt; 3.0.0&quot;,          &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+    &quot;evancz/elm-html&quot;: &quot;4.0.2 &amp;lt;= v &amp;lt; 5.0.0&quot;,             &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+    &quot;evancz/elm-http&quot;: &quot;3.0.0 &amp;lt;= v &amp;lt; 4.0.0&quot;,
+    &quot;evancz/start-app&quot;: &quot;2.0.2 &amp;lt;= v &amp;lt; 3.0.0&quot;             &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+},
+&quot;elm-version&quot;: &quot;0.16.0 &amp;lt;= v &amp;lt; 0.17.0&quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&quot;https://github.com/elm-community/&quot;&gt;Elm Community&lt;/a&gt; have taken over this package&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;elm-transit-router&lt;/code&gt;, &lt;code&gt;elm-route-parser&lt;/code&gt;, &lt;code&gt;elm-transit-style&lt;/code&gt; have been replaced by &lt;code&gt;elm-lang/navigation&lt;/code&gt; and &lt;code&gt;evancz/url-parser&lt;/code&gt;
+(pls note you can still use &lt;code&gt;etaque/elm-route-parser&lt;/code&gt; with the navigation package if you need more advanced route parsing)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This package has been baked into core of Elm for 0.17, so this package is no longer needed&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This package has moved under the &lt;code&gt;elm-lang&lt;/code&gt; umbrella. So has it&amp;#8217;s low level &lt;a href=&quot;https://github.com/elm-lang/virtual-dom&quot;&gt;virtual-dom&lt;/a&gt; transitive dependency&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This package has basically been moved into &lt;code&gt;elm-lang/html&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_mechanical_changes&quot;&gt;Mechanical changes&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_module_declarations&quot;&gt;Module declarations&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In 0.16 we had&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;module Main (..) where&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In 0.17 we have&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;module Main exposing (..)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Luckily &lt;a href=&quot;https://github.com/avh4/elm-format&quot;&gt;Elm Format&lt;/a&gt; handles this conversion automatically for us when we do format of an 0.16 .elm file !
+So we can just run elm-format on the &lt;code&gt;src&lt;/code&gt; directory.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_effects_are_now_named_code_cmd_code&quot;&gt;Effects are now named &lt;code&gt;Cmd&lt;/code&gt;&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The new name for Effects are now &lt;code&gt;Cmd&lt;/code&gt; shorthand for Command. &lt;code&gt;Cmd&lt;/code&gt; is part of &lt;code&gt;elm-lang/core&lt;/code&gt;
+and lives in the &lt;a href=&quot;http://package.elm-lang.org/packages/elm-lang/core/4.0.1/Platform-Cmd&quot;&gt;Platform.Cmd&lt;/a&gt; module&lt;/p&gt;
+&lt;/div&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 2. Changes to a typical update function&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Msg
+    = SomeMsg
+    | SomeOtherMsg
+
+
+update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )         &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+update msg model =
+    case msg of
+       SomeMsg -&amp;gt;
+           ( { model | count = model.count + 1 }
+           , Cmd.none                               &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+           )
+       -- etc...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;You&amp;#8217;ll also notice that &lt;code&gt;Action&lt;/code&gt; has changed to &lt;code&gt;Msg&lt;/code&gt;. It&amp;#8217;s just a naming convention change
+, but it better conveys what it actually is. You&amp;#8217;ll see later when we get to the view function why it&amp;#8217;s probably a good idea for you to
+follow that convention.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;As you see, here it&amp;#8217;s just a naming change in practice&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Action
+    = SomeAction
+    | SomeOtherAction
+
+
+update : Action -&amp;gt; Model -&amp;gt; ( Model, Effects Action )
+update action model =
+    case action of
+        SomeAction -&amp;gt;
+            ( { model | count = model.count + 1 }
+            , Effects.none
+            )
+        -- etc...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Making these changes is also fairly trivial with a good old search/replace.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_mailbox_and_address_are_gone_in_0_17&quot;&gt;Mailbox and address are gone in 0.17&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 3. Changes to a typical view function&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;view : Model -&amp;gt; Html Msg           &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+view model =
+    button
+        [ onClick SomeMsg ]        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+        [ text &quot;DoStuff&quot; ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;view : Signal.Address Action -&amp;gt; Model -&amp;gt; Html
+view address model =
+    button
+        [ onClick address SomeMsg ]
+        [ text &quot;DoStuff&quot;]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;olist arabic&quot;&gt;
+&lt;ol class=&quot;arabic&quot;&gt;
+&lt;li&gt;
+&lt;p&gt;The address parameter is gone, you no longer need to concern yourself with the intricacies of mailboxes.
+But you&amp;#8217;ll also notice that the return value type &lt;code&gt;Html&lt;/code&gt; takes a tag which in this case is our &lt;code&gt;Msg&lt;/code&gt; type. So if we have any event handlers
+in our view code, we are telling it that those should result in a message of type &lt;code&gt;Msg&lt;/code&gt;. We&amp;#8217;ll come back to this in a bit more detail when we go through a nesting example.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;We no longer need to deal with an address for our event handler, we just tell Elm that when the user clicks the button, it should
+trigger our update function with the given &lt;code&gt;Msg&lt;/code&gt; &lt;code&gt;SomeMsg&lt;/code&gt;. The Elm runtime will take care of routing the message to our update function without any address mumbojumbo !&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Again making this change is largely a matter of search/replace. There are a few exceptions though.&lt;/p&gt;
+&lt;/div&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 4. on &quot;input&quot; is now luckily onInput !&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;[ input
+  [ class &quot;form-control&quot;
+  , value model.name
+  , onInput SetAlbumName
+  ]
+  []
+]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;[ input
+  [ class &quot;form-control&quot;
+  , value model.name
+  , on &quot;input&quot;
+        targetValue
+        (\str -&amp;gt; Signal.message address (SetAlbumName str))
+  ]
+  []
+]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;But let&amp;#8217;s say you actually do need a custom decoder it would still be simpler than in 0.16&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;import Json.Decode as Json
+
+-- ...
+
+[ input
+  [ class &quot;form-control&quot;
+  , value model.name
+  , on &quot;input&quot; (Json.map SetArtistName targetValue) &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  ]
+  []
+]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Here we just map over the targetValue, and call SetArtistName with the value. &lt;code&gt;targetValue&lt;/code&gt; is a Json decoder which picks out the value from our input field when the event is triggered&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_routes_and_route_parsing_ehh_urls_if_you_like&quot;&gt;Routes and Route parsing (ehh&amp;#8230;&amp;#8203; URLs if you like)&lt;/h3&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 5. Route definitions&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Route
+    = Home
+    | ArtistListingPage
+    | ArtistDetailPage Int
+    | NewArtistPage
+    | AlbumDetailPage Int
+    | NewArtistAlbumPage Int&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Route
+  = Home
+  | ArtistListingPage
+  | ArtistDetailPage Int
+  | NewArtistPage
+  | AlbumDetailPage Int
+  | NewAlbumPage
+  | NewArtistAlbumPage Int
+  | EmptyRoute&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So the only change here is basically the removal of a couple of routes that weren&amp;#8217;t in use.&lt;/p&gt;
+&lt;/div&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 6. Route parsing&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17 (url-parser)&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16 (elm-route-parser)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;routeParser : Parser (Route -&amp;gt; a) a
+routeParser =
+    oneOf
+        [ format Home (s &quot;&quot;)
+        , format NewArtistPage (s &quot;artists&quot; &amp;lt;/&amp;gt; s &quot;new&quot;)
+        , format NewArtistAlbumPage
+                 (s &quot;artists&quot; &amp;lt;/&amp;gt; int &amp;lt;/&amp;gt; s &quot;albums&quot; &amp;lt;/&amp;gt; s &quot;new&quot;)
+        , format ArtistDetailPage (s &quot;artists&quot; &amp;lt;/&amp;gt; int)
+        , format ArtistListingPage (s &quot;artists&quot;)
+        , format AlbumDetailPage (s &quot;albums&quot; &amp;lt;/&amp;gt; int)
+        ]
+
+
+decode : Location -&amp;gt; Result String Route
+decode location =
+    parse identity routeParser (String.dropLeft 1 location.pathname)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;routeParsers : List (Matcher Route)
+routeParsers =
+  [ static Home &quot;/&quot;
+  , static ArtistListingPage &quot;/artists&quot;
+  , static NewArtistPage &quot;/artists/new&quot;
+  , dyn1 ArtistDetailPage &quot;/artists/&quot; int &quot;&quot;
+  , dyn1 AlbumDetailPage &quot;/albums/&quot; int &quot;&quot;
+  , static NewAlbumPage &quot;/albums/new&quot;
+  , dyn1 NewArtistAlbumPage &quot;/artists/&quot; int &quot;/albums/new&quot;
+  ]
+
+
+
+decode : String -&amp;gt; Route
+decode path =
+  RouteParser.match routeParsers path
+    |&amp;gt; Maybe.withDefault EmptyRoute&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The parsing syntax is slightly different, but the transition was fairly trivial in our case.
+The observant reader will notice that we&amp;#8217;ve skipped over the case when there is not matching route.
+We&amp;#8217;ll get back to that when we wire it all together.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Encoding&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;encode : Route -&amp;gt; String
+encode route =
+    case route of
+        Home -&amp;gt;
+            &quot;/&quot;
+
+        ArtistListingPage -&amp;gt;
+            &quot;/artists&quot;
+
+        NewArtistPage -&amp;gt;
+            &quot;/artists/new&quot;
+
+        ArtistDetailPage i -&amp;gt;
+            &quot;/artists/&quot; ++ toString i
+
+        AlbumDetailPage i -&amp;gt;
+            &quot;/albums/&quot; ++ toString i
+
+        NewArtistAlbumPage i -&amp;gt;
+            &quot;/artists/&quot; ++ (toString i) ++ &quot;/albums/new&quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Encoding routes is pretty much exactly the same as before.&lt;/p&gt;
+&lt;/div&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 7. Handy helpers&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17 (url-parser)&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16 (elm-route-parser)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;navigate : Route -&amp;gt; Cmd msg                     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+navigate route =
+    Navigation.newUrl (encode route)
+
+
+linkTo : Route -&amp;gt; List (Attribute msg) -&amp;gt; List (Html msg) -&amp;gt; Html msg
+linkTo route attrs content =                    &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    a ((linkAttrs route) ++ attrs) content
+
+
+linkAttrs : Route -&amp;gt; List (Attribute msg)
+linkAttrs route =
+    let
+        path =
+            encode route
+    in
+        [ href path
+        , attribute &quot;data-navigate&quot; path       &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+        ]
+
+
+catchNavigationClicks : (String -&amp;gt; msg) -&amp;gt; Attribute msg
+catchNavigationClicks tagger =                 &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+    onWithOptions &quot;click&quot;
+        { stopPropagation = True
+        , preventDefault = True
+        }
+        (Json.map tagger (Json.at [ &quot;target&quot; ] pathDecoder))
+
+
+pathDecoder : Json.Decoder String              &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+pathDecoder =
+    Json.oneOf
+        [ Json.at [ &quot;data-navigate&quot; ] Json.string
+        , Json.at [ &quot;parentElement&quot; ] (lazy (\_ -&amp;gt; pathDecoder))
+        , Json.fail &quot;no path found for click&quot;
+        ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;A couple of places in the Album app we wish to be able to navigate to a new page as a result of some logic
+in the update function is some component. Tbh we might be better off inlining this
+in the relevant update functions.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This is a handy convenience function for creating a link to one of our defined routes (aka pages in our App)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;In addition to the href attribute we define a &lt;code&gt;data-navigate&lt;/code&gt; attribute which we can use for a catch all handler we&amp;#8217;ll come to in a second&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This function allows us to catch all link clicks for a given element and all it&amp;#8217;s child elments.
+It prevents the browser from making the url reguest and rather allows us to provide a custom tagger function that receives the Url in question and can create a message as a result.
+It will make more sence to you when you see how it&amp;#8217;s used in our Main module later on.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;A Json parser which will recursivly walk through the element tree for the node receiving the event and try to find an element with the &lt;code&gt;data-navigage&lt;/code&gt; attribute defined.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;redirect : Route -&amp;gt; Effects ()
+redirect route =
+  encode route
+    |&amp;gt; Signal.send TransitRouter.pushPathAddress
+    |&amp;gt; Effects.task
+
+
+clickAttr : Route -&amp;gt; Attribute
+clickAttr route =
+  on &quot;click&quot; Json.value (\_ -&amp;gt;  Signal.message TransitRouter.pushPathAddress &amp;lt;| encode route)
+
+
+linkAttrs : Route -&amp;gt; List Attribute
+linkAttrs route =
+  let
+    path = encode route
+  in
+    [ href path
+    , onWithOptions
+        &quot;click&quot;
+        { stopPropagation = True, preventDefault = True }
+        Json.value
+        (\_ -&amp;gt;  Signal.message TransitRouter.pushPathAddress path)
+    ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+I borrowed most of this code from &lt;a href=&quot;https://github.com/etaque/tacks&quot;&gt;The tacks application from @etaque&lt;/a&gt;. Kudos to @etaque for coming up with this !
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock warning&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-warning&quot; title=&quot;Warning&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Please be adviced that these helpers do make a compromise in terms of type safety.
+I&amp;#8217;m sure in due time, more type safe patterns will emerge.  An obvious alternative to this approach is to
+have a custom message in each update function that handles navigation. I&amp;#8217;m going to try that out in the near future and see how it plays out.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_sample_usage&quot;&gt;Sample usage&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Let&amp;#8217;s have a quick look at a few examples on how we are using the &lt;code&gt;navigate&lt;/code&gt; and &lt;code&gt;linkTo&lt;/code&gt; helper functions
+in the Albums app. How it all fits together will hopefully be apparent when we describe how we wire everything together in our &lt;code&gt;Main&lt;/code&gt; module a little later on&lt;/p&gt;
+&lt;/div&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 8. artistRow function in frontend/src/ArtistDetails.elm&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;artistRow : Artist -&amp;gt; Html Msg
+artistRow artist =
+    tr []
+        [ td [] [ text artist.name ]
+        , td []
+            [ Routes.linkTo (Routes.ArtistDetailPage artist.id) &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+                [ class &quot;btn btn-sm btn-default&quot; ]
+                [ text &quot;Edit&quot; ]
+            ]
+        , td []
+            [ button
+                [ class &quot;btn btn-sm btn-danger&quot;
+                , onClick &amp;lt;| DeleteArtist (.id artist)          &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+                ]
+                [ text &quot;Delete!&quot; ]
+            ]
+        ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Here we are creating a normal link using the helper function described earlier. The result of clicking it should just be navigation, so sending a message to the ArtistListing &lt;code&gt;update&lt;/code&gt; function which then creates the navigation effect feels like it might be to much work/boilerplate&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Here the primary thing we want to handle is not navigation, the primary concern is handling deletion so we follow the normal pattern of returning a Msg which will be routed to our update function for handling&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;artistRow : Signal.Address Action -&amp;gt; Artist -&amp;gt; Html
+artistRow address artist =
+  tr
+    []
+    [ td [] [ text artist.name ]
+    , td
+        []
+        [ button
+            [ class &quot;btn btn-sm btn-default&quot;
+            , Routes.clickAttr
+                &amp;lt;| Routes.ArtistDetailPage artist.id
+            ]
+            [ text &quot;Edit&quot; ]
+        ]
+    , td
+        []
+        [ button
+            [ class &quot;btn btn-sm btn-danger&quot;
+            , onClick address (DeleteArtist (.id artist))
+            ]
+            [ text &quot;Delete!&quot; ]
+        ]
+    ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 9. update function in frontend/src/ArtistDetail.elm&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;-- ...
+
+HandleSaved artist -&amp;gt;
+    ( { model
+        | id = Just artist.id
+        , name = artist.name
+      }
+      , Routes.navigate Routes.ArtistListingPage &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+    )
+-- ...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Upon successfully saving an artist to our backend service, we create a Cmd (aka request for an effect to be performed), using our util function, to route the user to the
+ArtistListingPage&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;HandleSaved maybeArtist -&amp;gt;
+  case maybeArtist of
+    Just artist -&amp;gt;
+      ( { model
+          | id = Just artist.id
+          , name = artist.name
+        }
+      , Effects.map (\_ -&amp;gt; NoOp)
+                    (Routes.redirect Routes.ArtistListingPage)
+      )
+
+    Nothing -&amp;gt;
+      Debug.crash &quot;Save failed... we&apos;re not handling it...&quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_dealing_with_http&quot;&gt;Dealing with Http&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So in our Album app we separated all HTTP requests to a separate module we called &lt;code&gt;ServerApi&lt;/code&gt;.
+The changes from 0.16 to 0.17 isn&amp;#8217;t massive, but since we&amp;#8217;re at it we might as well make some small improvements
+to be better prepared for error handling in future episodes.&lt;/p&gt;
+&lt;/div&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;getArtist :
+  Int
+  -&amp;gt; (Http.Error -&amp;gt; msg)
+  -&amp;gt; (Artist -&amp;gt; msg)
+  -&amp;gt; Cmd msg
+getArtist id errorMsg msg =
+    Http.get artistDecoder
+            (baseUrl ++ &quot;/artists/&quot; ++ toString id)
+        |&amp;gt; Task.perform errorMsg msg&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;getArtist : Int -&amp;gt; (Maybe Artist -&amp;gt; a) -&amp;gt; Effects.Effects a
+getArtist id action =
+  Http.get artistDecoder (baseUrl ++ &quot;/artists/&quot; ++ toString id)
+    |&amp;gt; Task.toMaybe
+    |&amp;gt; Task.map action
+    |&amp;gt; Effects.task&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The http methods haven&amp;#8217;t really changed, but the manner in which we request the runtime to perform them have changed.
+We no longer have the Effects package, so we need to use &lt;code&gt;Task.perform&lt;/code&gt; to do it now. Our 0.16 implementation used
+Maybe to signal success or failure, in 0.17 we have opted to give a different message for success or failure.
+So if &lt;code&gt;getArtist&lt;/code&gt; fails the error result of or http action will be passed to our update function wrapped in the provided Msg given by our &lt;code&gt;errorMsg&lt;/code&gt; param,
+if it succeeds the response will be json decoded and passed to our update function wrapped in the provided Msg given by our &lt;code&gt;msg&lt;/code&gt; param.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Separating out all our http requests in one module gives flexibility in usage from multiple modules, but comes with a price of reduced type safety though.
+&lt;strong&gt;You&lt;/strong&gt; might want to localize http stuff with your components to make them more self-contained.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_usage_comparison&quot;&gt;Usage Comparison&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;frontend/src/AlbumDetail.elm 0.16&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Action -&amp;gt; Model -&amp;gt; ( Model, Effects Action )
+update action model =
+  case action of
+    NoOp -&amp;gt;
+      ( model, Effects.none )
+
+    GetAlbum id -&amp;gt;
+      ( model
+      , Effects.batch
+          [ getAlbum id ShowAlbum
+          , getArtists HandleArtistsRetrieved
+          ]
+      )
+
+    ShowAlbum maybeAlbum -&amp;gt;
+      case maybeAlbum of
+        Just album -&amp;gt;
+          ( createAlbumModel model album, Effects.none )
+
+        Nothing -&amp;gt; -- TODO: This could be an error if returned from api !
+          ( maybeAddPristine model, getArtists HandleArtistsRetrieved )
+
+    HandleArtistsRetrieved xs -&amp;gt;
+      ( { model | artists = (Maybe.withDefault [] xs) }
+      , Effects.none
+      )&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Our use of Maybe to signal failure in our 0.16 implementation clearly muddles what&amp;#8217;s going on in terms of potential failures.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;frontend/src/AlbumDetail.elm 0.17&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;mountAlbumCmd : Int -&amp;gt; Cmd Msg                                    &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+mountAlbumCmd id =
+    Cmd.batch
+        [ getAlbum id FetchAlbumFailed ShowAlbum
+        , getArtists FetchArtistsFailed HandleArtistsRetrieved
+        ]
+
+
+mountNewAlbumCmd : Cmd Msg                                        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+mountNewAlbumCmd =
+    getArtists FetchArtistsFailed HandleArtistsRetrieved
+
+
+update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        -- TODO: show error
+        FetchAlbumFailed err -&amp;gt;                                   &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+            ( model, Cmd.none )
+
+        ShowAlbum album -&amp;gt;                                        &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+            ( createAlbumModel model album, Cmd.none )
+
+        HandleArtistsRetrieved artists&apos; -&amp;gt;
+            ( { model | artists = artists&apos; }
+            , Cmd.none
+            )
+
+        -- TODO: show error
+        FetchArtistsFailed err -&amp;gt;
+            ( model, Cmd.none )
+
+        -- rest left out for brevity&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This command has been separated out as an exposed function for the module. The reason is that we need to perform this
+when we navigate to a `/albums/&amp;lt;id&amp;gt;. I.e when that particular url is mounted. You&amp;#8217;ll see how when we cover the Main module.
+We are actually running two http requests here.. hopefully/presumably in the order they are listed :-)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Similar to the above, but this is for handling when the user navigates to the url for creating a &lt;em&gt;new&lt;/em&gt; album&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;if getAlbum should fail this is where we should handle that (And we will eventually in a future episode)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If getAlbum succeeds we set the model up for displaying the retrieved artist&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_nesting_components&quot;&gt;Nesting Components&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The way you handle nesting of components in 0.17 has changed (for the better) with the removal of Mailboxes.
+If you didn&amp;#8217;t do to much fancy stuff with addresses the transition to 0.17 should be quite straight forward.
+We&amp;#8217;ll illustrate by showing a simple/common transition and then we will show how you might handle a more complex
+nesting scenario (based on actual examples from the Albums App)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_the_common_scenario&quot;&gt;The common scenario&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 10. update function in frontend/src/Main.elm&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        HomeMsg m -&amp;gt;
+            let
+                ( subMdl, subCmd ) =
+                    Home.update m model.homeModel
+            in
+                { model | homeModel = subMdl }
+                    ! [ Cmd.map HomeMsg subCmd ]   &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+        -- ...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;So rather than using &lt;code&gt;Effects.map&lt;/code&gt; to map the result action(s) of effects from a child component, we use &lt;code&gt;Cmd.map&lt;/code&gt; to map result msg(s) from a child component
+to a Msg that is known to the parent module.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Action -&amp;gt; Model -&amp;gt; ( Model, Effects Action )
+update action model =
+  case action of
+    HomeAction homeAction -&amp;gt;
+      let
+        ( subMdl, effects ) =
+          Home.update homeAction model.homeModel
+      in
+        ( { model | homeModel = subMdl }
+        , Effects.map HomeAction effects
+        )
+
+    -- ...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I think you&amp;#8217;ll agree this change is pretty simple to deal with. Let&amp;#8217;s see how nesting of view functions
+for components have changed&lt;/p&gt;
+&lt;/div&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 11. contentView function in frontend/src/Main.elm&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;contentView : Model -&amp;gt; Html Msg
+contentView model =
+    case model.route of                             &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+        Home -&amp;gt;
+            App.map HomeMsg                         &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+                    &amp;lt;| Home.view model.homeModel
+
+        -- ...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;As we did in 0.16 we keep track of the current route in our model&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;App.map is shorthand for Html.App.map. So we need to map between the &lt;code&gt;Msg&lt;/code&gt; type returned from the view function in the Home module
+to a &lt;code&gt;Msg&lt;/code&gt; type that is known to our Main module. In this instance it&amp;#8217;s &lt;code&gt;HomeMsg&lt;/code&gt;. We need to do this mapping so that when the msg is passed
+pack into our root update function we know which msg we should forward to which subcomponent.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;contentView : Signal.Address Action -&amp;gt; Model -&amp;gt; Html
+contentView address model =
+  case (TransitRouter.getRoute model) of
+    Home -&amp;gt;
+      Home.view (Signal.forwardTo address HomeAction)  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+                model.homeModel&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Signal.forwardTo essentially achieved the same effect, but it&amp;#8217;s way less intuitive to grasp. It&amp;#8217;s unlikely you&amp;#8217;ll miss it much !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This change isn&amp;#8217;t quite search/replace (well with regex perhaps), but it&amp;#8217;s quite trivial too.
+Ok let&amp;#8217;s move onto something a bit more complex.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_a_more_complex_scenario_album_and_tracks&quot;&gt;A more complex scenario - Album and tracks&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;If you wish to see the Album and Tracks solution in action, you can check it out here:&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/RU0NB2xaQIg&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 12. update function in frontend/src/TrackRow.elm&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Msg
+    = SetTrackName String
+    | SetMinutes String
+    | SetSeconds String
+    | Dispatch DispatchMsg                             &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+
+
+type DispatchMsg                                       &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    = MoveUp
+    | MoveDown
+    | Remove
+
+
+update : Msg -&amp;gt; Model -&amp;gt; ( Model, Maybe DispatchMsg )  &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+update msg model =
+    case msg of
+        SetTrackName v -&amp;gt;
+            ( { model | name = v, status = Modified }
+            , Nothing                                  &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+            )
+
+        SetMinutes str -&amp;gt;
+            -- ...
+
+        SetSeconds str -&amp;gt;
+            -- ...
+
+        Dispatch dispatchMsg -&amp;gt;                        &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+            ( model, Just dispatchMsg )&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We add a new Msg tag called &lt;code&gt;Dispatch&lt;/code&gt; which has a payload of type &lt;code&gt;DispatchMsg&lt;/code&gt; to model
+messages we would like to notify the parent of this component to handle&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;DispatchMsg becomes part of the public Api for our component so we need to expose it from our module&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The way we notify the parent in this solution is to add a return value, so now we return a tuple of Model and Maybe a DispatchMsg the parent
+should respond to.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;For the component internal messages there is nothing extra the parent should respond to, so we simply return &lt;code&gt;Nothing&lt;/code&gt; as a DispatchMsg&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;For all dispatch messages we return the concrete dispatch message tag that we want the parent to handle&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Action
+  = SetTrackName String
+  | SetMinutes String
+  | SetSeconds String
+
+
+update : Action -&amp;gt; Model -&amp;gt; Model
+update action model =
+  case action of
+    SetTrackName v -&amp;gt;
+      { model | name = v, status = Modified }
+
+    SetMinutes str -&amp;gt;
+      -- ..
+
+
+    SetSeconds str -&amp;gt;
+      -- ..&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There is no magic involved here, we are just returning an additional piece of info in the return value of
+our update function.&lt;/p&gt;
+&lt;/div&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 13. view function in frontend/src/TrackRow.elm&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;view : Model -&amp;gt; Html Msg
+view model =
+    tr []
+        [ td [] [ statusView model ]
+        , td [] [ moveView model ]
+        , td [] [ nameView model ]
+        , td [] [ durationView model ]
+        , td [] [ removeView model ]
+        ]
+
+removeView : Model -&amp;gt; Html Msg
+removeView model =
+    button
+        [ onClick (Dispatch Remove)           &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+        , class
+            &amp;lt;| &quot;btn btn-sm btn-danger &quot;
+            ++ if isPristine model then
+                &quot;disabled&quot;
+               else
+                &quot;&quot;
+        ]
+        [ text &quot;Remove&quot; ]
+
+-- ...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When the user clicks the remove button, we simply return a Msg with the tag &lt;code&gt;Dispatch&lt;/code&gt; carrying a &lt;code&gt;DispatchMsg&lt;/code&gt; with the tag &lt;code&gt;Remove&lt;/code&gt;
+This msg will be routed through the top-level update function, through the update function in &lt;code&gt;AlbumDetailPage&lt;/code&gt; and finally to the update function in &lt;code&gt;TrackRow&lt;/code&gt;.
+There it will be handled by the &lt;code&gt;Dispatch dispatchMsg &amp;#8594;&lt;/code&gt; case and simply returned to the parent (&lt;code&gt;AlbumDetailPage&lt;/code&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type alias Context =                          &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  { actions : Signal.Address Action
+  , remove : Signal.Address ()
+  , moveUp : Signal.Address ()
+  , moveDown : Signal.Address ()
+  }
+
+
+view : Context -&amp;gt; Model -&amp;gt; Html
+view context model =
+  tr
+    []
+    [ td [] [ statusView model ]
+    , td [] [ moveView context model ]
+    , td [] [ nameView context model ]
+    , td [] [ durationView context model ]
+    , td [] [ removeView context model ]
+    ]
+
+
+removeView : Context -&amp;gt; Model -&amp;gt; Html
+removeView context model =
+  button
+    [ onClick context.remove ()             &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    , class &amp;lt;| &quot;btn btn-sm btn-danger &quot;
+            ++ if isPristine model then
+                  &quot;disabled&quot;
+               else &quot;&quot;
+    ]
+    [ text &quot;Remove&quot; ]
+
+-- ..&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;In our 0.16 implementation we used this funny type and made it part of the public Api
+as an extra param to the view function.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This looks super-weird to someone who doesn&amp;#8217;t intuitively know that &lt;code&gt;()&lt;/code&gt; is &lt;code&gt;Unit&lt;/code&gt;.
+ &lt;code&gt;onClick&lt;/code&gt; takes 2 parameters an address and an Action. In this case context.remove is the first param and &lt;code&gt;()&lt;/code&gt; is the second !
+There is little point in explaining further, let&amp;#8217;s just agreed that this isn&amp;#8217;t very intuitive ?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;0.16 implementation of update function in frontend/src/AlbumDetail.elm&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Action -&amp;gt; Model -&amp;gt; ( Model, Effects Action )
+update action model =
+  case action of
+    -- ...
+
+    RemoveTrack id -&amp;gt;
+      ( { model \| tracks = List.filter (\( rowId, _ ) -&amp;gt; rowId /= id) model.tracks }
+      , Effects.none
+      )
+
+    MoveTrackUp id -&amp;gt;
+      -- ...
+    MoveTrackDown id -&amp;gt;
+      -- ...
+
+    ModifyTrack id trackRowAction -&amp;gt;
+      let
+        updateTrack ( trackId, trackModel ) =
+          if trackId == id then
+            ( trackId, TrackRow.update trackRowAction trackModel )
+          else
+            ( trackId, trackModel )
+      in
+        ( maybeAddPristine { model | tracks = List.map updateTrack model.tracks }
+        , Effects.none
+        )&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;0.17 implementation of update function in frontend/src/AlbumDetail.elm&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        -- ...
+
+        RemoveTrack id -&amp;gt;                                      &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+            ( { model \| tracks = List.filter (\( rowId, _ ) -&amp;gt; rowId /= id) model.tracks
+              }
+            , Cmd.none
+            )
+
+        MoveTrackUp id -&amp;gt;
+            -- ...
+
+        MoveTrackDown id -&amp;gt;
+            -- ...
+
+        ModifyTrack id trackRowMsg -&amp;gt;
+            case (modifyTrack id trackRowMsg model) of        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+                Just ( updModel, Nothing ) -&amp;gt;                 &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+                    ( model, Cmd.none )
+
+                Just ( updModel, Just dispatchMsg ) -&amp;gt;        &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+                    handleDispatch id dispatchMsg updModel
+
+                _ -&amp;gt;
+                    ( model, Cmd.none )                       &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+
+
+modifyTrack : TrackRowId -&amp;gt; TrackRow.Msg -&amp;gt; Model -&amp;gt; Maybe ( Model, Maybe TrackRow.DispatchMsg )
+modifyTrack id msg model =                                    &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+    ListX.find (\( trackId, _ ) -&amp;gt; id == trackId) model.tracks
+        \|&amp;gt; Maybe.map (\( _, trackModel ) -&amp;gt; TrackRow.update msg trackModel)
+        \|&amp;gt; Maybe.map
+            (\( updTrack, dispatchMsg ) -&amp;gt;
+                ( maybeAddPristine
+                    { model
+                        \| tracks =
+                            ListX.replaceIf (\( i, _ ) -&amp;gt; i == id)
+                                ( id, updTrack )
+                                model.tracks
+                    }
+                , dispatchMsg
+                )
+            )
+
+
+handleDispatch : TrackRowId -&amp;gt; TrackRow.DispatchMsg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+handleDispatch id msg model =                                &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+    case msg of
+        TrackRow.MoveDown -&amp;gt;
+            update (MoveTrackDown id) model
+
+        TrackRow.MoveUp -&amp;gt;
+            update (MoveTrackUp id) model
+
+        TrackRow.Remove -&amp;gt;
+            update (RemoveTrack id) model&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The parent, ie AlbumDetail, logic for deleting on of it&amp;#8217;s track rows&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We delegate updating the track row and consequently the AlbumDetail model to a helper function.
+We pattern match on the result from that function.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If it was a &quot;normal&quot; update with no dispatch message returned we simply return the updated model and a no op Cmd&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If the update of the track row got a dispatch message in return from TrackRow.update we delegate the handling of the
+dispatch message to another helper function.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Since we are dealing with Maybe values we have to handle this case, but it really shouldn&amp;#8217;t ever happen ! (famous last words)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This might look a bit scary, but in summary it; locates the correct track row, performs the update of that row by delegating to TrackRow update,
+updates the track row in the model with the updated track row and finally returns a tuple of the updated model and the dispatch message (which is Maybe you remember)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Here we simply pattern match on the dispatch message and invokes the update function with the appropriate corresponding &lt;code&gt;Msg&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+The pattern we used here is just one of many possible ways of solving this problem. Maybe someday a common preferred pattern will emerge,
+but the bottom line is that it will most likely be some variation of return values from update functions and/or input params to the view function in the parent/child communucation.
+The days of &quot;magic&quot; juggling with mailboxes are gone. Simple input/output FTW !
+Oh, and finally, for this particular case I think there might be a good case for arguing that perhaps remove/moveup/movedown doesn&amp;#8217;t really belong in &lt;code&gt;TrackRow&lt;/code&gt; at all, it might
+actually make more sence to use a decorator-kind of approach instead.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock warning&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-warning&quot; title=&quot;Warning&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Some flavors of using &quot;global&quot; or dummy effects (using say dummy tasks) for communicating between components have briefly surfaced. Pls think really carefully
+before adopting such an approach. Have a chat with the nice and very knowledgable people in the community to discuss
+if there isn&amp;#8217;t a better solution for your problem !
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_wiring_it_all_together_in_frontend_src_main_elm&quot;&gt;Wiring it all together in frontend/src/Main.elm&lt;/h3&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 14. main&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;main : Program Never
+main =
+    Navigation.program                       &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+      (Navigation.makeParser Routes.decode)
+        { init = init
+        , view = view
+        , update = update
+        , urlUpdate = urlUpdate              &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+        , subscriptions = \_ -&amp;gt; Sub.none     &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+        }&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Rather that start-app we are using the program function from Navigation. The first
+param is a function to creates a parser- So bootstrap it with our Routes.decode function.
+The second param is a config record similar to the one in start-app but not quite&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Hey what&amp;#8217;s this fellow, it seems we need to provide a function to handle URL updates in our application !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We don&amp;#8217;t have any subscriptions in our app, so we can just return Sub.none for that function.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;app : StartApp.App Model
+app =
+  StartApp.start
+    { init = init initialPath
+    , update = update
+    , view = view
+    , inputs = [ actions ]                  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+    }
+
+
+main : Signal Html
+main =
+  app.html
+
+
+port tasks : Signal (Task.Task Never ())   &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+port tasks =
+  app.tasks
+
+port initialPath : String                  &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Inputs was sort of like subscriptions. We needed that in our 0.16 because of elm-transit-router which used elm-history which again provided a signal for url changes.
+All of that is gone and handled by navigation, but slightly differently.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Just a thing you had to define if you had effects in your App in 0.16. We&amp;#8217;re happy it&amp;#8217;s gone !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We had to provide the initialPath (url) through a port in 0.16&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;caption class=&quot;title&quot;&gt;Table 15. Model and init stuff&lt;/caption&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type alias Model =
+    { route : Routes.Route
+    , homeModel : Home.Model
+    , artistListingModel : ArtistListing.Model
+    , artistDetailModel : ArtistDetail.Model
+    , albumDetailModel : AlbumDetail.Model
+    }
+
+initialModel : Model
+initialModel =
+    { route = Home
+    , homeModel = Home.init
+    , artistListingModel = ArtistListing.init
+    , artistDetailModel = ArtistDetail.init
+    , albumDetailModel = AlbumDetail.init
+    }
+
+
+init : Result String Route -&amp;gt; ( Model, Cmd Msg )  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+init result =
+    urlUpdate result initialModel&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;init&lt;/code&gt; is called for us by Navigation.program using our provided parser so
+we get a result from the parsing of the initial url. We pass that on to the yet to be described
+urlUpdate function along with our initial model.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type alias Model =
+  WithRoute
+    Routes.Route
+    { homeModel : Home.Model
+    , artistListingModel : ArtistListing.Model
+    , artistDetailModel : ArtistDetail.Model
+    , albumDetailModel : AlbumDetail.Model
+    }
+
+initialModel : Model
+initialModel =
+  { transitRouter = TransitRouter.empty Routes.EmptyRoute
+  , homeModel = Home.init
+  , artistListingModel = ArtistListing.init
+  , artistDetailModel = ArtistDetail.init
+  , albumDetailModel = AlbumDetail.init
+  }
+
+
+init : String -&amp;gt; ( Model, Effects Action )
+init path =
+  let
+    usePath = if path == &quot;/index.html&quot; then &quot;/&quot; else path
+  in
+    TransitRouter.init routerConfig usePath initialModel&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I don&amp;#8217;t think it&amp;#8217;s much point in describing the other slight differences, since they mostly pertain to
+details about elm-transit-router.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_url_updates_mounting_routes&quot;&gt;Url updates / Mounting routes&lt;/h4&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;mounting routes in 0.16&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;mountRoute : Route -&amp;gt; Route -&amp;gt; Model -&amp;gt; ( Model, Effects Action )
+mountRoute prevRoute route model =
+  case route of
+    Home -&amp;gt;
+      ( model, Effects.none )
+
+    ArtistListingPage -&amp;gt;
+      ( model, Effects.map ArtistListingAction (ServerApi.getArtists ArtistListing.HandleArtistsRetrieved) )
+
+    ArtistDetailPage artistId -&amp;gt;
+      ( model
+      , Effects.map ArtistDetailAction (ServerApi.getArtist artistId ArtistDetail.ShowArtist) )
+
+    NewArtistPage -&amp;gt;
+      ( { model | artistDetailModel = ArtistDetail.init }, Effects.none )
+
+    -- etc ..
+
+    EmptyRoute -&amp;gt;                &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+      ( model, Effects.none )&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This is how we handled route parse failures in our 0.16 implementation btw.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;urlUpdate in 0.17&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;urlUpdate : Result String Route -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+urlUpdate result model =
+    case result of
+        Err _ -&amp;gt;                                                            &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+            model ! [ Navigation.modifyUrl (Routes.encode model.route) ]
+
+        Ok (ArtistListingPage as route) -&amp;gt;                                  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+            { model | route = route }
+                ! [ Cmd.map ArtistListingMsg ArtistListing.mountCmd ]
+
+        -- rest left out for brevity
+
+        Ok ((NewArtistAlbumPage artistId) as route) -&amp;gt;                      &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+            { model
+                | route = route
+                , albumDetailModel = AlbumDetail.initForArtist artistId
+            }
+                ! [ Cmd.map AlbumDetailMsg AlbumDetail.mountNewAlbumCmd ]
+
+        Ok route -&amp;gt;                                                         &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+            { model | route = route } ! []&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If url parsing for a new url fails we just change the url back to url for the current route(/page)
+It might be  appropriate to show an error of some sort error.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When the we change url to the artist listing page we wish to initiate the http request for retrieving
+artists from our backend. That&amp;#8217;s where ArtistListing.mountCmd comes into the picture.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;In addition to providing an effect, we need to ensure that the albumDetailModel starts with a clean slate
+when the page for adding a new album is displayed. It might have been a good idea to separate this out to it&amp;#8217;s own component to avoid quite a bit of coniditional logic.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;For any other url changes we just update the route field in our model&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;strong&gt;What&amp;#8217;s up with the &lt;code&gt;! []&lt;/code&gt; thing ?&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;code&gt;!&lt;/code&gt; is a shorthand infix function with the following signature &lt;code&gt;(!) : model &amp;#8594; List (Cmd msg) &amp;#8594; (model, Cmd msg)&lt;/code&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;model ! [someCmd, someOtherCmd] == (model, Sub.batch [someCmd, SomeOtherCmd])&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_just_a_little_more_on_the_main_update_function_related_to_navigation&quot;&gt;Just a little more on the main update function, related to navigation&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+
+        -- other actions left out
+
+        Navigate url -&amp;gt;
+            model ! [ Navigation.newUrl url ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The navigate message triggers a call to the Navigation.newUrl function. That will step to a new url
+and update the browser history. You&amp;#8217;ll see in the next chapter were we trigger this message.&lt;/p&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Action -&amp;gt; Model -&amp;gt; ( Model, Effects Action )
+update action model =
+  case action of
+
+    -- other actions left out
+
+    RouterAction routeAction -&amp;gt;
+      TransitRouter.update routerConfig routeAction model&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This is a elm-transit-router specific handler that takes care of starting and stopping animation transitions
++ updating the route field of our model&lt;/p&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_view&quot;&gt;View&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.16&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;view : Model -&amp;gt; Html Msg
+view model =
+    div
+        [ class &quot;container-fluid&quot;
+        , Routes.catchNavigationClicks Navigate  &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+        ]
+        [ menu model
+        , div [ class &quot;content&quot; ]
+            [ contentView model ]                &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+        ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Here our catch all navigation related clicks helper function comes into play. So for any navigation related clicks, we return a &lt;code&gt;Navigate&lt;/code&gt; msg with a payload of the url to navigate to.
+This is will be handled in our top level update function as outlined in the previous chapter.
+I&amp;#8217;m not sold on it being a good solution, but it works !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;we have already shown how the &lt;code&gt;contentView&lt;/code&gt; function pattern matches on the route field of our model to render the appropriate page view&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;view : Signal.Address Action -&amp;gt; Model -&amp;gt; Html
+view address model =
+  div
+    [ class &quot;container-fluid&quot; ]
+    [ menu address model
+    , div
+        [ class &quot;content&quot;
+        , style (TransitStyle.fadeSlideLeft     &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+                  100
+                  (getTransition model))
+        ]
+        [ contentView address model ]
+    ]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This is particulars related to animations performed when making page transtions from elm-transit-*
+That part got lost in our upgrade adventure, but should be possible to plug back in in the future should we want to.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Most of the changes went really smoothly and quickly. I did have to spend a little bit of time to get familiar with the new navigation and url-parser package, but they are pretty intuitive.
+I wouldn&amp;#8217;t be lying if I said I spent much more time on writing this blog post than doing the upgrade.
+I also did quite a few changes to the implementation of details I haven&amp;#8217;t shown you, just because I&amp;#8217;ve become more confident with Elm than I was when writing the previous episodes.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;It was quite a bit of changes in terms of LOC&amp;#8217;s and I have to be honest and tell you it&amp;#8217;t didn&amp;#8217;t work once everything compiled. But you can hardly blame Elm for that,
+it was all my bad. I hadn&amp;#8217;t tested the route parsing properly and ended up implementing a loop. Kind of like a redirect loop, but all in js and out of reach for the browser.
+Firing up the inline repl in Light Table and interactively testing the parser quickly showed me the errors of my ways.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;All in all I have to say the upgrade was a really fun and enjoyable ride. I can definately say that
+0.17 made the App turn out much nicer.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;What&amp;#8217;s next ?&lt;/div&gt;
+&lt;p&gt;Hard to say for sure, but my current thinking is to start looking at auth using JWT web tokens.
+Time will tell if that&amp;#8217;s what it&amp;#8217;ll be.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_appendix&quot;&gt;Appendix&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Unfortunately the 0.17 release left elm-reactor a bit behind in terms of what it supports.
+From my past experience with ClojureScript, I have gotten used to the feeback  loop you get by using the wonderful &lt;a href=&quot;https://github.com/bhauman/lein-figwheel&quot;&gt;figwheel&lt;/a&gt;.
+elm-reactor unfortunately doesn&amp;#8217;t come close to that currently, so I had to turn to JS land for alternatives. After some evalutation and trials I ended up using
+&lt;a href=&quot;https://github.com/fluxxu/elm-hot-loader&quot;&gt;elm-hot-loader&lt;/a&gt;. It has worked out really nicely even though I ended up pulling down a fair chunk of the npm package repo.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m sure elm-reactor will be back with a vengeance in the not so distant future, packing some really cool and unique features.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+  	       </description>
+      </item>
       <item>
         <title>Elm Maybe - Dealing with null/Nothing</title>
         <link>http://rundis.github.io/blog/2016/elm_maybe.html</link>
