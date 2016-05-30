@@ -1,0 +1,1421 @@
+= Typed up CRUD SPA with Haskell and Elm - Part 5: Elm 0.17 Upgrade
+Magnus Rundberget
+2016-05-30
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: haskell, elm, haskellelmspa
+:imagesdir: /blog/2016/
+:icons: font
+:id: haskell_elm_spa_part5
+:toc: macro
+
+
+
+
+Elm version 0.17 was released a few weeks back. If haven't already, you should read the annoucement post
+http://elm-lang.org/blog/farewell-to-frp[A Farewell to FRP]. So what does that mean for the Albums app ?
+Sounds like we're in for a massive rewrite. It turns out, since we were already using The Elm Architecture to
+structure our application, the impact isn't that big after all. Most of it is mechanical, and actually the biggest change
+is that we can no longer use the 3.rd party routing library we depended on.
+
+
+
+
+[NOTE]
+====
+.Useful resources
+* Check out the other http://rundis.github.io/blog/tags/haskellelmspa.html[episodes] in this blog series.
+* The accompanying https://github.com/rundis/albums[Albums] sample app is on github, and there is a tag
+for each episode
+====
+
+
+toc::[]
+
+== Introduction
+I would have done the upgrade to 0.17 sooner, but the Album application depended on a 3rd party package
+called https://github.com/etaque/elm-transit-router[elm-transit-router]. It served us well and we even got some nice
+transition animations when changing pages. However as all the routing libraries that we're available for 0.16, it
+depended on a community package called elm-history. That package was never going to updated to support 0.17, in fact
+all support for the Web Platform APIs will eventually supported by the Elm language.
+
+
+Last week https://github.com/elm-lang/navigation[Navigation] was announced. This is library for managing navigation in a SPA. It provides nice abstractions over the History API.
+In tandem Evan released https://github.com/evancz/url-parser[URL Parser] which is a simple parser for turning URLs into structured data.
+
+With that in place I felt confident we should be able to do the upgrade. Let's walk through the highlights !
+
+
+
+
+== Upgrade steps
+
+=== Upgrading packages
+
+./frontend/elm-package.json
+|===
+|0.17 |0.16
+
+a|
+[source,JavaScript]
+----
+"dependencies": {
+  "elm-community/elm-json-extra": "1.0.0 <= v < 2.0.0",
+  "elm-community/list-extra": "2.0.0 <= v < 3.0.0",
+  "elm-lang/core": "4.0.0 <= v < 5.0.0",
+  "elm-lang/html": "1.0.0 <= v < 2.0.0",
+  "elm-lang/navigation": "1.0.0 <= v < 2.0.0",
+  "evancz/elm-http": "3.0.1 <= v < 4.0.0",
+  "evancz/url-parser": "1.0.0 <= v < 2.0.0"
+},
+"elm-version": "0.17.0 <= v < 0.18.0"
+----
+
+a|
+[source,JavaScript]
+----
+
+"dependencies": {
+    "circuithub/elm-list-extra": "3.9.0 <= v < 4.0.0",   // <1>
+    "elm-lang/core": "3.0.0 <= v < 4.0.0",
+    "etaque/elm-route-parser": "2.1.0 <= v < 3.0.0",
+    "etaque/elm-transit-router": "1.0.1 <= v < 2.0.0",   // <2>
+    "etaque/elm-transit-style": "1.0.1 <= v < 2.0.0",
+    "evancz/elm-effects": "2.0.1 <= v < 3.0.0",          // <3>
+    "evancz/elm-html": "4.0.2 <= v < 5.0.0",             // <4>
+    "evancz/elm-http": "3.0.0 <= v < 4.0.0",
+    "evancz/start-app": "2.0.2 <= v < 3.0.0"             // <5>
+},
+"elm-version": "0.16.0 <= v < 0.17.0"
+
+----
+<1> https://github.com/elm-community/[Elm Community] have taken over this package
+<2> `elm-transit-router`, `elm-route-parser`, `elm-transit-style` have been replaced by `elm-lang/navigation` and `evancz/url-parser`
+(pls note you can still use `etaque/elm-route-parser` with the navigation package if you need more advanced route parsing)
+<3> This package has been baked into core of Elm for 0.17, so this package is no longer needed
+<4> This package has moved under the `elm-lang` umbrella. So has it's low level https://github.com/elm-lang/virtual-dom[virtual-dom] transitive dependency
+<5> This package has basically been moved into `elm-lang/html`
+|===
+
+
+=== Mechanical changes
+
+
+==== Module declarations
+
+In 0.16 we had
+
+[source,elm]
+----
+module Main (..) where
+----
+
+In 0.17 we have
+[source,elm]
+----
+module Main exposing (..)
+----
+
+Luckily https://github.com/avh4/elm-format[Elm Format] handles this conversion automatically for us when we do format of an 0.16 .elm file !
+So we can just run elm-format on the `src` directory.
+
+
+==== Effects are now named `Cmd`
+The new name for Effects are now `Cmd` shorthand for Command. `Cmd` is part of `elm-lang/core`
+and lives in the http://package.elm-lang.org/packages/elm-lang/core/4.0.1/Platform-Cmd[Platform.Cmd] module
+
+.Changes to a typical update function
+
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+type Msg
+    = SomeMsg
+    \| SomeOtherMsg
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )         // <1>
+update msg model =
+    case msg of
+       SomeMsg ->
+           ( { model \| count = model.count + 1 }
+           , Cmd.none                               // <2>
+           )
+       -- etc...
+----
+<1> You'll also notice that `Action` has changed to `Msg`. It's just a naming convention change
+, but it better conveys what it actually is. You'll see later when we get to the view function why it's probably a good idea for you to
+follow that convention.
+<2> As you see, here it's just a naming change in practice
+
+a|
+[source,elm]
+----
+type Action
+    = SomeAction
+    \| SomeOtherAction
+
+
+update : Action -> Model -> ( Model, Effects Action )
+update action model =
+    case action of
+        SomeAction ->
+            ( { model \| count = model.count + 1 }
+            , Effects.none
+            )
+        -- etc...
+----
+|===
+
+
+Making these changes is also fairly trivial with a good old search/replace.
+
+
+==== Mailbox and address are gone in 0.17
+
+
+.Changes to a typical view function
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+view : Model -> Html Msg           // <1>
+view model =
+    button
+        [ onClick SomeMsg ]        // <2>
+        [ text "DoStuff" ]
+----
+
+a|
+[source,elm]
+----
+view : Signal.Address Action -> Model -> Html
+view address model =
+    button
+        [ onClick address SomeMsg ]
+        [ text "DoStuff"]
+----
+|===
+1. The address parameter is gone, you no longer need to concern yourself with the intricacies of mailboxes.
+But you'll also notice that the return value type `Html` takes a tag which in this case is our `Msg` type. So if we have any event handlers
+in our view code, we are telling it that those should result in a message of type `Msg`. We'll come back to this in a bit more detail when we go through a nesting example.
+2.  We no longer need to deal with an address for our event handler, we just tell Elm that when the user clicks the button, it should
+trigger our update function with the given `Msg` `SomeMsg`. The Elm runtime will take care of routing the message to our update function without any address mumbojumbo !
+
+
+Again making this change is largely a matter of search/replace. There are a few exceptions though.
+
+.on "input" is now luckily onInput !
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+[ input
+  [ class "form-control"
+  , value model.name
+  , onInput SetAlbumName
+  ]
+  []
+]
+----
+
+a|
+[source,elm]
+----
+[ input
+  [ class "form-control"
+  , value model.name
+  , on "input"
+        targetValue
+        (\str -> Signal.message address (SetAlbumName str))
+  ]
+  []
+]
+----
+|===
+
+But let's say you actually do need a custom decoder it would still be simpler than in 0.16
+[source, elm]
+----
+import Json.Decode as Json
+
+-- ...
+
+[ input
+  [ class "form-control"
+  , value model.name
+  , on "input" (Json.map SetArtistName targetValue) // <1>
+  ]
+  []
+]
+----
+<1> Here we just map over the targetValue, and call SetArtistName with the value. `targetValue` is a Json decoder which picks out the value from our input field when the event is triggered
+
+
+=== Routes and Route parsing (ehh... URLs if you like)
+
+.Route definitions
+
+|===
+|0.17 |0.16
+
+a|
+[source,elm]
+----
+type Route
+    = Home
+    \| ArtistListingPage
+    \| ArtistDetailPage Int
+    \| NewArtistPage
+    \| AlbumDetailPage Int
+    \| NewArtistAlbumPage Int
+----
+
+a|
+[source,elm]
+----
+type Route
+  = Home
+  \| ArtistListingPage
+  \| ArtistDetailPage Int
+  \| NewArtistPage
+  \| AlbumDetailPage Int
+  \| NewAlbumPage
+  \| NewArtistAlbumPage Int
+  \| EmptyRoute
+----
+|===
+
+So the only change here is basically the removal of a couple of routes that weren't in use.
+
+
+.Route parsing
+|===
+|0.17 (url-parser) |0.16 (elm-route-parser)
+
+a|
+[source,elm]
+----
+routeParser : Parser (Route -> a) a
+routeParser =
+    oneOf
+        [ format Home (s "")
+        , format NewArtistPage (s "artists" </> s "new")
+        , format NewArtistAlbumPage
+                 (s "artists" </> int </> s "albums" </> s "new")
+        , format ArtistDetailPage (s "artists" </> int)
+        , format ArtistListingPage (s "artists")
+        , format AlbumDetailPage (s "albums" </> int)
+        ]
+
+
+decode : Location -> Result String Route
+decode location =
+    parse identity routeParser (String.dropLeft 1 location.pathname)
+----
+
+a|
+[source,elm]
+----
+routeParsers : List (Matcher Route)
+routeParsers =
+  [ static Home "/"
+  , static ArtistListingPage "/artists"
+  , static NewArtistPage "/artists/new"
+  , dyn1 ArtistDetailPage "/artists/" int ""
+  , dyn1 AlbumDetailPage "/albums/" int ""
+  , static NewAlbumPage "/albums/new"
+  , dyn1 NewArtistAlbumPage "/artists/" int "/albums/new"
+  ]
+
+
+
+decode : String -> Route
+decode path =
+  RouteParser.match routeParsers path
+    \|> Maybe.withDefault EmptyRoute
+----
+|===
+The parsing syntax is slightly different, but the transition was fairly trivial in our case.
+The observant reader will notice that we've skipped over the case when there is not matching route.
+We'll get back to that when we wire it all together.
+
+
+
+.Encoding
+[source,elm]
+----
+encode : Route -> String
+encode route =
+    case route of
+        Home ->
+            "/"
+
+        ArtistListingPage ->
+            "/artists"
+
+        NewArtistPage ->
+            "/artists/new"
+
+        ArtistDetailPage i ->
+            "/artists/" ++ toString i
+
+        AlbumDetailPage i ->
+            "/albums/" ++ toString i
+
+        NewArtistAlbumPage i ->
+            "/artists/" ++ (toString i) ++ "/albums/new"
+
+----
+Encoding routes is pretty much exactly the same as before.
+
+
+.Handy helpers
+|===
+|0.17 (url-parser) |0.16 (elm-route-parser)
+
+a|
+[source,elm]
+----
+navigate : Route -> Cmd msg                     // <1>
+navigate route =
+    Navigation.newUrl (encode route)
+
+
+linkTo : Route -> List (Attribute msg) -> List (Html msg) -> Html msg
+linkTo route attrs content =                    // <2>
+    a ((linkAttrs route) ++ attrs) content
+
+
+linkAttrs : Route -> List (Attribute msg)
+linkAttrs route =
+    let
+        path =
+            encode route
+    in
+        [ href path
+        , attribute "data-navigate" path       // <3>
+        ]
+
+
+catchNavigationClicks : (String -> msg) -> Attribute msg
+catchNavigationClicks tagger =                 // <4>
+    onWithOptions "click"
+        { stopPropagation = True
+        , preventDefault = True
+        }
+        (Json.map tagger (Json.at [ "target" ] pathDecoder))
+
+
+pathDecoder : Json.Decoder String              // <5>
+pathDecoder =
+    Json.oneOf
+        [ Json.at [ "data-navigate" ] Json.string
+        , Json.at [ "parentElement" ] (lazy (\_ -> pathDecoder))
+        , Json.fail "no path found for click"
+        ]
+----
+<1> A couple of places in the Album app we wish to be able to navigate to a new page as a result of some logic
+in the update function is some component. Tbh we might be better off inlining this
+in the relevant update functions.
+<2> This is a handy convenience function for creating a link to one of our defined routes (aka pages in our App)
+<3> In addition to the href attribute we define a `data-navigate` attribute which we can use for a catch all handler we'll come to in a second
+<4> This function allows us to catch all link clicks for a given element and all it's child elments.
+It prevents the browser from making the url reguest and rather allows us to provide a custom tagger function that receives the Url in question and can create a message as a result.
+It will make more sence to you when you see how it's used in our Main module later on.
+<5> A Json parser which will recursivly walk through the element tree for the node receiving the event and try to find an element with the `data-navigage` attribute defined.
+
+a|
+[source,elm]
+----
+redirect : Route -> Effects ()
+redirect route =
+  encode route
+    \|> Signal.send TransitRouter.pushPathAddress
+    \|> Effects.task
+
+
+clickAttr : Route -> Attribute
+clickAttr route =
+  on "click" Json.value (\_ ->  Signal.message TransitRouter.pushPathAddress <\| encode route)
+
+
+linkAttrs : Route -> List Attribute
+linkAttrs route =
+  let
+    path = encode route
+  in
+    [ href path
+    , onWithOptions
+        "click"
+        { stopPropagation = True, preventDefault = True }
+        Json.value
+        (\_ ->  Signal.message TransitRouter.pushPathAddress path)
+    ]
+----
+|===
+
+NOTE: I borrowed most of this code from https://github.com/etaque/tacks[The tacks application from @etaque]. Kudos to @etaque for coming up with this !
+
+
+WARNING: Please be adviced that these helpers do make a compromise in terms of type safety.
+I'm sure in due time, more type safe patterns will emerge.  An obvious alternative to this approach is to
+have a custom message in each update function that handles navigation. I'm going to try that out in the near future and see how it plays out.
+
+
+
+==== Sample usage
+
+Let's have a quick look at a few examples on how we are using the `navigate` and `linkTo` helper functions
+in the Albums app. How it all fits together will hopefully be apparent when we describe how we wire everything together in our `Main` module a little later on
+
+.artistRow function in frontend/src/ArtistDetails.elm
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+artistRow : Artist -> Html Msg
+artistRow artist =
+    tr []
+        [ td [] [ text artist.name ]
+        , td []
+            [ Routes.linkTo (Routes.ArtistDetailPage artist.id) //<1>
+                [ class "btn btn-sm btn-default" ]
+                [ text "Edit" ]
+            ]
+        , td []
+            [ button
+                [ class "btn btn-sm btn-danger"
+                , onClick <\| DeleteArtist (.id artist)          //<2>
+                ]
+                [ text "Delete!" ]
+            ]
+        ]
+----
+<1> Here we are creating a normal link using the helper function described earlier. The result of clicking it should just be navigation, so sending a message to the ArtistListing `update` function which then creates the navigation effect feels like it might be to much work/boilerplate
+<2> Here the primary thing we want to handle is not navigation, the primary concern is handling deletion so we follow the normal pattern of returning a Msg which will be routed to our update function for handling
+a|
+[source,elm]
+----
+artistRow : Signal.Address Action -> Artist -> Html
+artistRow address artist =
+  tr
+    []
+    [ td [] [ text artist.name ]
+    , td
+        []
+        [ button
+            [ class "btn btn-sm btn-default"
+            , Routes.clickAttr
+                <\| Routes.ArtistDetailPage artist.id
+            ]
+            [ text "Edit" ]
+        ]
+    , td
+        []
+        [ button
+            [ class "btn btn-sm btn-danger"
+            , onClick address (DeleteArtist (.id artist))
+            ]
+            [ text "Delete!" ]
+        ]
+    ]
+----
+|===
+
+
+.update function in frontend/src/ArtistDetail.elm
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+-- ...
+
+HandleSaved artist ->
+    ( { model
+        \| id = Just artist.id
+        , name = artist.name
+      }
+      , Routes.navigate Routes.ArtistListingPage // <1>
+    )
+-- ...
+
+----
+<1> Upon successfully saving an artist to our backend service, we create a Cmd (aka request for an effect to be performed), using our util function, to route the user to the
+ArtistListingPage
+
+a|
+[source,elm]
+----
+HandleSaved maybeArtist ->
+  case maybeArtist of
+    Just artist ->
+      ( { model
+          \| id = Just artist.id
+          , name = artist.name
+        }
+      , Effects.map (\_ -> NoOp)
+                    (Routes.redirect Routes.ArtistListingPage)
+      )
+
+    Nothing ->
+      Debug.crash "Save failed... we're not handling it..."
+----
+|===
+
+
+=== Dealing with Http
+
+So in our Album app we separated all HTTP requests to a separate module we called `ServerApi`.
+The changes from 0.16 to 0.17 isn't massive, but since we're at it we might as well make some small improvements
+to be better prepared for error handling in future episodes.
+
+
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+getArtist :
+  Int
+  -> (Http.Error -> msg)
+  -> (Artist -> msg)
+  -> Cmd msg
+getArtist id errorMsg msg =
+    Http.get artistDecoder
+            (baseUrl ++ "/artists/" ++ toString id)
+        \|> Task.perform errorMsg msg
+----
+
+a|
+[source,elm]
+----
+getArtist : Int -> (Maybe Artist -> a) -> Effects.Effects a
+getArtist id action =
+  Http.get artistDecoder (baseUrl ++ "/artists/" ++ toString id)
+    \|> Task.toMaybe
+    \|> Task.map action
+    \|> Effects.task
+----
+|===
+The http methods haven't really changed, but the manner in which we request the runtime to perform them have changed.
+We no longer have the Effects package, so we need to use `Task.perform` to do it now. Our 0.16 implementation used
+Maybe to signal success or failure, in 0.17 we have opted to give a different message for success or failure.
+So if `getArtist` fails the error result of or http action will be passed to our update function wrapped in the provided Msg given by our `errorMsg` param,
+if it succeeds the response will be json decoded and passed to our update function wrapped in the provided Msg given by our `msg` param.
+
+
+NOTE: Separating out all our http requests in one module gives flexibility in usage from multiple modules, but comes with a price of reduced type safety though.
+**You** might want to localize http stuff with your components to make them more self-contained.
+
+
+
+
+==== Usage Comparison
+
+
+.frontend/src/AlbumDetail.elm 0.16
+[source, elm]
+----
+update : Action -> Model -> ( Model, Effects Action )
+update action model =
+  case action of
+    NoOp ->
+      ( model, Effects.none )
+
+    GetAlbum id ->
+      ( model
+      , Effects.batch
+          [ getAlbum id ShowAlbum
+          , getArtists HandleArtistsRetrieved
+          ]
+      )
+
+    ShowAlbum maybeAlbum ->
+      case maybeAlbum of
+        Just album ->
+          ( createAlbumModel model album, Effects.none )
+
+        Nothing -> -- TODO: This could be an error if returned from api !
+          ( maybeAddPristine model, getArtists HandleArtistsRetrieved )
+
+    HandleArtistsRetrieved xs ->
+      ( { model | artists = (Maybe.withDefault [] xs) }
+      , Effects.none
+      )
+
+----
+Our use of Maybe to signal failure in our 0.16 implementation clearly muddles what's going on in terms of potential failures.
+
+
+
+
+.frontend/src/AlbumDetail.elm 0.17
+[source,elm]
+----
+mountAlbumCmd : Int -> Cmd Msg                                    // <1>
+mountAlbumCmd id =
+    Cmd.batch
+        [ getAlbum id FetchAlbumFailed ShowAlbum
+        , getArtists FetchArtistsFailed HandleArtistsRetrieved
+        ]
+
+
+mountNewAlbumCmd : Cmd Msg                                        // <2>
+mountNewAlbumCmd =
+    getArtists FetchArtistsFailed HandleArtistsRetrieved
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        -- TODO: show error
+        FetchAlbumFailed err ->                                   // <3>
+            ( model, Cmd.none )
+
+        ShowAlbum album ->                                        // <4>
+            ( createAlbumModel model album, Cmd.none )
+
+        HandleArtistsRetrieved artists' ->
+            ( { model | artists = artists' }
+            , Cmd.none
+            )
+
+        -- TODO: show error
+        FetchArtistsFailed err ->
+            ( model, Cmd.none )
+
+        -- rest left out for brevity
+----
+<1> This command has been separated out as an exposed function for the module. The reason is that we need to perform this
+when we navigate to a `/albums/<id>. I.e when that particular url is mounted. You'll see how when we cover the Main module.
+We are actually running two http requests here.. hopefully/presumably in the order they are listed :-)
+<2> Similar to the above, but this is for handling when the user navigates to the url for creating a _new_ album
+<3> if getAlbum should fail this is where we should handle that (And we will eventually in a future episode)
+<4> If getAlbum succeeds we set the model up for displaying the retrieved artist
+
+
+
+=== Nesting Components
+
+The way you handle nesting of components in 0.17 has changed (for the better) with the removal of Mailboxes.
+If you didn't do to much fancy stuff with addresses the transition to 0.17 should be quite straight forward.
+We'll illustrate by showing a simple/common transition and then we will show how you might handle a more complex
+nesting scenario (based on actual examples from the Albums App)
+
+
+
+==== The common scenario
+
+.update function in frontend/src/Main.elm
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        HomeMsg m ->
+            let
+                ( subMdl, subCmd ) =
+                    Home.update m model.homeModel
+            in
+                { model \| homeModel = subMdl }
+                    ! [ Cmd.map HomeMsg subCmd ]   // <1>
+        -- ...
+----
+<1> So rather than using `Effects.map` to map the result action(s) of effects from a child component, we use `Cmd.map` to map result msg(s) from a child component
+to a Msg that is known to the parent module.
+
+
+a|
+[source,elm]
+----
+update : Action -> Model -> ( Model, Effects Action )
+update action model =
+  case action of
+    HomeAction homeAction ->
+      let
+        ( subMdl, effects ) =
+          Home.update homeAction model.homeModel
+      in
+        ( { model \| homeModel = subMdl }
+        , Effects.map HomeAction effects
+        )
+
+    -- ...
+
+----
+|===
+
+I think you'll agree this change is pretty simple to deal with. Let's see how nesting of view functions
+for components have changed
+
+
+.contentView function in frontend/src/Main.elm
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+contentView : Model -> Html Msg
+contentView model =
+    case model.route of                             // <1>
+        Home ->
+            App.map HomeMsg                         // <2>
+                    <\| Home.view model.homeModel
+
+        -- ...
+
+----
+<1> As we did in 0.16 we keep track of the current route in our model
+<2> App.map is shorthand for Html.App.map. So we need to map between the `Msg` type returned from the view function in the Home module
+to a `Msg` type that is known to our Main module. In this instance it's `HomeMsg`. We need to do this mapping so that when the msg is passed
+pack into our root update function we know which msg we should forward to which subcomponent.
+
+a|
+[source,elm]
+----
+contentView : Signal.Address Action -> Model -> Html
+contentView address model =
+  case (TransitRouter.getRoute model) of
+    Home ->
+      Home.view (Signal.forwardTo address HomeAction)  // <1>
+                model.homeModel
+----
+<1> Signal.forwardTo essentially achieved the same effect, but it's way less intuitive to grasp. It's unlikely you'll miss it much !
+|===
+
+This change isn't quite search/replace (well with regex perhaps), but it's quite trivial too.
+Ok let's move onto something a bit more complex.
+
+
+
+==== A more complex scenario - Album and tracks
+
+
+If you wish to see the Album and Tracks solution in action, you can check it out here:
+++++
+<iframe width="420" height="315" src="https://www.youtube.com/embed/RU0NB2xaQIg" frameborder="0" allowfullscreen></iframe>
+++++
+
+
+.update function in frontend/src/TrackRow.elm
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+type Msg
+    = SetTrackName String
+    \| SetMinutes String
+    \| SetSeconds String
+    \| Dispatch DispatchMsg                             // <1>
+
+
+type DispatchMsg                                       // <2>
+    = MoveUp
+    \| MoveDown
+    \| Remove
+
+
+update : Msg -> Model -> ( Model, Maybe DispatchMsg )  // <3>
+update msg model =
+    case msg of
+        SetTrackName v ->
+            ( { model \| name = v, status = Modified }
+            , Nothing                                  // <4>
+            )
+
+        SetMinutes str ->
+            -- ...
+
+        SetSeconds str ->
+            -- ...
+
+        Dispatch dispatchMsg ->                        // <5>
+            ( model, Just dispatchMsg )
+----
+<1> We add a new Msg tag called `Dispatch` which has a payload of type `DispatchMsg` to model
+messages we would like to notify the parent of this component to handle
+<2> DispatchMsg becomes part of the public Api for our component so we need to expose it from our module
+<3> The way we notify the parent in this solution is to add a return value, so now we return a tuple of Model and Maybe a DispatchMsg the parent
+should respond to.
+<4> For the component internal messages there is nothing extra the parent should respond to, so we simply return `Nothing` as a DispatchMsg
+<5> For all dispatch messages we return the concrete dispatch message tag that we want the parent to handle
+
+a|
+[source,elm]
+----
+type Action
+  = SetTrackName String
+  \| SetMinutes String
+  \| SetSeconds String
+
+
+update : Action -> Model -> Model
+update action model =
+  case action of
+    SetTrackName v ->
+      { model \| name = v, status = Modified }
+
+    SetMinutes str ->
+      -- ..
+
+
+    SetSeconds str ->
+      -- ..
+----
+|===
+There is no magic involved here, we are just returning an additional piece of info in the return value of
+our update function.
+
+
+.view function in frontend/src/TrackRow.elm
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+view : Model -> Html Msg
+view model =
+    tr []
+        [ td [] [ statusView model ]
+        , td [] [ moveView model ]
+        , td [] [ nameView model ]
+        , td [] [ durationView model ]
+        , td [] [ removeView model ]
+        ]
+
+removeView : Model -> Html Msg
+removeView model =
+    button
+        [ onClick (Dispatch Remove)           // <1>
+        , class
+            <\| "btn btn-sm btn-danger "
+            ++ if isPristine model then
+                "disabled"
+               else
+                ""
+        ]
+        [ text "Remove" ]
+
+-- ...
+----
+<1> When the user clicks the remove button, we simply return a Msg with the tag `Dispatch` carrying a `DispatchMsg` with the tag `Remove`
+This msg will be routed through the top-level update function, through the update function in `AlbumDetailPage` and finally to the update function in `TrackRow`.
+There it will be handled by the `Dispatch dispatchMsg ->` case and simply returned to the parent (`AlbumDetailPage`)
+
+
+a|
+[source,elm]
+----
+type alias Context =                          // <1>
+  { actions : Signal.Address Action
+  , remove : Signal.Address ()
+  , moveUp : Signal.Address ()
+  , moveDown : Signal.Address ()
+  }
+
+
+view : Context -> Model -> Html
+view context model =
+  tr
+    []
+    [ td [] [ statusView model ]
+    , td [] [ moveView context model ]
+    , td [] [ nameView context model ]
+    , td [] [ durationView context model ]
+    , td [] [ removeView context model ]
+    ]
+
+
+removeView : Context -> Model -> Html
+removeView context model =
+  button
+    [ onClick context.remove ()             // <2>
+    , class <\| "btn btn-sm btn-danger "
+            ++ if isPristine model then
+                  "disabled"
+               else ""
+    ]
+    [ text "Remove" ]
+
+-- ..
+
+----
+<1> In our 0.16 implementation we used this funny type and made it part of the public Api
+as an extra param to the view function.
+<2> This looks super-weird to someone who doesn't intuitively know that `()` is `Unit`.
+ `onClick` takes 2 parameters an address and an Action. In this case context.remove is the first param and `()` is the second !
+There is little point in explaining further, let's just agreed that this isn't very intuitive ?
+|===
+
+
+
+.0.16 implementation of update function in frontend/src/AlbumDetail.elm
+[source,elm]
+----
+update : Action -> Model -> ( Model, Effects Action )
+update action model =
+  case action of
+    -- ...
+
+    RemoveTrack id ->
+      ( { model \| tracks = List.filter (\( rowId, _ ) -> rowId /= id) model.tracks }
+      , Effects.none
+      )
+
+    MoveTrackUp id ->
+      -- ...
+    MoveTrackDown id ->
+      -- ...
+
+    ModifyTrack id trackRowAction ->
+      let
+        updateTrack ( trackId, trackModel ) =
+          if trackId == id then
+            ( trackId, TrackRow.update trackRowAction trackModel )
+          else
+            ( trackId, trackModel )
+      in
+        ( maybeAddPristine { model | tracks = List.map updateTrack model.tracks }
+        , Effects.none
+        )
+----
+
+
+.0.17 implementation of update function in frontend/src/AlbumDetail.elm
+[source,elm]
+----
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        -- ...
+
+        RemoveTrack id ->                                      // <1>
+            ( { model \| tracks = List.filter (\( rowId, _ ) -> rowId /= id) model.tracks
+              }
+            , Cmd.none
+            )
+
+        MoveTrackUp id ->
+            -- ...
+
+        MoveTrackDown id ->
+            -- ...
+
+        ModifyTrack id trackRowMsg ->
+            case (modifyTrack id trackRowMsg model) of        // <2>
+                Just ( updModel, Nothing ) ->                 // <3>
+                    ( model, Cmd.none )
+
+                Just ( updModel, Just dispatchMsg ) ->        // <4>
+                    handleDispatch id dispatchMsg updModel
+
+                _ ->
+                    ( model, Cmd.none )                       // <5>
+
+
+modifyTrack : TrackRowId -> TrackRow.Msg -> Model -> Maybe ( Model, Maybe TrackRow.DispatchMsg )
+modifyTrack id msg model =                                    // <6>
+    ListX.find (\( trackId, _ ) -> id == trackId) model.tracks
+        \|> Maybe.map (\( _, trackModel ) -> TrackRow.update msg trackModel)
+        \|> Maybe.map
+            (\( updTrack, dispatchMsg ) ->
+                ( maybeAddPristine
+                    { model
+                        \| tracks =
+                            ListX.replaceIf (\( i, _ ) -> i == id)
+                                ( id, updTrack )
+                                model.tracks
+                    }
+                , dispatchMsg
+                )
+            )
+
+
+handleDispatch : TrackRowId -> TrackRow.DispatchMsg -> Model -> ( Model, Cmd Msg )
+handleDispatch id msg model =                                // <7>
+    case msg of
+        TrackRow.MoveDown ->
+            update (MoveTrackDown id) model
+
+        TrackRow.MoveUp ->
+            update (MoveTrackUp id) model
+
+        TrackRow.Remove ->
+            update (RemoveTrack id) model
+
+----
+<1> The parent, ie AlbumDetail, logic for deleting on of it's track rows
+<2> We delegate updating the track row and consequently the AlbumDetail model to a helper function.
+We pattern match on the result from that function.
+<3> If it was a "normal" update with no dispatch message returned we simply return the updated model and a no op Cmd
+<4> If the update of the track row got a dispatch message in return from TrackRow.update we delegate the handling of the
+dispatch message to another helper function.
+<5> Since we are dealing with Maybe values we have to handle this case, but it really shouldn't ever happen ! (famous last words)
+<6> This might look a bit scary, but in summary it; locates the correct track row, performs the update of that row by delegating to TrackRow update,
+updates the track row in the model with the updated track row and finally returns a tuple of the updated model and the dispatch message (which is Maybe you remember)
+<7> Here we simply pattern match on the dispatch message and invokes the update function with the appropriate corresponding `Msg`
+
+
+NOTE: The pattern we used here is just one of many possible ways of solving this problem. Maybe someday a common preferred pattern will emerge,
+but the bottom line is that it will most likely be some variation of return values from update functions and/or input params to the view function in the parent/child communucation.
+The days of "magic" juggling with mailboxes are gone. Simple input/output FTW !
+Oh, and finally, for this particular case I think there might be a good case for arguing that perhaps remove/moveup/movedown doesn't really belong in `TrackRow` at all, it might
+actually make more sence to use a decorator-kind of approach instead.
+
+
+WARNING: Some flavors of using "global" or dummy effects (using say dummy tasks) for communicating between components have briefly surfaced. Pls think really carefully
+before adopting such an approach. Have a chat with the nice and very knowledgable people in the community to discuss
+if there isn't a better solution for your problem !
+
+
+
+
+=== Wiring it all together in frontend/src/Main.elm
+
+
+.main
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+main : Program Never
+main =
+    Navigation.program                       // <1>
+      (Navigation.makeParser Routes.decode)
+        { init = init
+        , view = view
+        , update = update
+        , urlUpdate = urlUpdate              // <2>
+        , subscriptions = \_ -> Sub.none     // <3>
+        }
+
+----
+<1> Rather that start-app we are using the program function from Navigation. The first
+param is a function to creates a parser- So bootstrap it with our Routes.decode function.
+The second param is a config record similar to the one in start-app but not quite
+<2> Hey what's this fellow, it seems we need to provide a function to handle URL updates in our application !
+<3> We don't have any subscriptions in our app, so we can just return Sub.none for that function.
+
+a|
+[source,elm]
+----
+app : StartApp.App Model
+app =
+  StartApp.start
+    { init = init initialPath
+    , update = update
+    , view = view
+    , inputs = [ actions ]                  // <1>
+    }
+
+
+main : Signal Html
+main =
+  app.html
+
+
+port tasks : Signal (Task.Task Never ())   // <2>
+port tasks =
+  app.tasks
+
+port initialPath : String                  // <3>
+
+----
+<1> Inputs was sort of like subscriptions. We needed that in our 0.16 because of elm-transit-router which used elm-history which again provided a signal for url changes.
+All of that is gone and handled by navigation, but slightly differently.
+<2> Just a thing you had to define if you had effects in your App in 0.16. We're happy it's gone !
+<3> We had to provide the initialPath (url) through a port in 0.16
+|===
+
+
+.Model and init stuff
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+type alias Model =
+    { route : Routes.Route
+    , homeModel : Home.Model
+    , artistListingModel : ArtistListing.Model
+    , artistDetailModel : ArtistDetail.Model
+    , albumDetailModel : AlbumDetail.Model
+    }
+
+initialModel : Model
+initialModel =
+    { route = Home
+    , homeModel = Home.init
+    , artistListingModel = ArtistListing.init
+    , artistDetailModel = ArtistDetail.init
+    , albumDetailModel = AlbumDetail.init
+    }
+
+
+init : Result String Route -> ( Model, Cmd Msg )  // <1>
+init result =
+    urlUpdate result initialModel
+
+----
+<1> `init` is called for us by Navigation.program using our provided parser so
+we get a result from the parsing of the initial url. We pass that on to the yet to be described
+urlUpdate function along with our initial model.
+
+a|
+[source,elm]
+----
+type alias Model =
+  WithRoute
+    Routes.Route
+    { homeModel : Home.Model
+    , artistListingModel : ArtistListing.Model
+    , artistDetailModel : ArtistDetail.Model
+    , albumDetailModel : AlbumDetail.Model
+    }
+
+initialModel : Model
+initialModel =
+  { transitRouter = TransitRouter.empty Routes.EmptyRoute
+  , homeModel = Home.init
+  , artistListingModel = ArtistListing.init
+  , artistDetailModel = ArtistDetail.init
+  , albumDetailModel = AlbumDetail.init
+  }
+
+
+init : String -> ( Model, Effects Action )
+init path =
+  let
+    usePath = if path == "/index.html" then "/" else path
+  in
+    TransitRouter.init routerConfig usePath initialModel
+----
+|===
+I don't think it's much point in describing the other slight differences, since they mostly pertain to
+details about elm-transit-router.
+
+
+==== Url updates / Mounting routes
+
+.mounting routes in 0.16
+[source,elm]
+----
+mountRoute : Route -> Route -> Model -> ( Model, Effects Action )
+mountRoute prevRoute route model =
+  case route of
+    Home ->
+      ( model, Effects.none )
+
+    ArtistListingPage ->
+      ( model, Effects.map ArtistListingAction (ServerApi.getArtists ArtistListing.HandleArtistsRetrieved) )
+
+    ArtistDetailPage artistId ->
+      ( model
+      , Effects.map ArtistDetailAction (ServerApi.getArtist artistId ArtistDetail.ShowArtist) )
+
+    NewArtistPage ->
+      ( { model | artistDetailModel = ArtistDetail.init }, Effects.none )
+
+    -- etc ..
+
+    EmptyRoute ->                // <1>
+      ( model, Effects.none )
+
+----
+<1> This is how we handled route parse failures in our 0.16 implementation btw.
+
+
+
+.urlUpdate in 0.17
+[source, elm]
+----
+urlUpdate : Result String Route -> Model -> ( Model, Cmd Msg )
+urlUpdate result model =
+    case result of
+        Err _ ->                                                            // <1>
+            model ! [ Navigation.modifyUrl (Routes.encode model.route) ]
+
+        Ok (ArtistListingPage as route) ->                                  // <2>
+            { model | route = route }
+                ! [ Cmd.map ArtistListingMsg ArtistListing.mountCmd ]
+
+        -- rest left out for brevity
+
+        Ok ((NewArtistAlbumPage artistId) as route) ->                      // <3>
+            { model
+                | route = route
+                , albumDetailModel = AlbumDetail.initForArtist artistId
+            }
+                ! [ Cmd.map AlbumDetailMsg AlbumDetail.mountNewAlbumCmd ]
+
+        Ok route ->                                                         // <4>
+            { model | route = route } ! []
+----
+<1> If url parsing for a new url fails we just change the url back to url for the current route(/page)
+It might be  appropriate to show an error of some sort error.
+<2> When the we change url to the artist listing page we wish to initiate the http request for retrieving
+artists from our backend. That's where ArtistListing.mountCmd comes into the picture.
+<3> In addition to providing an effect, we need to ensure that the albumDetailModel starts with a clean slate
+when the page for adding a new album is displayed. It might have been a good idea to separate this out to it's own component to avoid quite a bit of coniditional logic.
+<4> For any other url changes we just update the route field in our model
+
+
+[TIP]
+====
+**What's up with the `! []` thing ?**
+
+`!` is a shorthand infix function with the following signature `(!) : model -> List (Cmd msg) -> (model, Cmd msg)`
+
+[source,elm]
+----
+
+model ! [someCmd, someOtherCmd] == (model, Sub.batch [someCmd, SomeOtherCmd])
+
+----
+
+====
+
+
+==== Just a little more on the main update function, related to navigation
+
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+
+        -- other actions left out
+
+        Navigate url ->
+            model ! [ Navigation.newUrl url ]
+----
+The navigate message triggers a call to the Navigation.newUrl function. That will step to a new url
+and update the browser history. You'll see in the next chapter were we trigger this message.
+
+
+a|
+[source,elm]
+----
+update : Action -> Model -> ( Model, Effects Action )
+update action model =
+  case action of
+
+    -- other actions left out
+
+    RouterAction routeAction ->
+      TransitRouter.update routerConfig routeAction model
+----
+This is a elm-transit-router specific handler that takes care of starting and stopping animation transitions
++ updating the route field of our model
+|===
+
+
+
+
+
+==== View
+
+|===
+|0.17  |0.16
+
+a|
+[source,elm]
+----
+view : Model -> Html Msg
+view model =
+    div
+        [ class "container-fluid"
+        , Routes.catchNavigationClicks Navigate  // <1>
+        ]
+        [ menu model
+        , div [ class "content" ]
+            [ contentView model ]                // <2>
+        ]
+----
+<1> Here our catch all navigation related clicks helper function comes into play. So for any navigation related clicks, we return a `Navigate` msg with a payload of the url to navigate to.
+This is will be handled in our top level update function as outlined in the previous chapter.
+I'm not sold on it being a good solution, but it works !
+<2> we have already shown how the `contentView` function pattern matches on the route field of our model to render the appropriate page view
+
+a|
+[source,elm]
+----
+view : Signal.Address Action -> Model -> Html
+view address model =
+  div
+    [ class "container-fluid" ]
+    [ menu address model
+    , div
+        [ class "content"
+        , style (TransitStyle.fadeSlideLeft     // <1>
+                  100
+                  (getTransition model))
+        ]
+        [ contentView address model ]
+    ]
+----
+<1> This is particulars related to animations performed when making page transtions from elm-transit-*
+That part got lost in our upgrade adventure, but should be possible to plug back in in the future should we want to.
+|===
+
+
+
+
+== Summary
+Most of the changes went really smoothly and quickly. I did have to spend a little bit of time to get familiar with the new navigation and url-parser package, but they are pretty intuitive.
+I wouldn't be lying if I said I spent much more time on writing this blog post than doing the upgrade.
+I also did quite a few changes to the implementation of details I haven't shown you, just because I've become more confident with Elm than I was when writing the previous episodes.
+
+It was quite a bit of changes in terms of LOC's and I have to be honest and tell you it't didn't work once everything compiled. But you can hardly blame Elm for that,
+it was all my bad. I hadn't tested the route parsing properly and ended up implementing a loop. Kind of like a redirect loop, but all in js and out of reach for the browser.
+Firing up the inline repl in Light Table and interactively testing the parser quickly showed me the errors of my ways.
+
+All in all I have to say the upgrade was a really fun and enjoyable ride. I can definately say that
+0.17 made the App turn out much nicer.
+
+
+.What's next ?
+Hard to say for sure, but my current thinking is to start looking at auth using JWT web tokens.
+Time will tell if that's what it'll be.
+
+
+
+
+=== Appendix
+Unfortunately the 0.17 release left elm-reactor a bit behind in terms of what it supports.
+From my past experience with ClojureScript, I have gotten used to the feeback  loop you get by using the wonderful https://github.com/bhauman/lein-figwheel[figwheel].
+elm-reactor unfortunately doesn't come close to that currently, so I had to turn to JS land for alternatives. After some evalutation and trials I ended up using
+https://github.com/fluxxu/elm-hot-loader[elm-hot-loader]. It has worked out really nicely even though I ended up pulling down a fair chunk of the npm package repo.
+
+
+I'm sure elm-reactor will be back with a vengeance in the not so distant future, packing some really cool and unique features.
+
+
