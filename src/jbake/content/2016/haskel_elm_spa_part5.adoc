@@ -122,7 +122,7 @@ So we can just run elm-format on the `src` directory.
 
 ==== Effects are now named `Cmd`
 The new name for Effects are now `Cmd` shorthand for Command. `Cmd` is part of `elm-lang/core`
-and lives in the http://package.elm-lang.org/packages/elm-lang/core/4.0.1/Platform-Cmd[Platform.Cmd] module
+and lives in the http://package.elm-lang.org/packages/elm-lang/core/4.0.1/Platform-Cmd[Platform.Cmd] module.
 
 .Changes to a typical update function
 
@@ -287,13 +287,14 @@ type Route
   \| ArtistDetailPage Int
   \| NewArtistPage
   \| AlbumDetailPage Int
-  \| NewAlbumPage
+  \| NewAlbumPage               // <1>
   \| NewArtistAlbumPage Int
-  \| EmptyRoute
+  \| EmptyRoute                 // <2>
 ----
+<1> We never used this page, we always navigate through artist, so no point in keeping it until we need it.
+<2> EmptyRoute was used for handling route parser failures, we'll deal with that in another manner.
 |===
 
-So the only change here is basically the removal of a couple of routes that weren't in use.
 
 
 .Route parsing
@@ -345,9 +346,10 @@ decode path =
 |===
 The parsing syntax is slightly different, but the transition was fairly trivial in our case.
 The observant reader will notice that we've skipped over the case when there is not matching route.
-We'll get back to that when we wire it all together.
+We'll get back to that when we wire it all together. Also, we'll see later where our decode function comes into play when we wire up the app.
 
 
+TIP: To learn more about the new url-parser and it's functions check out the http://package.elm-lang.org/packages/evancz/url-parser/latest[package docs].
 
 .Encoding
 [source,elm]
@@ -423,14 +425,14 @@ pathDecoder =
         ]
 ----
 <1> A couple of places in the Album app we wish to be able to navigate to a new page as a result of some logic
-in the update function is some component. Tbh we might be better off inlining this
+in the update function of some component. We might actually be better off inlining this to be honest.
 in the relevant update functions.
-<2> This is a handy convenience function for creating a link to one of our defined routes (aka pages in our App)
-<3> In addition to the href attribute we define a `data-navigate` attribute which we can use for a catch all handler we'll come to in a second
-<4> This function allows us to catch all link clicks for a given element and all it's child elments.
-It prevents the browser from making the url reguest and rather allows us to provide a custom tagger function that receives the Url in question and can create a message as a result.
-It will make more sence to you when you see how it's used in our Main module later on.
-<5> A Json parser which will recursivly walk through the element tree for the node receiving the event and try to find an element with the `data-navigage` attribute defined.
+<2> This is a handy convenience function for creating a link to one of our defined routes (aka pages in our App).
+<3> In addition to the href attribute we define a `data-navigate` attribute which we can use for a catch all handler we'll come to in a second.
+<4> This function allows us to catch all link clicks for a given element and all its child elements.
+It prevents the browser from making the url request and rather allows us to provide a custom tagger function that receives the Url in question and can create a message as a result.
+It will make more sense to you when you see how it's used in our Main module later on.
+<5> A Json parser which will recursivly walk up the element tree for the node receiving the event and try to find an element with the `data-navigage` attribute defined.
 
 a|
 [source,elm]
@@ -463,9 +465,11 @@ linkAttrs route =
 |===
 
 NOTE: I borrowed most of this code from https://github.com/etaque/tacks[The tacks application from @etaque]. Kudos to @etaque for coming up with this !
+You might be wondering why we need `catchNavigationClicks` at all ? Well if you click on a href, the browser will (to my knowledge) change the window location
+and trigger a server request which causes the page to reload. In an SPA we typically don't want that to happen.
 
 
-WARNING: Please be adviced that these helpers do make a compromise in terms of type safety.
+WARNING: Please be advised that these helpers do make a compromise in terms of type safety. Note in particular the use of `msg` (basically anything) rather than a component specific `Msg` type.
 I'm sure in due time, more type safe patterns will emerge.  An obvious alternative to this approach is to
 have a custom message in each update function that handles navigation. I'm going to try that out in the near future and see how it plays out.
 
@@ -618,7 +622,7 @@ if it succeeds the response will be json decoded and passed to our update functi
 
 
 NOTE: Separating out all our http requests in one module gives flexibility in usage from multiple modules, but comes with a price of reduced type safety though.
-**You** might want to localize http stuff with your components to make them more self-contained.
+**You** might (depending on context of course) want to localize http stuff with your components to make them more self-contained.
 
 
 
@@ -1065,16 +1069,16 @@ handleDispatch id msg model =                                // <7>
             update (RemoveTrack id) model
 
 ----
-<1> The parent, ie AlbumDetail, logic for deleting on of it's track rows
+<1> The parent, ie AlbumDetail, logic for deleting on of it's track rows.
 <2> We delegate updating the track row and consequently the AlbumDetail model to a helper function.
 We pattern match on the result from that function.
-<3> If it was a "normal" update with no dispatch message returned we simply return the updated model and a no op Cmd
+<3> If it was a "normal" update with no dispatch message returned we simply return the updated model and a no op Cmd.
 <4> If the update of the track row got a dispatch message in return from TrackRow.update we delegate the handling of the
 dispatch message to another helper function.
-<5> Since we are dealing with Maybe values we have to handle this case, but it really shouldn't ever happen ! (famous last words)
+<5> Since we are dealing with Maybe values we have to handle this case, but it really shouldn't ever happen ! (Famous last words).
 <6> This might look a bit scary, but in summary it; locates the correct track row, performs the update of that row by delegating to TrackRow update,
 updates the track row in the model with the updated track row and finally returns a tuple of the updated model and the dispatch message (which is Maybe you remember)
-<7> Here we simply pattern match on the dispatch message and invokes the update function with the appropriate corresponding `Msg`
+<7> Here we simply pattern match on the dispatch message and invokes the update function with the appropriate corresponding `Msg`.
 
 
 NOTE: The pattern we used here is just one of many possible ways of solving this problem. Maybe someday a common preferred pattern will emerge,
@@ -1115,7 +1119,7 @@ main =
 ----
 <1> Rather that start-app we are using the program function from Navigation. The first
 param is a function to creates a parser- So bootstrap it with our Routes.decode function.
-The second param is a config record similar to the one in start-app but not quite
+The second param is a config record similar to the one in start-app but not quite.
 <2> Hey what's this fellow, it seems we need to provide a function to handle URL updates in our application !
 <3> We don't have any subscriptions in our app, so we can just return Sub.none for that function.
 
@@ -1147,7 +1151,7 @@ port initialPath : String                  // <3>
 <1> Inputs was sort of like subscriptions. We needed that in our 0.16 because of elm-transit-router which used elm-history which again provided a signal for url changes.
 All of that is gone and handled by navigation, but slightly differently.
 <2> Just a thing you had to define if you had effects in your App in 0.16. We're happy it's gone !
-<3> We had to provide the initialPath (url) through a port in 0.16
+<3> We had to provide the initialPath (url) through a port in 0.16.
 |===
 
 
@@ -1281,8 +1285,7 @@ It might be  appropriate to show an error of some sort error.
 artists from our backend. That's where ArtistListing.mountCmd comes into the picture.
 <3> In addition to providing an effect, we need to ensure that the albumDetailModel starts with a clean slate
 when the page for adding a new album is displayed. It might have been a good idea to separate this out to it's own component to avoid quite a bit of coniditional logic.
-<4> For any other url changes we just update the route field in our model
-
+<4> For any other url changes we just update the route field in our model.
 
 [TIP]
 ====
@@ -1293,7 +1296,7 @@ when the page for adding a new album is displayed. It might have been a good ide
 [source,elm]
 ----
 
-model ! [someCmd, someOtherCmd] == (model, Sub.batch [someCmd, SomeOtherCmd])
+model ! [someCmd, someOtherCmd] == (model, Cmd.batch [someCmd, SomeOtherCmd])
 
 ----
 
@@ -1334,7 +1337,7 @@ update action model =
       TransitRouter.update routerConfig routeAction model
 ----
 This is a elm-transit-router specific handler that takes care of starting and stopping animation transitions
-+ updating the route field of our model
++ updating the route field of our model.
 |===
 
 
@@ -1382,7 +1385,7 @@ view address model =
         [ contentView address model ]
     ]
 ----
-<1> This is particulars related to animations performed when making page transtions from elm-transit-*
+<1> This is particulars related to animations performed when making page transtions from the elm-transit-* packages.
 That part got lost in our upgrade adventure, but should be possible to plug back in in the future should we want to.
 |===
 
