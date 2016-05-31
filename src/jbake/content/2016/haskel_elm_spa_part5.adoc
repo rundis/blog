@@ -505,8 +505,8 @@ artistRow artist =
             ]
         ]
 ----
-<1> Here we are creating a normal link using the helper function described earlier. The result of clicking it should just be navigation, so sending a message to the ArtistListing `update` function which then creates the navigation effect feels like it might be to much work/boilerplate
-<2> Here the primary thing we want to handle is not navigation, the primary concern is handling deletion so we follow the normal pattern of returning a Msg which will be routed to our update function for handling
+<1> Here we are creating a normal link using the helper function described earlier. The result of clicking it should just be navigation, so sending a message to the ArtistListing `update` function which then creates the navigation effect feels like it might be to much work/boilerplate.
+<2> Here the primary thing we want to handle is not navigation, the primary concern is handling deletion so we follow the normal pattern of returning a Msg which will be routed to our update function for handling.
 a|
 [source,elm]
 ----
@@ -557,7 +557,7 @@ HandleSaved artist ->
 
 ----
 <1> Upon successfully saving an artist to our backend service, we create a Cmd (aka request for an effect to be performed), using our util function, to route the user to the
-ArtistListingPage
+ArtistListingPage.
 
 a|
 [source,elm]
@@ -787,7 +787,7 @@ contentView model =
         -- ...
 
 ----
-<1> As we did in 0.16 we keep track of the current route in our model
+<1> As we did in 0.16 we keep track of the current route in our model.
 <2> App.map is shorthand for Html.App.map. So we need to map between the `Msg` type returned from the view function in the Home module
 to a `Msg` type that is known to our Main module. In this instance it's `HomeMsg`. We need to do this mapping so that when the msg is passed
 pack into our root update function we know which msg we should forward to which subcomponent.
@@ -857,12 +857,12 @@ update msg model =
             ( model, Just dispatchMsg )
 ----
 <1> We add a new Msg tag called `Dispatch` which has a payload of type `DispatchMsg` to model
-messages we would like to notify the parent of this component to handle
-<2> DispatchMsg becomes part of the public Api for our component so we need to expose it from our module
+messages we would like to notify the parent of this component to handle.
+<2> DispatchMsg becomes part of the public Api for our component so we need to expose it from our module.
 <3> The way we notify the parent in this solution is to add a return value, so now we return a tuple of Model and Maybe a DispatchMsg the parent
 should respond to.
-<4> For the component internal messages there is nothing extra the parent should respond to, so we simply return `Nothing` as a DispatchMsg
-<5> For all dispatch messages we return the concrete dispatch message tag that we want the parent to handle
+<4> For the component internal messages there is nothing extra the parent should respond to, so we simply return `Nothing` as a DispatchMsg.
+<5> For all dispatch messages we return the concrete dispatch message tag that we want the parent to handle.
 
 a|
 [source,elm]
@@ -925,7 +925,7 @@ removeView model =
 ----
 <1> When the user clicks the remove button, we simply return a Msg with the tag `Dispatch` carrying a `DispatchMsg` with the tag `Remove`
 This msg will be routed through the top-level update function, through the update function in `AlbumDetailPage` and finally to the update function in `TrackRow`.
-There it will be handled by the `Dispatch dispatchMsg ->` case and simply returned to the parent (`AlbumDetailPage`)
+There it will be handled by the `Dispatch dispatchMsg ->` case and simply returned to the parent (`AlbumDetailPage`).
 
 
 a|
@@ -1077,7 +1077,7 @@ We pattern match on the result from that function.
 dispatch message to another helper function.
 <5> Since we are dealing with Maybe values we have to handle this case, but it really shouldn't ever happen ! (Famous last words).
 <6> This might look a bit scary, but in summary it; locates the correct track row, performs the update of that row by delegating to TrackRow update,
-updates the track row in the model with the updated track row and finally returns a tuple of the updated model and the dispatch message (which is Maybe you remember)
+updates the track row in the model with the updated track row and finally returns a tuple of the updated model and the dispatch message (which is Maybe you remember).
 <7> Here we simply pattern match on the dispatch message and invokes the update function with the appropriate corresponding `Msg`.
 
 
@@ -1366,7 +1366,7 @@ view model =
 <1> Here our catch all navigation related clicks helper function comes into play. So for any navigation related clicks, we return a `Navigate` msg with a payload of the url to navigate to.
 This is will be handled in our top level update function as outlined in the previous chapter.
 I'm not sold on it being a good solution, but it works !
-<2> we have already shown how the `contentView` function pattern matches on the route field of our model to render the appropriate page view
+<2> we have already shown how the `contentView` function pattern matches on the route field of our model to render the appropriate page view.
 
 a|
 [source,elm]
