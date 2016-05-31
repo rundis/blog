@@ -268,7 +268,7 @@ So we can just run elm-format on the <code>src</code> directory.</p>
 <h4 id="_effects_are_now_named_code_cmd_code">Effects are now named <code>Cmd</code></h4>
 <div class="paragraph">
 <p>The new name for Effects are now <code>Cmd</code> shorthand for Command. <code>Cmd</code> is part of <code>elm-lang/core</code>
-and lives in the <a href="http://package.elm-lang.org/packages/elm-lang/core/4.0.1/Platform-Cmd">Platform.Cmd</a> module</p>
+and lives in the <a href="http://package.elm-lang.org/packages/elm-lang/core/4.0.1/Platform-Cmd">Platform.Cmd</a> module.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 2. Changes to a typical update function</caption>
@@ -496,17 +496,26 @@ trigger our update function with the given <code>Msg</code> <code>SomeMsg</code>
   | ArtistDetailPage Int
   | NewArtistPage
   | AlbumDetailPage Int
-  | NewAlbumPage
+  | NewAlbumPage               <i class="conum" data-value="1"></i><b>(1)</b>
   | NewArtistAlbumPage Int
-  | EmptyRoute</code></pre>
+  | EmptyRoute                 <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We never used this page, we always navigate through artist, so no point in keeping it until we need it.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>EmptyRoute was used for handling route parser failures, we&#8217;ll deal with that in another manner.</td>
+</tr>
+</table>
 </div></div></td>
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>So the only change here is basically the removal of a couple of routes that weren&#8217;t in use.</p>
-</div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 6. Route parsing</caption>
 <colgroup>
@@ -568,7 +577,19 @@ decode path =
 <div class="paragraph">
 <p>The parsing syntax is slightly different, but the transition was fairly trivial in our case.
 The observant reader will notice that we&#8217;ve skipped over the case when there is not matching route.
-We&#8217;ll get back to that when we wire it all together.</p>
+We&#8217;ll get back to that when we wire it all together. Also, we&#8217;ll see later where our decode function comes into play when we wire up the app.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+To learn more about the new url-parser and it&#8217;s functions check out the <a href="http://package.elm-lang.org/packages/evancz/url-parser/latest">package docs</a>.
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="title">Encoding</div>
@@ -658,26 +679,26 @@ pathDecoder =
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
 <td>A couple of places in the Album app we wish to be able to navigate to a new page as a result of some logic
-in the update function is some component. Tbh we might be better off inlining this
+in the update function of some component. We might actually be better off inlining this to be honest.
 in the relevant update functions.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>This is a handy convenience function for creating a link to one of our defined routes (aka pages in our App)</td>
+<td>This is a handy convenience function for creating a link to one of our defined routes (aka pages in our App).</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>In addition to the href attribute we define a <code>data-navigate</code> attribute which we can use for a catch all handler we&#8217;ll come to in a second</td>
+<td>In addition to the href attribute we define a <code>data-navigate</code> attribute which we can use for a catch all handler we&#8217;ll come to in a second.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>This function allows us to catch all link clicks for a given element and all it&#8217;s child elments.
-It prevents the browser from making the url reguest and rather allows us to provide a custom tagger function that receives the Url in question and can create a message as a result.
-It will make more sence to you when you see how it&#8217;s used in our Main module later on.</td>
+<td>This function allows us to catch all link clicks for a given element and all its child elements.
+It prevents the browser from making the url request and rather allows us to provide a custom tagger function that receives the Url in question and can create a message as a result.
+It will make more sense to you when you see how it&#8217;s used in our Main module later on.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>A Json parser which will recursivly walk through the element tree for the node receiving the event and try to find an element with the <code>data-navigage</code> attribute defined.</td>
+<td>A Json parser which will recursivly walk up the element tree for the node receiving the event and try to find an element with the <code>data-navigage</code> attribute defined.</td>
 </tr>
 </table>
 </div></div></td>
@@ -720,6 +741,8 @@ linkAttrs route =
 </td>
 <td class="content">
 I borrowed most of this code from <a href="https://github.com/etaque/tacks">The tacks application from @etaque</a>. Kudos to @etaque for coming up with this !
+You might be wondering why we need <code>catchNavigationClicks</code> at all ? Well if you click on a href, the browser will (to my knowledge) change the window location
+and trigger a server request which causes the page to reload. In an SPA we typically don&#8217;t want that to happen.
 </td>
 </tr>
 </table>
@@ -731,7 +754,7 @@ I borrowed most of this code from <a href="https://github.com/etaque/tacks">The 
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-Please be adviced that these helpers do make a compromise in terms of type safety.
+Please be advised that these helpers do make a compromise in terms of type safety. Note in particular the use of <code>msg</code> (basically anything) rather than a component specific <code>Msg</code> type.
 I&#8217;m sure in due time, more type safe patterns will emerge.  An obvious alternative to this approach is to
 have a custom message in each update function that handles navigation. I&#8217;m going to try that out in the near future and see how it plays out.
 </td>
@@ -941,7 +964,7 @@ if it succeeds the response will be json decoded and passed to our update functi
 </td>
 <td class="content">
 Separating out all our http requests in one module gives flexibility in usage from multiple modules, but comes with a price of reduced type safety though.
-<strong>You</strong> might want to localize http stuff with your components to make them more self-contained.
+<strong>You</strong> might (depending on context of course) want to localize http stuff with your components to make them more self-contained.
 </td>
 </tr>
 </table>
@@ -1494,7 +1517,7 @@ handleDispatch id msg model =                                <i class="conum" da
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The parent, ie AlbumDetail, logic for deleting on of it&#8217;s track rows</td>
+<td>The parent, ie AlbumDetail, logic for deleting on of it&#8217;s track rows.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -1503,7 +1526,7 @@ We pattern match on the result from that function.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>If it was a "normal" update with no dispatch message returned we simply return the updated model and a no op Cmd</td>
+<td>If it was a "normal" update with no dispatch message returned we simply return the updated model and a no op Cmd.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
@@ -1512,7 +1535,7 @@ dispatch message to another helper function.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>Since we are dealing with Maybe values we have to handle this case, but it really shouldn&#8217;t ever happen ! (famous last words)</td>
+<td>Since we are dealing with Maybe values we have to handle this case, but it really shouldn&#8217;t ever happen ! (Famous last words).</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
@@ -1521,7 +1544,7 @@ updates the track row in the model with the updated track row and finally return
 </tr>
 <tr>
 <td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>Here we simply pattern match on the dispatch message and invokes the update function with the appropriate corresponding <code>Msg</code></td>
+<td>Here we simply pattern match on the dispatch message and invokes the update function with the appropriate corresponding <code>Msg</code>.</td>
 </tr>
 </table>
 </div>
@@ -1593,7 +1616,7 @@ main =
 <td><i class="conum" data-value="1"></i><b>1</b></td>
 <td>Rather that start-app we are using the program function from Navigation. The first
 param is a function to creates a parser- So bootstrap it with our Routes.decode function.
-The second param is a config record similar to the one in start-app but not quite</td>
+The second param is a config record similar to the one in start-app but not quite.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -1642,7 +1665,7 @@ All of that is gone and handled by navigation, but slightly differently.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>We had to provide the initialPath (url) through a port in 0.16</td>
+<td>We had to provide the initialPath (url) through a port in 0.16.</td>
 </tr>
 </table>
 </div></div></td>
@@ -1814,7 +1837,7 @@ when the page for adding a new album is displayed. It might have been a good ide
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>For any other url changes we just update the route field in our model</td>
+<td>For any other url changes we just update the route field in our model.</td>
 </tr>
 </table>
 </div>
@@ -1833,7 +1856,7 @@ when the page for adding a new album is displayed. It might have been a good ide
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">model ! [someCmd, someOtherCmd] == (model, Sub.batch [someCmd, SomeOtherCmd])</code></pre>
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">model ! [someCmd, someOtherCmd] == (model, Cmd.batch [someCmd, SomeOtherCmd])</code></pre>
 </div>
 </div>
 </td>
@@ -1886,7 +1909,7 @@ update action model =
 </div>
 <div class="paragraph">
 <p>This is a elm-transit-router specific handler that takes care of starting and stopping animation transitions
-+ updating the route field of our model</p>
++ updating the route field of our model.</p>
 </div></div></td>
 </tr>
 </tbody>
@@ -1956,7 +1979,7 @@ view address model =
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>This is particulars related to animations performed when making page transtions from elm-transit-*
+<td>This is particulars related to animations performed when making page transtions from the elm-transit-* packages.
 That part got lost in our upgrade adventure, but should be possible to plug back in in the future should we want to.</td>
 </tr>
 </table>

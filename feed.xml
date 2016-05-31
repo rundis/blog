@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Tue, 31 May 2016 00:31:19 +0200</pubDate>
-    <lastBuildDate>Tue, 31 May 2016 00:31:19 +0200</lastBuildDate>
+    <pubDate>Tue, 31 May 2016 20:05:51 +0200</pubDate>
+    <lastBuildDate>Tue, 31 May 2016 20:05:51 +0200</lastBuildDate>
 
     <item>
       <title>Typed up CRUD SPA with Haskell and Elm - Part 5: Elm 0.17 Upgrade</title>
@@ -196,7 +196,7 @@ So we can just run elm-format on the &lt;code&gt;src&lt;/code&gt; directory.&lt;
 &lt;h4 id=&quot;_effects_are_now_named_code_cmd_code&quot;&gt;Effects are now named &lt;code&gt;Cmd&lt;/code&gt;&lt;/h4&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;The new name for Effects are now &lt;code&gt;Cmd&lt;/code&gt; shorthand for Command. &lt;code&gt;Cmd&lt;/code&gt; is part of &lt;code&gt;elm-lang/core&lt;/code&gt;
-and lives in the &lt;a href=&quot;http://package.elm-lang.org/packages/elm-lang/core/4.0.1/Platform-Cmd&quot;&gt;Platform.Cmd&lt;/a&gt; module&lt;/p&gt;
+and lives in the &lt;a href=&quot;http://package.elm-lang.org/packages/elm-lang/core/4.0.1/Platform-Cmd&quot;&gt;Platform.Cmd&lt;/a&gt; module.&lt;/p&gt;
 &lt;/div&gt;
 &lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
 &lt;caption class=&quot;title&quot;&gt;Table 2. Changes to a typical update function&lt;/caption&gt;
@@ -424,17 +424,26 @@ trigger our update function with the given &lt;code&gt;Msg&lt;/code&gt; &lt;code
   | ArtistDetailPage Int
   | NewArtistPage
   | AlbumDetailPage Int
-  | NewAlbumPage
+  | NewAlbumPage               &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
   | NewArtistAlbumPage Int
-  | EmptyRoute&lt;/code&gt;&lt;/pre&gt;
+  | EmptyRoute                 &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We never used this page, we always navigate through artist, so no point in keeping it until we need it.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;EmptyRoute was used for handling route parser failures, we&amp;#8217;ll deal with that in another manner.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;So the only change here is basically the removal of a couple of routes that weren&amp;#8217;t in use.&lt;/p&gt;
-&lt;/div&gt;
 &lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
 &lt;caption class=&quot;title&quot;&gt;Table 6. Route parsing&lt;/caption&gt;
 &lt;colgroup&gt;
@@ -496,7 +505,19 @@ decode path =
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;The parsing syntax is slightly different, but the transition was fairly trivial in our case.
 The observant reader will notice that we&amp;#8217;ve skipped over the case when there is not matching route.
-We&amp;#8217;ll get back to that when we wire it all together.&lt;/p&gt;
+We&amp;#8217;ll get back to that when we wire it all together. Also, we&amp;#8217;ll see later where our decode function comes into play when we wire up the app.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+To learn more about the new url-parser and it&amp;#8217;s functions check out the &lt;a href=&quot;http://package.elm-lang.org/packages/evancz/url-parser/latest&quot;&gt;package docs&lt;/a&gt;.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;title&quot;&gt;Encoding&lt;/div&gt;
@@ -586,26 +607,26 @@ pathDecoder =
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
 &lt;td&gt;A couple of places in the Album app we wish to be able to navigate to a new page as a result of some logic
-in the update function is some component. Tbh we might be better off inlining this
+in the update function of some component. We might actually be better off inlining this to be honest.
 in the relevant update functions.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;This is a handy convenience function for creating a link to one of our defined routes (aka pages in our App)&lt;/td&gt;
+&lt;td&gt;This is a handy convenience function for creating a link to one of our defined routes (aka pages in our App).&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;In addition to the href attribute we define a &lt;code&gt;data-navigate&lt;/code&gt; attribute which we can use for a catch all handler we&amp;#8217;ll come to in a second&lt;/td&gt;
+&lt;td&gt;In addition to the href attribute we define a &lt;code&gt;data-navigate&lt;/code&gt; attribute which we can use for a catch all handler we&amp;#8217;ll come to in a second.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;This function allows us to catch all link clicks for a given element and all it&amp;#8217;s child elments.
-It prevents the browser from making the url reguest and rather allows us to provide a custom tagger function that receives the Url in question and can create a message as a result.
-It will make more sence to you when you see how it&amp;#8217;s used in our Main module later on.&lt;/td&gt;
+&lt;td&gt;This function allows us to catch all link clicks for a given element and all its child elements.
+It prevents the browser from making the url request and rather allows us to provide a custom tagger function that receives the Url in question and can create a message as a result.
+It will make more sense to you when you see how it&amp;#8217;s used in our Main module later on.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;A Json parser which will recursivly walk through the element tree for the node receiving the event and try to find an element with the &lt;code&gt;data-navigage&lt;/code&gt; attribute defined.&lt;/td&gt;
+&lt;td&gt;A Json parser which will recursivly walk up the element tree for the node receiving the event and try to find an element with the &lt;code&gt;data-navigage&lt;/code&gt; attribute defined.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
@@ -648,6 +669,8 @@ linkAttrs route =
 &lt;/td&gt;
 &lt;td class=&quot;content&quot;&gt;
 I borrowed most of this code from &lt;a href=&quot;https://github.com/etaque/tacks&quot;&gt;The tacks application from @etaque&lt;/a&gt;. Kudos to @etaque for coming up with this !
+You might be wondering why we need &lt;code&gt;catchNavigationClicks&lt;/code&gt; at all ? Well if you click on a href, the browser will (to my knowledge) change the window location
+and trigger a server request which causes the page to reload. In an SPA we typically don&amp;#8217;t want that to happen.
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
@@ -659,7 +682,7 @@ I borrowed most of this code from &lt;a href=&quot;https://github.com/etaque/tac
 &lt;i class=&quot;fa icon-warning&quot; title=&quot;Warning&quot;&gt;&lt;/i&gt;
 &lt;/td&gt;
 &lt;td class=&quot;content&quot;&gt;
-Please be adviced that these helpers do make a compromise in terms of type safety.
+Please be advised that these helpers do make a compromise in terms of type safety. Note in particular the use of &lt;code&gt;msg&lt;/code&gt; (basically anything) rather than a component specific &lt;code&gt;Msg&lt;/code&gt; type.
 I&amp;#8217;m sure in due time, more type safe patterns will emerge.  An obvious alternative to this approach is to
 have a custom message in each update function that handles navigation. I&amp;#8217;m going to try that out in the near future and see how it plays out.
 &lt;/td&gt;
@@ -869,7 +892,7 @@ if it succeeds the response will be json decoded and passed to our update functi
 &lt;/td&gt;
 &lt;td class=&quot;content&quot;&gt;
 Separating out all our http requests in one module gives flexibility in usage from multiple modules, but comes with a price of reduced type safety though.
-&lt;strong&gt;You&lt;/strong&gt; might want to localize http stuff with your components to make them more self-contained.
+&lt;strong&gt;You&lt;/strong&gt; might (depending on context of course) want to localize http stuff with your components to make them more self-contained.
 &lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
@@ -1422,7 +1445,7 @@ handleDispatch id msg model =                                &lt;i class=&quot;c
 &lt;table&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;The parent, ie AlbumDetail, logic for deleting on of it&amp;#8217;s track rows&lt;/td&gt;
+&lt;td&gt;The parent, ie AlbumDetail, logic for deleting on of it&amp;#8217;s track rows.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
@@ -1431,7 +1454,7 @@ We pattern match on the result from that function.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;If it was a &quot;normal&quot; update with no dispatch message returned we simply return the updated model and a no op Cmd&lt;/td&gt;
+&lt;td&gt;If it was a &quot;normal&quot; update with no dispatch message returned we simply return the updated model and a no op Cmd.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
@@ -1440,7 +1463,7 @@ dispatch message to another helper function.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Since we are dealing with Maybe values we have to handle this case, but it really shouldn&amp;#8217;t ever happen ! (famous last words)&lt;/td&gt;
+&lt;td&gt;Since we are dealing with Maybe values we have to handle this case, but it really shouldn&amp;#8217;t ever happen ! (Famous last words).&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
@@ -1449,7 +1472,7 @@ updates the track row in the model with the updated track row and finally return
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Here we simply pattern match on the dispatch message and invokes the update function with the appropriate corresponding &lt;code&gt;Msg&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Here we simply pattern match on the dispatch message and invokes the update function with the appropriate corresponding &lt;code&gt;Msg&lt;/code&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;
@@ -1521,7 +1544,7 @@ main =
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
 &lt;td&gt;Rather that start-app we are using the program function from Navigation. The first
 param is a function to creates a parser- So bootstrap it with our Routes.decode function.
-The second param is a config record similar to the one in start-app but not quite&lt;/td&gt;
+The second param is a config record similar to the one in start-app but not quite.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
@@ -1570,7 +1593,7 @@ All of that is gone and handled by navigation, but slightly differently.&lt;/td&
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;We had to provide the initialPath (url) through a port in 0.16&lt;/td&gt;
+&lt;td&gt;We had to provide the initialPath (url) through a port in 0.16.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
@@ -1742,7 +1765,7 @@ when the page for adding a new album is displayed. It might have been a good ide
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;For any other url changes we just update the route field in our model&lt;/td&gt;
+&lt;td&gt;For any other url changes we just update the route field in our model.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;
@@ -1761,7 +1784,7 @@ when the page for adding a new album is displayed. It might have been a good ide
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;model ! [someCmd, someOtherCmd] == (model, Sub.batch [someCmd, SomeOtherCmd])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;model ! [someCmd, someOtherCmd] == (model, Cmd.batch [someCmd, SomeOtherCmd])&lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/td&gt;
@@ -1814,7 +1837,7 @@ update action model =
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;This is a elm-transit-router specific handler that takes care of starting and stopping animation transitions
-+ updating the route field of our model&lt;/p&gt;
++ updating the route field of our model.&lt;/p&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
@@ -1884,7 +1907,7 @@ view address model =
 &lt;table&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;This is particulars related to animations performed when making page transtions from elm-transit-*
+&lt;td&gt;This is particulars related to animations performed when making page transtions from the elm-transit-* packages.
 That part got lost in our upgrade adventure, but should be possible to plug back in in the future should we want to.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
