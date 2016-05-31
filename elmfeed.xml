@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/elmfeed.xml" rel="self" type="application/rss+xml" />
     <description>Elm feed from rundis.github.com/blog</description>
     <language>en-gb</language>
-    <pubDate>Tue, 31 May 2016 20:05:51 +0200</pubDate>
-    <lastBuildDate>Tue, 31 May 2016 20:05:51 +0200</lastBuildDate>
+    <pubDate>Tue, 31 May 2016 20:22:18 +0200</pubDate>
+    <lastBuildDate>Tue, 31 May 2016 20:22:18 +0200</lastBuildDate>
 
       <item>
         <title>Typed up CRUD SPA with Haskell and Elm - Part 5: Elm 0.17 Upgrade</title>
@@ -734,11 +734,11 @@ artistRow artist =
 &lt;table&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Here we are creating a normal link using the helper function described earlier. The result of clicking it should just be navigation, so sending a message to the ArtistListing &lt;code&gt;update&lt;/code&gt; function which then creates the navigation effect feels like it might be to much work/boilerplate&lt;/td&gt;
+&lt;td&gt;Here we are creating a normal link using the helper function described earlier. The result of clicking it should just be navigation, so sending a message to the ArtistListing &lt;code&gt;update&lt;/code&gt; function which then creates the navigation effect feels like it might be to much work/boilerplate.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Here the primary thing we want to handle is not navigation, the primary concern is handling deletion so we follow the normal pattern of returning a Msg which will be routed to our update function for handling&lt;/td&gt;
+&lt;td&gt;Here the primary thing we want to handle is not navigation, the primary concern is handling deletion so we follow the normal pattern of returning a Msg which will be routed to our update function for handling.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
@@ -805,7 +805,7 @@ HandleSaved artist -&amp;gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
 &lt;td&gt;Upon successfully saving an artist to our backend service, we create a Cmd (aka request for an effect to be performed), using our util function, to route the user to the
-ArtistListingPage&lt;/td&gt;
+ArtistListingPage.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
@@ -1097,7 +1097,7 @@ contentView model =
 &lt;table&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;As we did in 0.16 we keep track of the current route in our model&lt;/td&gt;
+&lt;td&gt;As we did in 0.16 we keep track of the current route in our model.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
@@ -1191,11 +1191,11 @@ update msg model =
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
 &lt;td&gt;We add a new Msg tag called &lt;code&gt;Dispatch&lt;/code&gt; which has a payload of type &lt;code&gt;DispatchMsg&lt;/code&gt; to model
-messages we would like to notify the parent of this component to handle&lt;/td&gt;
+messages we would like to notify the parent of this component to handle.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;DispatchMsg becomes part of the public Api for our component so we need to expose it from our module&lt;/td&gt;
+&lt;td&gt;DispatchMsg becomes part of the public Api for our component so we need to expose it from our module.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
@@ -1204,11 +1204,11 @@ should respond to.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;For the component internal messages there is nothing extra the parent should respond to, so we simply return &lt;code&gt;Nothing&lt;/code&gt; as a DispatchMsg&lt;/td&gt;
+&lt;td&gt;For the component internal messages there is nothing extra the parent should respond to, so we simply return &lt;code&gt;Nothing&lt;/code&gt; as a DispatchMsg.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;For all dispatch messages we return the concrete dispatch message tag that we want the parent to handle&lt;/td&gt;
+&lt;td&gt;For all dispatch messages we return the concrete dispatch message tag that we want the parent to handle.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
@@ -1289,7 +1289,7 @@ removeView model =
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
 &lt;td&gt;When the user clicks the remove button, we simply return a Msg with the tag &lt;code&gt;Dispatch&lt;/code&gt; carrying a &lt;code&gt;DispatchMsg&lt;/code&gt; with the tag &lt;code&gt;Remove&lt;/code&gt;
 This msg will be routed through the top-level update function, through the update function in &lt;code&gt;AlbumDetailPage&lt;/code&gt; and finally to the update function in &lt;code&gt;TrackRow&lt;/code&gt;.
-There it will be handled by the &lt;code&gt;Dispatch dispatchMsg &amp;#8594;&lt;/code&gt; case and simply returned to the parent (&lt;code&gt;AlbumDetailPage&lt;/code&gt;)&lt;/td&gt;
+There it will be handled by the &lt;code&gt;Dispatch dispatchMsg &amp;#8594;&lt;/code&gt; case and simply returned to the parent (&lt;code&gt;AlbumDetailPage&lt;/code&gt;).&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
@@ -1468,7 +1468,7 @@ dispatch message to another helper function.&lt;/td&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
 &lt;td&gt;This might look a bit scary, but in summary it; locates the correct track row, performs the update of that row by delegating to TrackRow update,
-updates the track row in the model with the updated track row and finally returns a tuple of the updated model and the dispatch message (which is Maybe you remember)&lt;/td&gt;
+updates the track row in the model with the updated track row and finally returns a tuple of the updated model and the dispatch message (which is Maybe you remember).&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
@@ -1882,7 +1882,7 @@ I&amp;#8217;m not sold on it being a good solution, but it works !&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;we have already shown how the &lt;code&gt;contentView&lt;/code&gt; function pattern matches on the route field of our model to render the appropriate page view&lt;/td&gt;
+&lt;td&gt;we have already shown how the &lt;code&gt;contentView&lt;/code&gt; function pattern matches on the route field of our model to render the appropriate page view.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
