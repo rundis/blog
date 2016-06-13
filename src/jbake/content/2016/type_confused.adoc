@@ -1,0 +1,141 @@
+= Oh no! Learning Elm has gotten me confused about static vs dynamic typing.
+Magnus Rundberget
+2016-06-13
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: elm, haskell, groovy, clojure
+:imagesdir: /blog/2016/
+:icons: font
+:id: type_confused
+:toc: macro
+
+
+The last few years I've worked on projects using Groovy and Clojure/ClojureScript.
+In 2016 I've spent quite a bit of pastime trying to get to grips
+with statically typed functional languages. In particular I've deep dived into Elm. I've also dipped
+my toes into Haskell. It's been a great learning experience and has changed my view of static typing.
+Does this mean I'm a static typing zealot now ? Nah, but there is no doubt I'm much more open to the benefits of static typing.
+I guess would characterize myself more like undecided or confused than convinced either way.
+
+
+
+
+== Background
+
+
+A couple of years ago I started working with Groovy (and Grails). I fell in love
+and felt I became way more productive than I had ever been when working with Java. I rarely
+missed the added type safety of Java. Groovy also gave me a gentle introduction to functional programming related concepts in a way Java never encouraged me to.
+
+In 2014 I started dabbling with Clojure(Script), but it took until 2015 before I got a chance
+to use it for real in a project. It was a blast and I finally started to understand why more and more people
+are turning towards functional programming. Clojure/ClojureScript became a big part of my life
+both at work and evenings and nights. I was hooked.
+
+At the end of last year I was back on a Groovy/Grails project. I was perfectly ok with that, but it wasn't
+a shiny new thing any longer, so I guess that's partially why I was looking for something new to learn on the side.
+Elm really caught my attention. When I watched http://www.elmbark.com/2016/03/16/mainstream-elm-user-focused-design[Let's be mainstream! User focused design in Elm]
+I finally found a statically typed functional language that looked approachable to me.
+
+
+== First signs of functional immutable damage
+
+My time with Clojure (and gradually Elm) had changed me. I started to change how I coded Groovy. I tried to be more
+functional and whenever I declared a variable that I later mutated I was left feeling dirty somehow.
+It's hard to try to enforce immutability in Groovy when the language, libraries and idioms don't make immutability
+a first class citizen. I had to bite the bullet quite a few times, and yeah I could still get things done.
+The thing is, I started to pay more attention to what kind of errors and bugs I introduced as a result of careless mutation.
+
+One particular example springs to mind. I was doing validation of a master/detail form.
+To validate the detail rows of the form I needed to make sure they were sorted.
+
+.Easy peasy ?
+[source,groovy]
+----
+master.detailRows.sort {it.date}
+----
+However this had the nasty side-effect
+of reordering the detail rows in my UI which was rendered from this object.
+I was puzzled at first, but then I remembered that immutability is not something you
+can take for granted in the Groovy collection API (some things are, others are just bolted on top of Java).
+The fix was easy enough. `collection.sort` has an overloaded version that takes a boolean parameter `mutate`.
+
+.So I was left with
+[source,groovy]
+----
+master.details.sort(false) {it.date}
+----
+My eyes hurt: **`sort false`**, but but I **do** want to sort.
+2 years ago I wouldn't think much of this, it's just a thing I was used to deal with and spend cycles on.
+Now I get annoyed both with myself for forgetting and the language for making me feel dumb for not remembering.
+
+
+== Adding types
+After having spent some time with Elm (and Haskell) I noticed I started to add more
+type information in my Groovy code. I felt it improved the readability of my functions and methods.
+It also made IntelliJ more happy and helpful in many cases.
+The frontend of the application is written in JavaScript with a fair chunk of jQuery. Introducing something like Flow
+might be helpful, but I'm convinced there are other more fundemental issues that needs to be addressed before considering that.
+
+I'm pretty sure I'll be using something like https://github.com/plumatic/schema[Schema] more actively when writing Clojure/ClojureScript
+going forward. When I have the chance Clojure Spec will probably be the preferred option. I know it's not static typing, but my hunch is
+that it will have a huge positive impact on documentation, error messages, runtime checks, testing and probably many other things too.
+
+
+
+== Functionally dynamic, but statically aware
+This week I was back to a Clojure/ClojureScript project again. I'm quite excited and I'm convinced I'm going to have a blast.
+However I've decided to use this opportunity to reflect more on where I feel Clojure/ClojureScript with it's dynamic typing shines and where I think
+static typing might have been helpful. After spending so much time with Elm and very much enjoying it, I might be susceptible to confirmation bias that static typing only carries benefits.
+I'm going to try real hard to stay as objective or rather true to myself as I can when reflecting on positives of static vs dynamic.
+Of course there's a lot more to languages than static vs dynamic typing. I do find it interesting to reflect about it though, especially
+since so many people seem to have such strong opinions about type safety. I myself am mostly confused or largely undecided at the moment.
+
+
+
+
+=== First week reflections
+NOTE: Undoubtably with some Elm tinted glasses
+
+.The good
+- https://github.com/bhauman/lein-figwheel[Figwheel] how I've missed you ! With the latest release, error messages has gotten way better too. Maybe Elm with it's suberb error messages has been an inspiration ?
+- I haven't gotten my tooling set up right yet, but know that once I've got the REPL stuff set up right I'm going to be a happier puppy
+- The app is really cool, and there are lots of exciting techs to dig into
+- Paredit rocks for editing
+
+.Unsure/unknowns
+- https://github.com/Day8/re-frame[re-frame] - When I first read about it several months ago I was initially convinced that this
+small but very powerful framework was a fantastic thing. Maybe it really is to. But having experienced Elms departure from FRP, I'm wondering whether it might have some drawbacks at scale that I am not aware of yet.
+I've barely gotten a chance to work with it, but I've so far found it hard to internalize all the reactive dataflows going on in the client app. I obviously need to spend more time before making any judgment.
+Maybe I'll write a blog post comparing The Elm Architecture to re-frame in the future.
+
+
+.Have I become dumber ?
+- I genuinly found it harder than before to understand what various functions did by looking at their signature.
+That could very well be down to naming and lack of documentation and or something like schema, but it was initially frustrating to see functions with map parameters and having to read through
+the whole of the implementation to get an understanding of what they might contain. `println` to the rescue... sort of.
+- I made silly mistakes, some of these resulted in things just not happening and others resulted in stacktraces that wasn't helpful in anyway at all.
+I can't help but think about the fact that  static types and a helpful compiler would have prevented me from making many of those mistakes. Sure I should have tested more, both through the use of the REPL and probably more proper tests too.
+- I was faced with a few refactorings, that didn't really go as well as I feel it should have. Again more tests would have helped, but then again a lot of those tests I just wouldn't have needed to write in Elm.
+
+
+
+== An attempt to summarize
+I'm convinced that functional programming vs imperative programming is a much more important concern than
+static vs dynamic typing. I'm also in no doubt that I think functional programming is by far superior.
+A year ago I was solidly in the dynamic typing camp. My impression of statically typed functional languages was that they were way to hard to get started with.
+None of the languages I had heard about seemed particularily approachable and I had doubts about their practicality for the problems
+I typically encounter in my projects. I've tried Haskell a couple of times, but I guess I was never commited enough.
+Learning Elm has not only been great fun, but It has clearly opened my mind to the possibility that static type checking can be very beneficial.
+It's hard to describe the experience of doing a major refactoring, having a really helpful and friendly compiler guide you along step by step and when finally
+everything compiles it just works. Having had that experience many times with Elm (and to a degree Haskell) certainly changed something fundementally in my thinking.
+
+Until I have used Elm, Haskell or another statically typed functional language in a real project I'm in no position to pass any proper (personal) judgement. Maybe
+I'm just going to remain confused, or maybe I'm never going to have a particularily strong preference.
+
+
+
+
+
+
+
