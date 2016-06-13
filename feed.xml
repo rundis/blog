@@ -6,9 +6,200 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Tue, 31 May 2016 20:22:18 +0200</pubDate>
-    <lastBuildDate>Tue, 31 May 2016 20:22:18 +0200</lastBuildDate>
+    <pubDate>Mon, 13 Jun 2016 23:05:26 +0200</pubDate>
+    <lastBuildDate>Mon, 13 Jun 2016 23:05:26 +0200</lastBuildDate>
 
+    <item>
+      <title>Oh no! Learning Elm has gotten me confused about static vs dynamic typing.</title>
+      <link>http://rundis.github.io/blog/2016/type_confused.html</link>
+      <pubDate>Mon, 13 Jun 2016 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">2016/type_confused.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The last few years I&amp;#8217;ve worked on projects using Groovy and Clojure/ClojureScript.
+In 2016 I&amp;#8217;ve spent quite a bit of pastime trying to get to grips
+with statically typed functional languages. In particular I&amp;#8217;ve deep dived into Elm. I&amp;#8217;ve also dipped
+my toes into Haskell. It&amp;#8217;s been a great learning experience and has changed my view of static typing.
+Does this mean I&amp;#8217;m a static typing zealot now ? Nah, but there is no doubt I&amp;#8217;m much more open to the benefits of static typing.
+I guess would characterize myself more like undecided or confused than convinced either way.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_background&quot;&gt;Background&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;A couple of years ago I started working with Groovy (and Grails). I fell in love
+and felt I became way more productive than I had ever been when working with Java. I rarely
+missed the added type safety of Java. Groovy also gave me a gentle introduction to functional programming related concepts in a way Java never encouraged me to.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In 2014 I started dabbling with Clojure(Script), but it took until 2015 before I got a chance
+to use it for real in a project. It was a blast and I finally started to understand why more and more people
+are turning towards functional programming. Clojure/ClojureScript became a big part of my life
+both at work and evenings and nights. I was hooked.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;At the end of last year I was back on a Groovy/Grails project. I was perfectly ok with that, but it wasn&amp;#8217;t
+a shiny new thing any longer, so I guess that&amp;#8217;s partially why I was looking for something new to learn on the side.
+Elm really caught my attention. When I watched &lt;a href=&quot;http://www.elmbark.com/2016/03/16/mainstream-elm-user-focused-design&quot;&gt;Let&amp;#8217;s be mainstream! User focused design in Elm&lt;/a&gt;
+I finally found a statically typed functional language that looked approachable to me.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_first_signs_of_functional_immutable_damage&quot;&gt;First signs of functional immutable damage&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;My time with Clojure (and gradually Elm) had changed me. I started to change how I coded Groovy. I tried to be more
+functional and whenever I declared a variable that I later mutated I was left feeling dirty somehow.
+It&amp;#8217;s hard to try to enforce immutability in Groovy when the language, libraries and idioms don&amp;#8217;t make immutability
+a first class citizen. I had to bite the bullet quite a few times, and yeah I could still get things done.
+The thing is, I started to pay more attention to what kind of errors and bugs I introduced as a result of careless mutation.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;One particular example springs to mind. I was doing validation of a master/detail form.
+To validate the detail rows of the form I needed to make sure they were sorted.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Easy peasy ?&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-groovy&quot; data-lang=&quot;groovy&quot;&gt;master.detailRows.sort {it.date}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;However this had the nasty side-effect
+of reordering the detail rows in my UI which was rendered from this object.
+I was puzzled at first, but then I remembered that immutability is not something you
+can take for granted in the Groovy collection API (some things are, others are just bolted on top of Java).
+The fix was easy enough. &lt;code&gt;collection.sort&lt;/code&gt; has an overloaded version that takes a boolean parameter &lt;code&gt;mutate&lt;/code&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;So I was left with&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-groovy&quot; data-lang=&quot;groovy&quot;&gt;master.details.sort(false) {it.date}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;My eyes hurt: &lt;strong&gt;&lt;code&gt;sort false&lt;/code&gt;&lt;/strong&gt;, but but I &lt;strong&gt;do&lt;/strong&gt; want to sort.
+2 years ago I wouldn&amp;#8217;t think much of this, it&amp;#8217;s just a thing I was used to deal with and spend cycles on.
+Now I get annoyed both with myself for forgetting and the language for making me feel dumb for not remembering.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_adding_types&quot;&gt;Adding types&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;After having spent some time with Elm (and Haskell) I noticed I started to add more
+type information in my Groovy code. I felt it improved the readability of my functions and methods.
+It also made IntelliJ more happy and helpful in many cases.
+The frontend of the application is written in JavaScript with a fair chunk of jQuery. Introducing something like Flow
+might be helpful, but I&amp;#8217;m convinced there are other more fundemental issues that needs to be addressed before considering that.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m pretty sure I&amp;#8217;ll be using something like &lt;a href=&quot;https://github.com/plumatic/schema&quot;&gt;Schema&lt;/a&gt; more actively when writing Clojure/ClojureScript
+going forward. When I have the chance Clojure Spec will probably be the preferred option. I know it&amp;#8217;s not static typing, but my hunch is
+that it will have a huge positive impact on documentation, error messages, runtime checks, testing and probably many other things too.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_functionally_dynamic_but_statically_aware&quot;&gt;Functionally dynamic, but statically aware&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;This week I was back to a Clojure/ClojureScript project again. I&amp;#8217;m quite excited and I&amp;#8217;m convinced I&amp;#8217;m going to have a blast.
+However I&amp;#8217;ve decided to use this opportunity to reflect more on where I feel Clojure/ClojureScript with it&amp;#8217;s dynamic typing shines and where I think
+static typing might have been helpful. After spending so much time with Elm and very much enjoying it, I might be susceptible to confirmation bias that static typing only carries benefits.
+I&amp;#8217;m going to try real hard to stay as objective or rather true to myself as I can when reflecting on positives of static vs dynamic.
+Of course there&amp;#8217;s a lot more to languages than static vs dynamic typing. I do find it interesting to reflect about it though, especially
+since so many people seem to have such strong opinions about type safety. I myself am mostly confused or largely undecided at the moment.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_first_week_reflections&quot;&gt;First week reflections&lt;/h3&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+Undoubtably with some Elm tinted glasses
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;The good&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/bhauman/lein-figwheel&quot;&gt;Figwheel&lt;/a&gt; how I&amp;#8217;ve missed you ! With the latest release, error messages has gotten way better too. Maybe Elm with it&amp;#8217;s suberb error messages has been an inspiration ?&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;I haven&amp;#8217;t gotten my tooling set up right yet, but know that once I&amp;#8217;ve got the REPL stuff set up right I&amp;#8217;m going to be a happier puppy&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The app is really cool, and there are lots of exciting techs to dig into&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Paredit rocks for editing&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Unsure/unknowns&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/Day8/re-frame&quot;&gt;re-frame&lt;/a&gt; - When I first read about it several months ago I was initially convinced that this
+small but very powerful framework was a fantastic thing. Maybe it really is to. But having experienced Elms departure from FRP, I&amp;#8217;m wondering whether it might have some drawbacks at scale that I am not aware of yet.
+I&amp;#8217;ve barely gotten a chance to work with it, but I&amp;#8217;ve so far found it hard to internalize all the reactive dataflows going on in the client app. I obviously need to spend more time before making any judgment.
+Maybe I&amp;#8217;ll write a blog post comparing The Elm Architecture to re-frame in the future.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Have I become dumber ?&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;I genuinly found it harder than before to understand what various functions did by looking at their signature.
+That could very well be down to naming and lack of documentation and or something like schema, but it was initially frustrating to see functions with map parameters and having to read through
+the whole of the implementation to get an understanding of what they might contain. &lt;code&gt;println&lt;/code&gt; to the rescue&amp;#8230;&amp;#8203; sort of.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;I made silly mistakes, some of these resulted in things just not happening and others resulted in stacktraces that wasn&amp;#8217;t helpful in anyway at all.
+I can&amp;#8217;t help but think about the fact that  static types and a helpful compiler would have prevented me from making many of those mistakes. Sure I should have tested more, both through the use of the REPL and probably more proper tests too.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;I was faced with a few refactorings, that didn&amp;#8217;t really go as well as I feel it should have. Again more tests would have helped, but then again a lot of those tests I just wouldn&amp;#8217;t have needed to write in Elm.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_an_attempt_to_summarize&quot;&gt;An attempt to summarize&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m convinced that functional programming vs imperative programming is a much more important concern than
+static vs dynamic typing. I&amp;#8217;m also in no doubt that I think functional programming is by far superior.
+A year ago I was solidly in the dynamic typing camp. My impression of statically typed functional languages was that they were way to hard to get started with.
+None of the languages I had heard about seemed particularily approachable and I had doubts about their practicality for the problems
+I typically encounter in my projects. I&amp;#8217;ve tried Haskell a couple of times, but I guess I was never commited enough.
+Learning Elm has not only been great fun, but It has clearly opened my mind to the possibility that static type checking can be very beneficial.
+It&amp;#8217;s hard to describe the experience of doing a major refactoring, having a really helpful and friendly compiler guide you along step by step and when finally
+everything compiles it just works. Having had that experience many times with Elm (and to a degree Haskell) certainly changed something fundementally in my thinking.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Until I have used Elm, Haskell or another statically typed functional language in a real project I&amp;#8217;m in no position to pass any proper (personal) judgement. Maybe
+I&amp;#8217;m just going to remain confused, or maybe I&amp;#8217;m never going to have a particularily strong preference.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Typed up CRUD SPA with Haskell and Elm - Part 5: Elm 0.17 Upgrade</title>
       <link>http://rundis.github.io/blog/2016/haskel_elm_spa_part5.html</link>
