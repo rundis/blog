@@ -1,0 +1,401 @@
+= Elm Light 0.4.0 - AST driven Elm features in Light Table using PEG.js
+Magnus Rundberget
+2016-09-15
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: elm, clojurescript, javascript, pegjs, lighttable
+:imagesdir: /blog/2016/
+:icons: font
+:id: elm_light_package
+
+
+
+Version 0.4.0 marks the first version of https://github.com/rundis/elm-light[Elm Light] that uses ASTs to enable more advanced IDE like features.
+This version includes features like; find usages, jump to definition, context aware auto-completer and some simple refactorings.
+It's early days, but I'm in no doubt it will enable some pretty cool features going forward.
+
+
+Evan Czaplicki the author of http://elm-lang.org/[Elm] has told the community on several occations not to block on something
+not being available from Elm. I'll have to admit that I've been hoping for more tooling hooks from Elm for quite some time, an offical AST coupled with
+the Elm compiler would be super sweet. It's definitely on the roadmap, but not a high priority for Elm (right now).
+My best bet would be to wait for the AST work put into https://github.com/avh4/elm-format[elm-format] to be made available. That might
+actually not be to far off. But several weeks ago I decided I wanted to give it a shot to do something simplified on my
+own. Mainly as a learning experience, but also to gather data for use cases that an AST can support and to learn a bit about parsing.
+
+
+You'll find a demo of the new features added in version 0.4.0 below. The rest of this post gives a brief description
+of my journey to create a parser and how I integrated that into the plugin.
+
+
+NOTE: You can find the elm-light plugin https://github.com/rundis/elm-light[here]
+
+
+== Demo of 0.4.0 Features
+https://youtu.be/pmMhCRvU9R0[ScreenCast demo]
+
+++++
+<iframe width="560" height="315" src="https://www.youtube.com/embed/pmMhCRvU9R0" frameborder="0" allowfullscreen></iframe>
+++++
+
+
+.Other relevant demos:
+* http://rundis.github.io/blog/2016/elm_light_package.html[Managing and digramming Elm packages with d3 in Light Table]
+* http://rundis.github.io/blog/2015/elm_light.html[elm-light intro demo]
+
+
+
+== Creating a parser
+
+=== Researching
+It actually started a while back when I bought a book about parsers. It was almost 1000 pages. It turned out
+to be very uninspiring bed time reading. I guess I wasn't motivated enough.
+
+My only other experience with parsing since my University days was the stuff I did when porting https://github.com/xsc/rewrite-clj[rewrite-clj]
+to ClojureScript. That ended up becoming https://github.com/rundis/rewrite-cljs[rewrite-cljs], which I've used for some othere Light Table plugins I've created.
+But the syntax of Clojure is comparatively simple and also I did a port, so I can't really claim any credits for the actual parsing anyways.
+
+
+In the Clojure world I've used https://github.com/Engelberg/instaparse[InstaParse] which is a really neat library to build parsers.
+It also has a ClojureScript port, which I though would be good fit for Light Table. I found an old BNF for Elm called https://github.com/Apanatshka/elm-spoofax/blob/master/syntax.ebnf[elm-spoofax],
+so I thought. Let's give it a go. I spent a good week or so to get something that seemed to parse most Elm files I threw at it
+and provided a tree of nodes which looked fairly decent to work with. However I hadn't read the README for the CLJs port
+that will and hadn't really reflected on what an order of magnitude slower that it's Clojure big brother actually meant.
+With a couple of hundred lines I started seeing parse-times nearing a second. I'm sure it could be optimized and tuned somewhat,
+but it was way off the mark of what I was going to need for continuos as you type parsing.
+
+
+Back to the drawing board. I started looking at a ton of alternatives. Parser generators and parser combinators etc etc.
+
+=== Enter PEG.js
+After trying out a few parser generators I came across http://pegjs.org/[PEG.js]. It looked approachable enough
+to me and they even had a nice online tool. So I set out on my way and decided to keep it simple. Just parse
+top level definitions. Spent a few days to get an initial version up and running. It was time to give it a performance test.
+YAY, for most files I got < 10ms parse times for some quite big ones (thousands of lines) I started seeing 100ms parse times.
+It still seemed worth pursuing. So I did !
+
+
+TIP: PEG.js is a simple parser generator. It supports a syntax that is BNF like, but you can smatter it with
+some JavaScript when appropriate. It also has nice error reporting and a few other nifty features.
+
+
+[source,javascript]
+----
+module                                           // <1>
+  = declaration:moduledeclaration EOS
+    LAYOUT
+    imports:imports?
+    LAYOUT
+    toplevel:topLevelDeclarations?
+    LAYOUT
+    {
+      return {
+      	moduledeclaration: declaration,
+        imports: imports,
+        declarations: toplevel
+      }
+    }
+
+moduledeclaration                               // <2>
+  = type:(type:("effect" / "port") __ { return type; })? "module" __ name:upperIds __ exposing:exposing
+    {
+      return {
+        type: (type||"" + " module").trim(),
+        name: name,
+        exposing: exposing
+      };
+    }
+
+// .. etc
+
+----
+<1> The top level rule. It sort of looks like BNF, but you'll also notice some JavaScript
+<2> The rule for parsing the module declaration, which again uses other rules, which again ...
+
+I basically used a process of looking at this old https://github.com/Apanatshka/elm-spoofax/blob/master/syntax.ebnf[Elm BNF]
+as inspiration and then adjusting along the way. The PEG.js online tool was really helpful during this work.
+
+
+
+[NOTE]
+.Why a JavaScript parser generator ?
+====
+Well Light Table is based on Electron. So it's basically a node server with a browser client build in.
+Having a parser that plays seemlessly with the basic building blocks of the browser is both convenient
+and practical in terms of distribution. I can just require the parser as a node module and off we go.
+
+The second reason is that for example my Haskell foo is not up to scratch. I would love to do it in Elm
+but current Elm combinator libraries just doesn't provide enough building blocks for me to see
+this as a competive or realistic alternative quite yet.
+====
+
+
+== Designing for As You Type Parsing (AYTP ?)
+The general idea I had was to design with the following in mind
+- Parsing everything (including 3.rd party packages) when connecting, is a bearable price to pay to ensure everything is hunky dory and good to go once you are connected
+- The design should support file changes not only from actions in the editor, but also from any outside process
+- Things generally have to be asynchronous to ensure the Editor stays responsive at all times
+- Only introduce (persistent) caching if there is no way around it
+
+
+
+=== Listening for changes
+To support parsing whenever a file changes or whenever you install or remove a package in your Elm projects
+I opted for using https://github.com/paulmillr/chokidar[Chokidar]. https://github.com/halohalospecial/atom-elmjutsu[Elmjutsu] - an excellent Elm plugin for Atom
+provided me with the inspiration here.
+
+Each Elm project in Light Table will get it's own node process running Chokidar. Whenever the appropriate events
+are fired, it will parse the file(s) needed and notify the Elm plugin editor process with the results.
+
+
+.The code for initiating the watcher
+[source,javascript]
+----
+  var watcher = chokidar.watch(['elm-package.json',                    // <1>
+                                'elm-stuff/exact-dependencies.json',
+                                '**/*.elm'], {
+    cwd: process.cwd(),
+    persistent: true,
+    ignoreInitial: false,
+    followSymlinks: false,
+    atomic: false
+  });
+
+  watcher.on("raw", function(event, file, details) {                   // <2>
+    var relFile = path.relative(process.cwd(), file);
+    var sourceDirs = getSourceDirs(process.cwd());
+
+
+    if(relFile === "elm-stuff/exact-dependencies.json") {
+      if ( event === "modified") {
+        parseAllPackageSources();                                      // <3>
+      }
+      if (event === "deleted") {
+        sendAstMsg({
+          type: "packagesDeleted"
+        });
+      }
+    }
+
+
+    if (isSourceFile(sourceDirs, file) && event === "modified") {
+      parseAndSend(file);                                              // <4>
+    }
+
+    if (isSourceFile(sourceDirs, file) && event === "deleted") {
+      sendAstMsg({
+        file: file,
+        type: "deleted"
+      });
+    }
+
+    if (isSourceFile(sourceDirs, file) && event === "moved") {
+      if (fileExists(file)) {
+        parseAndSend(file);
+      } else {
+        sendAstMsg({
+          file: file,
+          type: "deleted"
+        });
+      }
+    }
+  });
+
+
+  elmGlobals.watcher = watcher;
+}
+----
+<1> Start the watcher
+<2> To be able to handle renames and a few othere edge cases I ended listening for raw avents from Chokidar
+<3> Whenever this elm file changes is very likely that's due to a package install, update or delete of some kind
+The time spent for parsing all package sources is proportionally small compared to the time spent on
+a package install so this "brute-force" approach actually works fine.
+<4> Parsing a single file on change and notifying the editor process with the results is the common case
+
+
+
+=== Caching the ASTs
+In the Elm Light plugin Editor part, a Clojure(Script) atom is used to store all projects and their ASTs. Not only does it
+store AST's for you project files, but it also stores ASTs for any 3.rd party packages your project depends on.
+That means that it does use quite a bit of memory, but profiling sugggest it's not too bad actually.
+The great thing now is, that I have a Clojure datastructure I can work with. Slice and dice, transform and do all kinds of stuff with
+using the full power of the clojure.core API. Super powerful and so much fun too :-)
+
+
+=== But what about this parsing as you type then ?
+Well for every open Elm editor, there is a handler for parsing the editors content and update the AST atom.
+Again the actually parsing is performed in a node client process, otherwise the editor would obviously have ground to a halt.
+
+
+.It looks something like this:
+[source,clojure]
+----
+(behavior ::elm-parse-editor-on-change                               // <1>
+          :desc "Parse a connected elm editor on content change"
+          :triggers #{:change}
+          :debounce 200                                              // <2>
+          :reaction (fn [ed]
+                      (object/raise ed :elm.parse.editor)))          // <3>
+
+
+(behavior ::elm-parse-editor                                         // <4>
+          :desc "Initiate parsing of the content/elm code of the given editor"
+          :triggers #{:elm.parse.editor :focus :project-connected }
+          :reaction (fn [ed]
+                      (when (not (str-contains (-> @ed :info :path) "elm-stuff"))
+                        (let [client (get-eval-client-if-connected ed :editor.elm.ast.parsetext)
+                             path (-> @ed :info :path)]
+
+                         (when (and client
+                                  (= (pool/last-active) ed))
+
+                           (clients/send client                     // <5>
+                                         :editor.elm.ast.parsetext
+                                         {:code (editor/->val ed)}
+                                         :only ed))))))
+
+(behavior ::elm-parse-editor-result                                 // <6>
+          :desc "Handle parse results for a parsed editors content"
+          :triggers #{:editor.elm.ast.parsetext.result}
+          :reaction (fn [ed res]
+                      (if-let [error (:error res)]
+                        (do
+                          (object/update! ed [:ast-status] assoc :status :error :error error)
+                          (object/raise ed :elm.gutter.refresh))
+                        (let [path (-> @ed :info :path)]
+                          (object/update! ed [:ast-status] assoc :status :ok :error nil)
+
+                          (elm-ast/upsert-ast! (-> (get-editor-client ed) deref :dir)  // <7>
+                                               {:file path
+                                                :ast (:ast res)})
+                          (object/raise ed :elm.gutter.exposeds.mark)))
+
+
+                      (elm-ast/update-status-for-editor ed)))
+
+----
+<1> This the behaviour (think runtime configurable event handler) that triggers
+parsing whenever the editor contents change.
+<2> Parsing all the time is not really necessary for most things, so a debounce has
+been defined to not spam the node client
+<3> We delegate to the behaviour below which is a more generic trigger parsing behavior
+<4> This behavior is responsible for sending off a parse request to the node client
+<5> We send the parse request to the node client
+<6> Once the node client process has finished parsing this behviour will be triggered with the result
+<7> We update the AST atom with the AST for this particular combination of project and file represented by the editor
+
+
+NOTE: We only update the AST on succesful parses. A lot of the time when typing the editor contents will naturally not
+be in a correct state for parsing. We always keep track of the last valid state, so that allows the plugin
+to still provide features that doesn't necessarily need an completely current AST.
+
+
+=== There is always an exception
+Things was working quite well initially, managed to get several features up and running.
+But when I started to rewrite the auto completer from using https://github.com/ElmCast/elm-oracle[elm-oracle]
+I hit a few killer problems;
+- The contiuous parsing started to tax the editor to the point that things became unusable
+- With debouncing I didn't have accurate enough results to provide a proper context for context aware completions
+- I discovered general performance problems in how I've written my ClojureScript code
+- For large files synchrounous parsing was out of the question
+
+Auto completers are tricky and doing it synchronous was proving useless for Elm files larger than a few hundred lines.
+Back to the drawing board.
+
+==== Tuning
+So providing hints for the autocompleter definitely has to happen asynchronously.
+But even that was to taxing for larger files and AST. So I spent quite some time optimizing
+the ClojureScript code. Turning to JavaScript native when that was called for. Heck I even threw in memoization
+a couple of places to get response times down. Even turning JSON into EDN (clojure data format) had to be tweaked to
+become performant enough. The whole process was quite challenging and fun.
+There are still things to be tuned, but I'll wait and see what real usage experience provides in terms of cases worth
+optimizing for.
+
+
+==== Partial synchronous partial parsing
+The autocompleter is async, but for some cases it turned out to be feasible to do a partial
+parse of the editors contents. PEG.js has a feature to support multiple start rules, so I ended
+up defining a start rule that only parses the module declaration and any imports.
+That allowed the context sensitive hints for module declartions and imports to have a completely up to date
+AST (well as long as it's valid) and at the same time keep the autocompleter responsive enough.
+
+
+==== Really large files
+Depending on who you ask, you might get a different definition, but to me Elm files that are several thousand
+lines are large. So hopefully they are more the exception than the rule. But for files of that
+size the autocompleter will be a little slugish. Not too bad (on my machine!), but you will notice it.
+
+TIP: If you experience this, do let me know. And also be aware that turning off the auto-completer is deffo and option
+and easy for you to do. The guide contains instructions for how to do that.
+
+
+
+== Refactoring
+It would be really neat if I could refactor in the AST itself and just "print" the update result
+back to the editor. However with the complexities of the AST already, the fact that I'm not even parsing everything yet
+and all interesing challenges with an indentation sensitive language with lot's of flexibility in terms of comments and whitespace...
+Well that'll have to be a future enterprise.
+
+That's not entirly true though. For a couple of the features I sort of do that, but only for a
+select few nodes of the AST, and the change is not persited to the AST atom (think global database of ASTs).
+So it's like a one-way dataflow:
+
+* get necessary nodes from AST atom
+* update the node(s)
+* print to editor
+* editor change triggers AST parsing for editor
+* node client notifies editor behaviour responsible for updating the AST atom
+* AST Atom gets updated
+* The AST atom is up to date, but slightly after the editor
+
+
+[source, clojure]
+----
+(behavior ::elm-expose-top-level
+          :desc "Behavior to expose top level Elm declaration"
+          :triggers #{:elm.expose.top.level}
+          :reaction (fn [ed]
+                      (let [path (-> @ed :info :path)
+                            prj-path (project-path path)
+                            module (elm-ast/get-module-ast prj-path path)             // <1>
+                            exposing (-> module :ast :moduleDeclaration :exposing)]   // <2>
+
+                        (when-let [decl (elm-ast/find-top-level-declaration-by-pos    // <3>
+                                            (editor/->cursor ed)
+                                            module)]
+                          (when-not (elm-ast/exposed-by-module? module (:value decl))
+                            (let [{:keys [start end]} (elm-ast/->range (:location exposing))
+                                  upd-exp (elm-ast/expose-decl decl exposing)         // <4>
+                                  pos (editor/->cursor ed)
+                                  bm (editor/bookmark ed pos)]
+                              (editor/replace ed                                      // <5>
+                                              start
+                                              end
+                                              (elm-ast/print-exposing upd-exp))
+                              (safe-move-cursor ed bm pos)))))))
+
+----
+<1> Get the AST root node for the module the current editor represents
+<2> From that retrieve the exposing node (this is the one we want to update)
+<3> Find the declaration to expose based on where the cursor is placed in the editor
+<4> Update the exposing AST node to also expose the given declaration in <3>
+<5> Overwrite the exposing node in the editor, that works because we have the current location
+of it already :-)
+
+Once the editor is changed, the normal process for updating the global AST atom is triggered.
+
+
+
+== Summary and going forward
+Writing a parser (with the help of a parser generator) has been a really valuable learning experience.
+After my failed attempt with InstaParse, it's hard to describe the feeling I had when I saw the numbers
+from my PEG.js based implementation. I tried to talk to my wife about it, but she couldn't really see what the fuzz was all
+about !
+
+I'll continue to make the parser better, but the plan isn't to spend massive amounts of time on making that perfect.
+I'd rather turn my attention on trying to help the Elm community and it's tooling people access
+to an AST on stereoids. My bet is that the AST from elm-format is going to be the way forward, so I'll try
+to help out here. Hopefully my own experience will be useful in this process.
+
+I'm pretty sure I can carry on to make some pretty cool features with the AST i already have,
+so there will defininetely be some cool stuff coming in Elm Light in the near future regardless
+of what happens in the AST space and tooling hooks for Elm in general.
