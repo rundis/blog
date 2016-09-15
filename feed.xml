@@ -6,9 +6,582 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 13 Jun 2016 23:05:26 +0200</pubDate>
-    <lastBuildDate>Mon, 13 Jun 2016 23:05:26 +0200</lastBuildDate>
+    <pubDate>Thu, 15 Sep 2016 23:08:22 +0200</pubDate>
+    <lastBuildDate>Thu, 15 Sep 2016 23:08:22 +0200</lastBuildDate>
 
+    <item>
+      <title>Elm Light 0.4.0 - AST driven Elm features in Light Table using PEG.js</title>
+      <link>http://rundis.github.io/blog/2016/elm_light_ast.html</link>
+      <pubDate>Thu, 15 Sep 2016 00:00:00 +0200</pubDate>
+      <guid isPermaLink="false">2016/elm_light_ast.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Version 0.4.0 marks the first version of &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;Elm Light&lt;/a&gt; that uses ASTs to enable more advanced IDE like features.
+This version includes features like; find usages, jump to definition, context aware auto-completer and some simple refactorings.
+It&amp;#8217;s early days, but I&amp;#8217;m in no doubt it will enable some pretty cool features going forward.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Evan Czaplicki the author of &lt;a href=&quot;http://elm-lang.org/&quot;&gt;Elm&lt;/a&gt; has told the community on several occations not to block on something
+not being available from Elm. I&amp;#8217;ll have to admit that I&amp;#8217;ve been hoping for more tooling hooks from Elm for quite some time, an offical AST coupled with
+the Elm compiler would be super sweet. It&amp;#8217;s definitely on the roadmap, but not a high priority for Elm (right now).
+My best bet would be to wait for the AST work put into &lt;a href=&quot;https://github.com/avh4/elm-format&quot;&gt;elm-format&lt;/a&gt; to be made available. That might
+actually not be to far off. But several weeks ago I decided I wanted to give it a shot to do something simplified on my
+own. Mainly as a learning experience, but also to gather data for use cases that an AST can support and to learn a bit about parsing.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;You&amp;#8217;ll find a demo of the new features added in version 0.4.0 below. The rest of this post gives a brief description
+of my journey to create a parser and how I integrated that into the plugin.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+You can find the elm-light plugin &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;here&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_demo_of_0_4_0_features&quot;&gt;Demo of 0.4.0 Features&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://youtu.be/pmMhCRvU9R0&quot;&gt;ScreenCast demo&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/pmMhCRvU9R0&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Other relevant demos:&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://rundis.github.io/blog/2016/elm_light_package.html&quot;&gt;Managing and digramming Elm packages with d3 in Light Table&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;http://rundis.github.io/blog/2015/elm_light.html&quot;&gt;elm-light intro demo&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_creating_a_parser&quot;&gt;Creating a parser&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_researching&quot;&gt;Researching&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;It actually started a while back when I bought a book about parsers. It was almost 1000 pages. It turned out
+to be very uninspiring bed time reading. I guess I wasn&amp;#8217;t motivated enough.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;My only other experience with parsing since my University days was the stuff I did when porting &lt;a href=&quot;https://github.com/xsc/rewrite-clj&quot;&gt;rewrite-clj&lt;/a&gt;
+to ClojureScript. That ended up becoming &lt;a href=&quot;https://github.com/rundis/rewrite-cljs&quot;&gt;rewrite-cljs&lt;/a&gt;, which I&amp;#8217;ve used for some othere Light Table plugins I&amp;#8217;ve created.
+But the syntax of Clojure is comparatively simple and also I did a port, so I can&amp;#8217;t really claim any credits for the actual parsing anyways.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In the Clojure world I&amp;#8217;ve used &lt;a href=&quot;https://github.com/Engelberg/instaparse&quot;&gt;InstaParse&lt;/a&gt; which is a really neat library to build parsers.
+It also has a ClojureScript port, which I though would be good fit for Light Table. I found an old BNF for Elm called &lt;a href=&quot;https://github.com/Apanatshka/elm-spoofax/blob/master/syntax.ebnf&quot;&gt;elm-spoofax&lt;/a&gt;,
+so I thought. Let&amp;#8217;s give it a go. I spent a good week or so to get something that seemed to parse most Elm files I threw at it
+and provided a tree of nodes which looked fairly decent to work with. However I hadn&amp;#8217;t read the README for the CLJs port
+that will and hadn&amp;#8217;t really reflected on what an order of magnitude slower that it&amp;#8217;s Clojure big brother actually meant.
+With a couple of hundred lines I started seeing parse-times nearing a second. I&amp;#8217;m sure it could be optimized and tuned somewhat,
+but it was way off the mark of what I was going to need for continuos as you type parsing.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Back to the drawing board. I started looking at a ton of alternatives. Parser generators and parser combinators etc etc.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_enter_peg_js&quot;&gt;Enter PEG.js&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;After trying out a few parser generators I came across &lt;a href=&quot;http://pegjs.org/&quot;&gt;PEG.js&lt;/a&gt;. It looked approachable enough
+to me and they even had a nice online tool. So I set out on my way and decided to keep it simple. Just parse
+top level definitions. Spent a few days to get an initial version up and running. It was time to give it a performance test.
+YAY, for most files I got &amp;lt; 10ms parse times for some quite big ones (thousands of lines) I started seeing 100ms parse times.
+It still seemed worth pursuing. So I did !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+PEG.js is a simple parser generator. It supports a syntax that is BNF like, but you can smatter it with
+some JavaScript when appropriate. It also has nice error reporting and a few other nifty features.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;module                                           &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  = declaration:moduledeclaration EOS
+    LAYOUT
+    imports:imports?
+    LAYOUT
+    toplevel:topLevelDeclarations?
+    LAYOUT
+    {
+      return {
+      	moduledeclaration: declaration,
+        imports: imports,
+        declarations: toplevel
+      }
+    }
+
+moduledeclaration                               &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  = type:(type:(&quot;effect&quot; / &quot;port&quot;) __ { return type; })? &quot;module&quot; __ name:upperIds __ exposing:exposing
+    {
+      return {
+        type: (type||&quot;&quot; + &quot; module&quot;).trim(),
+        name: name,
+        exposing: exposing
+      };
+    }
+
+// .. etc&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The top level rule. It sort of looks like BNF, but you&amp;#8217;ll also notice some JavaScript&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The rule for parsing the module declaration, which again uses other rules, which again &amp;#8230;&amp;#8203;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I basically used a process of looking at this old &lt;a href=&quot;https://github.com/Apanatshka/elm-spoofax/blob/master/syntax.ebnf&quot;&gt;Elm BNF&lt;/a&gt;
+as inspiration and then adjusting along the way. The PEG.js online tool was really helpful during this work.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Why a JavaScript parser generator ?&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Well Light Table is based on Electron. So it&amp;#8217;s basically a node server with a browser client build in.
+Having a parser that plays seemlessly with the basic building blocks of the browser is both convenient
+and practical in terms of distribution. I can just require the parser as a node module and off we go.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The second reason is that for example my Haskell foo is not up to scratch. I would love to do it in Elm
+but current Elm combinator libraries just doesn&amp;#8217;t provide enough building blocks for me to see
+this as a competive or realistic alternative quite yet.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_designing_for_as_you_type_parsing_aytp&quot;&gt;Designing for As You Type Parsing (AYTP ?)&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The general idea I had was to design with the following in mind
+- Parsing everything (including 3.rd party packages) when connecting, is a bearable price to pay to ensure everything is hunky dory and good to go once you are connected
+- The design should support file changes not only from actions in the editor, but also from any outside process
+- Things generally have to be asynchronous to ensure the Editor stays responsive at all times
+- Only introduce (persistent) caching if there is no way around it&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_listening_for_changes&quot;&gt;Listening for changes&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To support parsing whenever a file changes or whenever you install or remove a package in your Elm projects
+I opted for using &lt;a href=&quot;https://github.com/paulmillr/chokidar&quot;&gt;Chokidar&lt;/a&gt;. &lt;a href=&quot;https://github.com/halohalospecial/atom-elmjutsu&quot;&gt;Elmjutsu&lt;/a&gt; - an excellent Elm plugin for Atom
+provided me with the inspiration here.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Each Elm project in Light Table will get it&amp;#8217;s own node process running Chokidar. Whenever the appropriate events
+are fired, it will parse the file(s) needed and notify the Elm plugin editor process with the results.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;The code for initiating the watcher&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;  var watcher = chokidar.watch([&apos;elm-package.json&apos;,                    &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+                                &apos;elm-stuff/exact-dependencies.json&apos;,
+                                &apos;**/*.elm&apos;], {
+    cwd: process.cwd(),
+    persistent: true,
+    ignoreInitial: false,
+    followSymlinks: false,
+    atomic: false
+  });
+
+  watcher.on(&quot;raw&quot;, function(event, file, details) {                   &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+    var relFile = path.relative(process.cwd(), file);
+    var sourceDirs = getSourceDirs(process.cwd());
+
+
+    if(relFile === &quot;elm-stuff/exact-dependencies.json&quot;) {
+      if ( event === &quot;modified&quot;) {
+        parseAllPackageSources();                                      &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+      }
+      if (event === &quot;deleted&quot;) {
+        sendAstMsg({
+          type: &quot;packagesDeleted&quot;
+        });
+      }
+    }
+
+
+    if (isSourceFile(sourceDirs, file) &amp;amp;&amp;amp; event === &quot;modified&quot;) {
+      parseAndSend(file);                                              &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+    }
+
+    if (isSourceFile(sourceDirs, file) &amp;amp;&amp;amp; event === &quot;deleted&quot;) {
+      sendAstMsg({
+        file: file,
+        type: &quot;deleted&quot;
+      });
+    }
+
+    if (isSourceFile(sourceDirs, file) &amp;amp;&amp;amp; event === &quot;moved&quot;) {
+      if (fileExists(file)) {
+        parseAndSend(file);
+      } else {
+        sendAstMsg({
+          file: file,
+          type: &quot;deleted&quot;
+        });
+      }
+    }
+  });
+
+
+  elmGlobals.watcher = watcher;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Start the watcher&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;To be able to handle renames and a few othere edge cases I ended listening for raw avents from Chokidar&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Whenever this elm file changes is very likely that&amp;#8217;s due to a package install, update or delete of some kind
+The time spent for parsing all package sources is proportionally small compared to the time spent on
+a package install so this &quot;brute-force&quot; approach actually works fine.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Parsing a single file on change and notifying the editor process with the results is the common case&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_caching_the_asts&quot;&gt;Caching the ASTs&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In the Elm Light plugin Editor part, a Clojure(Script) atom is used to store all projects and their ASTs. Not only does it
+store AST&amp;#8217;s for you project files, but it also stores ASTs for any 3.rd party packages your project depends on.
+That means that it does use quite a bit of memory, but profiling sugggest it&amp;#8217;s not too bad actually.
+The great thing now is, that I have a Clojure datastructure I can work with. Slice and dice, transform and do all kinds of stuff with
+using the full power of the clojure.core API. Super powerful and so much fun too :-)&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_but_what_about_this_parsing_as_you_type_then&quot;&gt;But what about this parsing as you type then ?&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Well for every open Elm editor, there is a handler for parsing the editors content and update the AST atom.
+Again the actually parsing is performed in a node client process, otherwise the editor would obviously have ground to a halt.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;It looks something like this:&lt;/div&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;(behavior ::elm-parse-editor-on-change                               &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+          :desc &quot;Parse a connected elm editor on content change&quot;
+          :triggers #{:change}
+          :debounce 200                                              &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+          :reaction (fn [ed]
+                      (object/raise ed :elm.parse.editor)))          &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+
+
+(behavior ::elm-parse-editor                                         &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+          :desc &quot;Initiate parsing of the content/elm code of the given editor&quot;
+          :triggers #{:elm.parse.editor :focus :project-connected }
+          :reaction (fn [ed]
+                      (when (not (str-contains (-&amp;gt; @ed :info :path) &quot;elm-stuff&quot;))
+                        (let [client (get-eval-client-if-connected ed :editor.elm.ast.parsetext)
+                             path (-&amp;gt; @ed :info :path)]
+
+                         (when (and client
+                                  (= (pool/last-active) ed))
+
+                           (clients/send client                     &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+                                         :editor.elm.ast.parsetext
+                                         {:code (editor/-&amp;gt;val ed)}
+                                         :only ed))))))
+
+(behavior ::elm-parse-editor-result                                 &lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;(6)&lt;/b&gt;
+          :desc &quot;Handle parse results for a parsed editors content&quot;
+          :triggers #{:editor.elm.ast.parsetext.result}
+          :reaction (fn [ed res]
+                      (if-let [error (:error res)]
+                        (do
+                          (object/update! ed [:ast-status] assoc :status :error :error error)
+                          (object/raise ed :elm.gutter.refresh))
+                        (let [path (-&amp;gt; @ed :info :path)]
+                          (object/update! ed [:ast-status] assoc :status :ok :error nil)
+
+                          (elm-ast/upsert-ast! (-&amp;gt; (get-editor-client ed) deref :dir)  &lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;(7)&lt;/b&gt;
+                                               {:file path
+                                                :ast (:ast res)})
+                          (object/raise ed :elm.gutter.exposeds.mark)))
+
+
+                      (elm-ast/update-status-for-editor ed)))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This the behaviour (think runtime configurable event handler) that triggers
+parsing whenever the editor contents change.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Parsing all the time is not really necessary for most things, so a debounce has
+been defined to not spam the node client&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We delegate to the behaviour below which is a more generic trigger parsing behavior&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;This behavior is responsible for sending off a parse request to the node client&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We send the parse request to the node client&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;6&quot;&gt;&lt;/i&gt;&lt;b&gt;6&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Once the node client process has finished parsing this behviour will be triggered with the result&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;7&quot;&gt;&lt;/i&gt;&lt;b&gt;7&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We update the AST atom with the AST for this particular combination of project and file represented by the editor&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+We only update the AST on succesful parses. A lot of the time when typing the editor contents will naturally not
+be in a correct state for parsing. We always keep track of the last valid state, so that allows the plugin
+to still provide features that doesn&amp;#8217;t necessarily need an completely current AST.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_there_is_always_an_exception&quot;&gt;There is always an exception&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Things was working quite well initially, managed to get several features up and running.
+But when I started to rewrite the auto completer from using &lt;a href=&quot;https://github.com/ElmCast/elm-oracle&quot;&gt;elm-oracle&lt;/a&gt;
+I hit a few killer problems;
+- The contiuous parsing started to tax the editor to the point that things became unusable
+- With debouncing I didn&amp;#8217;t have accurate enough results to provide a proper context for context aware completions
+- I discovered general performance problems in how I&amp;#8217;ve written my ClojureScript code
+- For large files synchrounous parsing was out of the question&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Auto completers are tricky and doing it synchronous was proving useless for Elm files larger than a few hundred lines.
+Back to the drawing board.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_tuning&quot;&gt;Tuning&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So providing hints for the autocompleter definitely has to happen asynchronously.
+But even that was to taxing for larger files and AST. So I spent quite some time optimizing
+the ClojureScript code. Turning to JavaScript native when that was called for. Heck I even threw in memoization
+a couple of places to get response times down. Even turning JSON into EDN (clojure data format) had to be tweaked to
+become performant enough. The whole process was quite challenging and fun.
+There are still things to be tuned, but I&amp;#8217;ll wait and see what real usage experience provides in terms of cases worth
+optimizing for.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_partial_synchronous_partial_parsing&quot;&gt;Partial synchronous partial parsing&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The autocompleter is async, but for some cases it turned out to be feasible to do a partial
+parse of the editors contents. PEG.js has a feature to support multiple start rules, so I ended
+up defining a start rule that only parses the module declaration and any imports.
+That allowed the context sensitive hints for module declartions and imports to have a completely up to date
+AST (well as long as it&amp;#8217;s valid) and at the same time keep the autocompleter responsive enough.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_really_large_files&quot;&gt;Really large files&lt;/h4&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Depending on who you ask, you might get a different definition, but to me Elm files that are several thousand
+lines are large. So hopefully they are more the exception than the rule. But for files of that
+size the autocompleter will be a little slugish. Not too bad (on my machine!), but you will notice it.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+If you experience this, do let me know. And also be aware that turning off the auto-completer is deffo and option
+and easy for you to do. The guide contains instructions for how to do that.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_refactoring&quot;&gt;Refactoring&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;It would be really neat if I could refactor in the AST itself and just &quot;print&quot; the update result
+back to the editor. However with the complexities of the AST already, the fact that I&amp;#8217;m not even parsing everything yet
+and all interesing challenges with an indentation sensitive language with lot&amp;#8217;s of flexibility in terms of comments and whitespace&amp;#8230;&amp;#8203;
+Well that&amp;#8217;ll have to be a future enterprise.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;That&amp;#8217;s not entirly true though. For a couple of the features I sort of do that, but only for a
+select few nodes of the AST, and the change is not persited to the AST atom (think global database of ASTs).
+So it&amp;#8217;s like a one-way dataflow:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;get necessary nodes from AST atom&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;update the node(s)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;print to editor&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;editor change triggers AST parsing for editor&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;node client notifies editor behaviour responsible for updating the AST atom&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;AST Atom gets updated&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The AST atom is up to date, but slightly after the editor&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-clojure&quot; data-lang=&quot;clojure&quot;&gt;(behavior ::elm-expose-top-level
+          :desc &quot;Behavior to expose top level Elm declaration&quot;
+          :triggers #{:elm.expose.top.level}
+          :reaction (fn [ed]
+                      (let [path (-&amp;gt; @ed :info :path)
+                            prj-path (project-path path)
+                            module (elm-ast/get-module-ast prj-path path)             &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+                            exposing (-&amp;gt; module :ast :moduleDeclaration :exposing)]   &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+
+                        (when-let [decl (elm-ast/find-top-level-declaration-by-pos    &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+                                            (editor/-&amp;gt;cursor ed)
+                                            module)]
+                          (when-not (elm-ast/exposed-by-module? module (:value decl))
+                            (let [{:keys [start end]} (elm-ast/-&amp;gt;range (:location exposing))
+                                  upd-exp (elm-ast/expose-decl decl exposing)         &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+                                  pos (editor/-&amp;gt;cursor ed)
+                                  bm (editor/bookmark ed pos)]
+                              (editor/replace ed                                      &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+                                              start
+                                              end
+                                              (elm-ast/print-exposing upd-exp))
+                              (safe-move-cursor ed bm pos)))))))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Get the AST root node for the module the current editor represents&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;From that retrieve the exposing node (this is the one we want to update)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Find the declaration to expose based on where the cursor is placed in the editor&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Update the exposing AST node to also expose the given declaration in &amp;lt;3&amp;gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Overwrite the exposing node in the editor, that works because we have the current location
+of it already :-)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Once the editor is changed, the normal process for updating the global AST atom is triggered.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_summary_and_going_forward&quot;&gt;Summary and going forward&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Writing a parser (with the help of a parser generator) has been a really valuable learning experience.
+After my failed attempt with InstaParse, it&amp;#8217;s hard to describe the feeling I had when I saw the numbers
+from my PEG.js based implementation. I tried to talk to my wife about it, but she couldn&amp;#8217;t really see what the fuzz was all
+about !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;ll continue to make the parser better, but the plan isn&amp;#8217;t to spend massive amounts of time on making that perfect.
+I&amp;#8217;d rather turn my attention on trying to help the Elm community and it&amp;#8217;s tooling people access
+to an AST on stereoids. My bet is that the AST from elm-format is going to be the way forward, so I&amp;#8217;ll try
+to help out here. Hopefully my own experience will be useful in this process.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m pretty sure I can carry on to make some pretty cool features with the AST i already have,
+so there will defininetely be some cool stuff coming in Elm Light in the near future regardless
+of what happens in the AST space and tooling hooks for Elm in general.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Oh no! Learning Elm has gotten me confused about static vs dynamic typing.</title>
       <link>http://rundis.github.io/blog/2016/type_confused.html</link>
