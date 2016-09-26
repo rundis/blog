@@ -69,7 +69,7 @@ public int add (int x, int y) {
 ----
 increment : Int -> Int         // <1>
 increment value =
-  value = value + 1
+  value + 1
 
 
 add : Int -> Int -> Int        // <2>
