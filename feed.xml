@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Thu, 15 Sep 2016 23:08:22 +0200</pubDate>
-    <lastBuildDate>Thu, 15 Sep 2016 23:08:22 +0200</lastBuildDate>
+    <pubDate>Mon, 26 Sep 2016 13:25:28 +0200</pubDate>
+    <lastBuildDate>Mon, 26 Sep 2016 13:25:28 +0200</lastBuildDate>
 
     <item>
       <title>Elm Light 0.4.0 - AST driven Elm features in Light Table using PEG.js</title>
@@ -2810,7 +2810,7 @@ public int add (int x, int y) {
 &lt;div class=&quot;content&quot;&gt;
 &lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;increment : Int -&amp;gt; Int         &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
 increment value =
-  value = value + 1
+  value + 1
 
 
 add : Int -&amp;gt; Int -&amp;gt; Int        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
