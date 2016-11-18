@@ -71,6 +71,957 @@
 	<div class="page-header">
 		<h1>Blog</h1>
 	</div>
+  			<a href="/blog/2016/haskel_elm_spa_part6.html"><h1>Typed up CRUD SPA with Haskell and Elm - Part 6: Elm 0.18 Upgrade</h1></a>
+  			<p>21 November 2016</p>
+        <p><em>Tags: </em>
+		      <a href="/blog/tags/haskell.html">haskell</a>
+	      
+		      <a href="/blog/tags/elm.html">elm</a>
+	      
+		      <a href="/blog/tags/haskellelmspa.html">haskellelmspa</a>
+	      </p>
+        <a href="https://twitter.com/share"
+           class="twitter-share-button"
+           data-text="Typed up CRUD SPA with Haskell and Elm - Part 6: Elm 0.18 Upgrade"
+           data-url="http://rundis.github.io/blog/2016/haskel_elm_spa_part6.html"
+           data-via="mrundberget" data-lang="en">Tweet</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+  			<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Another <a href="http://elm-lang.org/blog/the-perfect-bug-report">Elm release</a> and it&#8217;s time for yet another upgrade post.
+The changes outlined in the <a href="https://github.com/elm-lang/elm-platform/blob/master/upgrade-docs/0.18.md">migration guide</a> didn&#8217;t look
+to intimidating, so I jumped into it with pretty high confidence. It took me about 2 hours to get through and it was almost an instant success.
+The compiler had my back all along, helped by my <a href="https://github.com/rundis/elm-light">editor</a> showing errors inline and docs/signatures whenever I was in doubt.
+I didn&#8217;t even have to resort to google once to figure out what to do. I said it almost worked the first time. Well
+I had managed to add a http header twice which Servant wasn&#8217;t to impressed by, but once that was fixed everything was working hunky dory !</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<div class="title">Useful resources</div>
+<ul>
+<li>
+<p>Check out the other <a href="http://rundis.github.io/blog/tags/haskellelmspa.html">episodes</a> in this blog series.</p>
+</li>
+<li>
+<p>The accompanying <a href="https://github.com/rundis/albums">Albums</a> sample app is on github, and there is a tag
+for each episode</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_introduction">Introduction</a></li>
+<li><a href="#_upgrade_steps">Upgrade steps</a>
+<ul class="sectlevel2">
+<li><a href="#_preconditions">Preconditions</a></li>
+<li><a href="#_running_elm_upgrade">Running elm-upgrade</a></li>
+<li><a href="#_service_api_http_and_json_changes">Service API - Http and Json changes</a></li>
+<li><a href="#_handling_the_service_api_changes">Handling the Service API changes</a></li>
+<li><a href="#_handling_changes_to_url_parser">Handling changes to url-parser</a></li>
+<li><a href="#_handling_changes_to_navigation_in_main">Handling changes to Navigation in Main</a></li>
+</ul>
+</li>
+<li><a href="#_summary">Summary</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Albums app is about 1400 lines of Elm code, so it&#8217;s small, but still it might give you some pointers to the effort
+involved when upgrading. With this upgrade I tried to be semi-structured in my commits so I&#8217;ll be referring to them as we go along.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_upgrade_steps">Upgrade steps</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_preconditions">Preconditions</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Install <a href="https://guide.elm-lang.org/install.html">Elm 0.18</a></p>
+</li>
+<li>
+<p>Install <a href="https://github.com/avh4/elm-format#installation-">elm-format</a></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_running_elm_upgrade">Running elm-upgrade</h3>
+<div class="paragraph">
+<p>For this release <a href="https://github.com/avh4">@avh4</a> and <a href="https://github.com/eeue56">@eeue56</a> created the very
+handy <a href="https://github.com/avh4/elm-upgrade">elm-upgrade</a> util to ease the upgrade process.</p>
+</div>
+<div class="paragraph">
+<p>To summarize what elm-upgrade does; It upgrades your project definition (elm-package.json) and it runs elm-format on your
+code in "upgrade mode" so that most of the syntax changes in core is fixed.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>It worked great ! Only snag I had was that it failed to upgrade elm-community/json-extra, but hey that was simple enough for me to do afterwords.</p>
+</div>
+<div class="paragraph">
+<p>Here you can see the resulting  <a href="https://github.com/rundis/albums/commit/f9284e22767f4b7e5c9a0524a06406d2f40767cc">diff</a>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_service_api_http_and_json_changes">Service API - Http and Json changes</h3>
+<div class="sect3">
+<h4 id="_changing_a_simple_get_request">Changing a simple get request</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">getArtist
+  :  Int
+  -> (Result Http.Error Artist -> msg)
+  -> Cmd msg             // <1>
+getArtist id msg =
+   Http.get
+       (baseUrl ++ "/artists/" ++ toString id)
+       artistDecoder     // <2>
+       ❘> Http.send msg  // <3></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We no longer have a separate msg for errors. Our msg type constructor
+should now take a Result</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The order of url and decoder has swapped</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>To send the request created in 2, we use the send function</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">getArtist
+    :  Int
+    -&gt; (Http.Error -&gt; msg)
+    -&gt; (Artist -&gt; msg)
+    -&gt; Cmd msg
+getArtist id errorMsg msg =
+   Http.get artistDecoder (baseUrl ++ "/artists/" ++ toString id)
+       ❘&gt; Task.perform errorMsg msg</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+If you wish to keep the old behavior, you can convert a request to
+a task using <a href="http://package.elm-lang.org/packages/elm-lang/http/1.0.0/Http#toTask">toTask</a>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_changing_a_post_request">Changing a post request</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">createArtist
+   : ArtistRequest a
+  -> (Result Http.Error Artist -> msg)
+  -> Cmd msg
+createArtist artist msg =
+    Http.post
+        (baseUrl ++ "/artists")
+        (Http.stringBody              // <1>
+            "application/json"
+            <❘ encodeArtist artist)
+        artistDecoder
+        ❘> Http.send msg</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>With 0.18 we can specify content-type for body and now we can actually use the post function ! Yay :-)</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">createArtist
+   : ArtistRequest a
+  -&gt; (Result Http.Error Artist -&gt; msg)
+  -&gt; Cmd msg
+createArtist artist errorMsg msg =
+   Http.send Http.defaultSettings
+       { verb = "POST"
+       , url = baseUrl ++ "/artists"
+       , body = Http.string (encodeArtist artist)
+       , headers =
+           [ ( "Content-Type"
+             , "application/json"
+             )
+           ]
+       }
+       ❘&gt; Http.fromJson artistDecoder
+       ❘&gt; Task.perform errorMsg msg</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_changing_a_put_request">Changing a put request</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">updateArtist
+   : Artist
+  -> (Result Http.Error Artist -> msg)
+  -> Cmd msg
+updateArtist artist msg =
+    Http.request                           // <1>
+        { method = "PUT"
+        , headers = []                     // <2>
+        , url = baseUrl
+                  ++ "/artists/"
+                  ++ toString artist.id
+        , body = Http.stringBody
+                   "application/json"
+                   <❘ encodeArtist artist
+        , expect = Http.expectJson
+                     artistDecoder // <3>
+        , timeout = Nothing
+        , withCredentials = False
+        }
+        ❘> Http.send msg</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Rather than just passsing a record we use the request function
+to gain full control of the request creation</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We don&#8217;t need to specify the content header here, because we specify that
+when creating the body</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>We configure the request to expect a json response providing it with our json decoder</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">updateArtist
+   : Artist
+  -&gt; (Http.Error -&gt; msg)
+  -&gt; (Artist -&gt; msg)
+  -&gt; Cmd msg
+updateArtist artist errorMsg msg =
+   Http.send Http.defaultSettings
+       { verb = "PUT"
+       , headers =
+            [ ( "Content-Type"
+              , "application/json"
+              )
+            ]
+       , url = baseUrl
+                 ++ "/artists/"
+                 ++ toString artist.id
+       , body = Http.string (encodeArtist artist)
+       }
+       ❘&gt; Http.fromJson artistDecoder
+       ❘&gt; Task.perform errorMsg msg</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_changing_json_decoding">Changing Json Decoding</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">albumDecoder : JsonD.Decoder Album
+albumDecoder =
+JsonD.map4 Album                           <i class="conum" data-value="1"></i><b>(1)</b>
+  (JsonD.field "albumId"  JsonD.int)       <i class="conum" data-value="2"></i><b>(2)</b>
+  (JsonD.field "albumName"  JsonD.string)
+  (JsonD.field "albumArtistId"  JsonD.int)
+  (JsonD.field "albumTracks"
+     &lt;❘ JsonD.list trackDecoder)</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>You can use the map&lt;n&gt; functions to map several fields</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Infix syntax has been removed in favor of the explicit field function</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">albumDecoder : JsonD.Decoder Album
+albumDecoder =
+JsonD.object4 Album
+  ("albumId" := JsonD.int) JsonD.int)
+  ("albumName" := JsonD.string)
+  ("albumArtistId" := JsonD.int)
+  ("albumTracks" := JsonD.list trackDecoder)</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+You can view the complete diff for the Service Api <a href="https://github.com/rundis/albums/commit/20a9ff4a459ab5d04821b45bf2fdae18b36e0605">here</a>.
+(Please note that the headers for the put request should not be there, fixed in another commit)
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_handling_the_service_api_changes">Handling the Service API changes</h3>
+<div class="paragraph">
+<p>We&#8217;ll use the artistlisting page as an example for handling the api changes.
+The big change is really that the messages has changed signature and we can remove a few.</p>
+</div>
+<div class="sect3">
+<h4 id="_msg_type_changes">Msg type changes</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Msg
+    = Show
+    ❘ HandleArtistsRetrieved
+       (Result Http.Error (List Artist))   <i class="conum" data-value="1"></i><b>(1)</b>
+    ❘ DeleteArtist Int
+    ❘ HandleArtistDeleted
+       (Result Http.Error String)</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We handle the success case and failure case with the same message using the Result type</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">type Msg
+   = Show
+   ❘ HandleArtistsRetrieved (List Artist)
+   ❘ FetchArtistsFailed Http.Error
+   ❘ DeleteArtist Int
+   ❘ HandleArtistDeleted
+   ❘ DeleteFailed</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_changes_to_the_update_function">Changes to the update function</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update action model =
+    case action of
+        Show -&gt;
+            ( model, mountCmd )
+
+        HandleArtistsRetrieved res -&gt;
+            case res of
+                Result.Ok artists -&gt;    <i class="conum" data-value="1"></i><b>(1)</b>
+                    ( { model ❘ artists = artists }
+                    , Cmd.none
+                    )
+
+                Result.Err err -&gt;      <i class="conum" data-value="2"></i><b>(2)</b>
+                    let _ =
+                        Debug.log "Error retrieving artist" err
+                    in
+                        (model, Cmd.none)
+
+
+        DeleteArtist id -&gt;
+            ( model
+            , deleteArtist id HandleArtistDeleted
+            )
+
+        HandleArtistDeleted res -&gt;
+            case res of
+                Result.Ok _ -&gt;
+                    update Show model
+
+                Result.Err err -&gt;
+                    let _ =
+                        Debug.log "Error deleting artist" err
+                    in
+                        (model, Cmd.none)</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Handling the success case is similar to how we did in 0.17</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Poor man&#8217;s error handling&#8230;&#8203; don&#8217;t do this for realz !</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update action model =
+    case action of
+        Show -&gt;
+            ( model, mountCmd )
+
+        HandleArtistsRetrieved artists -&gt;
+            ( { model ❘ artists = artists }
+            , Cmd.none
+            )
+
+        FetchArtistsFailed err -&gt;
+            ( model, Cmd.none )
+
+        DeleteArtist id -&gt;
+            ( model
+            , deleteArtist
+                id
+                DeleteFailed
+                HandleArtistDeleted )
+
+        HandleArtistDeleted -&gt;
+            update Show model
+
+        DeleteFailed -&gt;
+            ( model, Cmd.none )</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The diffs for the various pages can be found here:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/rundis/albums/commit/2c7ced33102f54ee974034c20a5eaa7198da9c49">ArtistListing.elm</a></p>
+</li>
+<li>
+<p><a href="https://github.com/rundis/albums/commit/64f0aa1276fd26ba69fca748504a5324292d2db2">ArtistDetail.elm</a></p>
+</li>
+<li>
+<p><a href="https://github.com/rundis/albums/commit/2a8f8dbdba0c17a15764734c6d83b15e848f279f">AlbumDetail.elm</a></p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_handling_changes_to_url_parser">Handling changes to url-parser</h3>
+<div class="paragraph">
+<p>The <a href="http://package.elm-lang.org/packages/evancz/url-parser/latest">url-parser</a> package has had a few changes.
+Let&#8217;s have a closer look</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">routeParser : Parser (Route -&gt; a) a
+routeParser =
+    UrlParser.oneOf
+        [ UrlParser.map Home (s "")   <i class="conum" data-value="1"></i><b>(1)</b>
+        , UrlParser.map
+            NewArtistPage (s "artists" &lt;/&gt; s "new")
+        , UrlParser.map
+            NewArtistAlbumPage
+            (s "artists"
+             &lt;/&gt; int
+             &lt;/&gt; s "albums"
+             &lt;/&gt; s "new")
+        , UrlParser.map
+            ArtistDetailPage
+            (s "artists" &lt;/&gt; int)
+        , UrlParser.map
+            ArtistListingPage
+            (s "artists")
+        , UrlParser.map
+            AlbumDetailPage
+            (s "albums" &lt;/&gt; int)
+        ]
+
+
+decode : Location -&gt; Maybe Route    <i class="conum" data-value="2"></i><b>(2)</b>
+decode location =
+    UrlParser.parsePath
+       routeParser location <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Consistency matters, format is now map !</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Rather than returning a Result, we now return a Maybe</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>You can use parsePath and/or parseHash to parse the url. For our case
+parsePath is what we need here.</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">routeParser : Parser (Route -&gt; a) a
+routeParser =
+    oneOf
+        [ format Home (s "")
+        , format
+            NewArtistPage
+            (s "artists" &lt;/&gt; s "new")
+        , format
+            NewArtistAlbumPage
+            ( s "artists"
+              &lt;/&gt; int
+              &lt;/&gt; s "albums"
+              &lt;/&gt; s "new"
+            )
+        , format
+            ArtistDetailPage
+            (s "artists" &lt;/&gt; int)
+        , format
+            ArtistListingPage (s "artists")
+        , format
+            AlbumDetailPage (s "albums" &lt;/&gt; int)
+        ]
+
+
+decode : Location -&gt; Result String Route
+decode location =
+    parse
+      identity
+      routeParser
+      (String.dropLeft 1 location.pathname)</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_handling_changes_to_navigation_in_main">Handling changes to Navigation in Main</h3>
+<div class="sect3">
+<h4 id="_changing_the_main_function">Changing the main function</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">main : Program Never Model Msg    <i class="conum" data-value="1"></i><b>(1)</b>
+main =
+    Navigation.program UrlChange  <i class="conum" data-value="2"></i><b>(2)</b>
+        { init = init
+        , view = view
+        , update = update         <i class="conum" data-value="3"></i><b>(3)</b>
+        , subscriptions = \_ -&gt; Sub.none
+        }</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The function signature for main has become more specific
+(probably triggered by the introduction of the debugger)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We now supply a message constructor for url changes. This message
+is passed into our update function as any other message. Nice !</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The urlUpdate field is gone, all updates flows through our provider update function</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">main : Program Never
+main =
+    Navigation.program
+        (Navigation.makeParser Routes.decode)
+        { init = init
+        , view = view
+        , update = update
+        , urlUpdate = urlUpdate
+        , subscriptions = \_ -&gt; Sub.none
+        }</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_changing_the_init_function">Changing the init function</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">init : Navigation.Location -&gt; ( Model, Cmd Msg )
+init loc =
+    update (UrlChange loc) initialModel</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We get the initial url passed as a Location to the init function.
+We just delegate to the update function to handle the url to load the appropriate
+page.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">init : Result String Route -&gt; ( Model, Cmd Msg )
+init result =
+    urlUpdate result initialModel</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_changing_the_main_update_function">Changing the main update function</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">0.18</th>
+<th class="tableblock halign-left valign-top">0.17</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+-- .. everything else the same really, exept;
+
+   UrlChange loc -&gt;              <i class="conum" data-value="1"></i><b>(1)</b>
+            urlUpdate loc model
+
+
+urlUpdate                        <i class="conum" data-value="2"></i><b>(2)</b>
+   : Navigation.Location
+  -&gt; Model
+  -&gt; ( Model, Cmd Msg )
+urlUpdate loc model =
+    case (Routes.decode loc) of  <i class="conum" data-value="3"></i><b>(3)</b>
+        Nothing  -&gt;    <i class="conum" data-value="4"></i><b>(4)</b>
+            model ! [ Navigation.modifyUrl
+                       (Routes.encode model.route) ]
+
+        Just (ArtistListingPage as route) -&gt;  <i class="conum" data-value="5"></i><b>(5)</b>
+            { model ❘ route = route }
+                ! [ Cmd.map
+                      ArtistListingMsg
+                      ArtistListing.mountCmd ]
+
+        -- etc for the rest of the routes</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We have a new case for the UrlChange Msg we provided in the main function
+We just delegate to our exising urlUpdate function (more or less)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We&#8217;ve changed the signagure to receive a Location rather that are result</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Routes.decode return a Maybe so we pattern match on the result</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>If parsing the url was unsuccessful we change the url to our default url (provided by initialModel, the first time otherwise it will change the url back to the previously successful one)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>When successful we change the url and initialize the appropriate route (/page)</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-elm" data-lang="elm">update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+
+    -- .. etc
+
+urlUpdate
+   : Result String Route
+  -&gt; Model
+  -&gt; ( Model, Cmd Msg )
+urlUpdate result model =
+    case result of
+        Err _ -&gt;
+            model ! [ Navigation.modifyUrl
+                        (Routes.encode model.route) ]
+
+        Ok (ArtistListingPage as route) -&gt;
+            { model ❘ route = route }
+                ! [ Cmd.map
+                      ArtistListingMsg
+                      ArtistListing.mountCmd ]
+
+        -- etc for the reset of the routes</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+You can see the complete diff <a href="https://github.com/rundis/albums/commit/eade9f1880382fe13e43c00a2e7bf7de940ec599">here</a>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Obviosuly there were quite a few changes, but none of the were really that big and to my mind all of the changed things for the better.
+Using elm-upgrade and the upgrade feature in elm-format really helped kick-start the conversion, I have great hopes for this getting even better in the future.</p>
+</div>
+<div class="paragraph">
+<p>I haven&#8217;t covered the the re-introduction of the debugger in elm-reactor, which was the big new feature in Elm 0.18.</p>
+</div>
+<div class="paragraph">
+<p>In addition to Elm 0.18 being a nice incremental improvement, it has been great to see that the community
+has really worked hard to upgrade packages and helping out making the upgrade as smooth as possible. Great stuff !</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+A little mind-you that even though this simple app was easy to upgrade that might not be the case for you. But stories
+I&#8217;ve heard so far has a similar ring to them. I guess the biggest hurdle for upgrading is dependency on lot&#8217;s of third-party packages
+that might take some time before being upgraded to 0.18. Some patience might be needed.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div></p>
   			<a href="/blog/2016/elm_light_ast.html"><h1>Elm Light 0.4.0 - AST driven Elm features in Light Table using PEG.js</h1></a>
   			<p>15 September 2016</p>
         <p><em>Tags: </em>

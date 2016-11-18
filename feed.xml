@@ -6,9 +6,952 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Mon, 26 Sep 2016 13:25:28 +0200</pubDate>
-    <lastBuildDate>Mon, 26 Sep 2016 13:25:28 +0200</lastBuildDate>
+    <pubDate>Fri, 18 Nov 2016 23:46:02 +0100</pubDate>
+    <lastBuildDate>Fri, 18 Nov 2016 23:46:02 +0100</lastBuildDate>
 
+    <item>
+      <title>Typed up CRUD SPA with Haskell and Elm - Part 6: Elm 0.18 Upgrade</title>
+      <link>http://rundis.github.io/blog/2016/haskel_elm_spa_part6.html</link>
+      <pubDate>Mon, 21 Nov 2016 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2016/haskel_elm_spa_part6.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Another &lt;a href=&quot;http://elm-lang.org/blog/the-perfect-bug-report&quot;&gt;Elm release&lt;/a&gt; and it&amp;#8217;s time for yet another upgrade post.
+The changes outlined in the &lt;a href=&quot;https://github.com/elm-lang/elm-platform/blob/master/upgrade-docs/0.18.md&quot;&gt;migration guide&lt;/a&gt; didn&amp;#8217;t look
+to intimidating, so I jumped into it with pretty high confidence. It took me about 2 hours to get through and it was almost an instant success.
+The compiler had my back all along, helped by my &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;editor&lt;/a&gt; showing errors inline and docs/signatures whenever I was in doubt.
+I didn&amp;#8217;t even have to resort to google once to figure out what to do. I said it almost worked the first time. Well
+I had managed to add a http header twice which Servant wasn&amp;#8217;t to impressed by, but once that was fixed everything was working hunky dory !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;Useful resources&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Check out the other &lt;a href=&quot;http://rundis.github.io/blog/tags/haskellelmspa.html&quot;&gt;episodes&lt;/a&gt; in this blog series.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The accompanying &lt;a href=&quot;https://github.com/rundis/albums&quot;&gt;Albums&lt;/a&gt; sample app is on github, and there is a tag
+for each episode&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div id=&quot;toc&quot; class=&quot;toc&quot;&gt;
+&lt;div id=&quot;toctitle&quot; class=&quot;title&quot;&gt;Table of Contents&lt;/div&gt;
+&lt;ul class=&quot;sectlevel1&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_introduction&quot;&gt;Introduction&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_upgrade_steps&quot;&gt;Upgrade steps&lt;/a&gt;
+&lt;ul class=&quot;sectlevel2&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#_preconditions&quot;&gt;Preconditions&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_running_elm_upgrade&quot;&gt;Running elm-upgrade&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_service_api_http_and_json_changes&quot;&gt;Service API - Http and Json changes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_handling_the_service_api_changes&quot;&gt;Handling the Service API changes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_handling_changes_to_url_parser&quot;&gt;Handling changes to url-parser&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_handling_changes_to_navigation_in_main&quot;&gt;Handling changes to Navigation in Main&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#_summary&quot;&gt;Summary&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The Albums app is about 1400 lines of Elm code, so it&amp;#8217;s small, but still it might give you some pointers to the effort
+involved when upgrading. With this upgrade I tried to be semi-structured in my commits so I&amp;#8217;ll be referring to them as we go along.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_upgrade_steps&quot;&gt;Upgrade steps&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_preconditions&quot;&gt;Preconditions&lt;/h3&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Install &lt;a href=&quot;https://guide.elm-lang.org/install.html&quot;&gt;Elm 0.18&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Install &lt;a href=&quot;https://github.com/avh4/elm-format#installation-&quot;&gt;elm-format&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_running_elm_upgrade&quot;&gt;Running elm-upgrade&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For this release &lt;a href=&quot;https://github.com/avh4&quot;&gt;@avh4&lt;/a&gt; and &lt;a href=&quot;https://github.com/eeue56&quot;&gt;@eeue56&lt;/a&gt; created the very
+handy &lt;a href=&quot;https://github.com/avh4/elm-upgrade&quot;&gt;elm-upgrade&lt;/a&gt; util to ease the upgrade process.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;To summarize what elm-upgrade does; It upgrades your project definition (elm-package.json) and it runs elm-format on your
+code in &quot;upgrade mode&quot; so that most of the syntax changes in core is fixed.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;It worked great ! Only snag I had was that it failed to upgrade elm-community/json-extra, but hey that was simple enough for me to do afterwords.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Here you can see the resulting  &lt;a href=&quot;https://github.com/rundis/albums/commit/f9284e22767f4b7e5c9a0524a06406d2f40767cc&quot;&gt;diff&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_service_api_http_and_json_changes&quot;&gt;Service API - Http and Json changes&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_changing_a_simple_get_request&quot;&gt;Changing a simple get request&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;getArtist
+  :  Int
+  -&gt; (Result Http.Error Artist -&gt; msg)
+  -&gt; Cmd msg             // &lt;1&gt;
+getArtist id msg =
+   Http.get
+       (baseUrl ++ &quot;/artists/&quot; ++ toString id)
+       artistDecoder     // &lt;2&gt;
+       ❘&gt; Http.send msg  // &lt;3&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We no longer have a separate msg for errors. Our msg type constructor
+should now take a Result&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The order of url and decoder has swapped&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;To send the request created in 2, we use the send function&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;getArtist
+    :  Int
+    -&amp;gt; (Http.Error -&amp;gt; msg)
+    -&amp;gt; (Artist -&amp;gt; msg)
+    -&amp;gt; Cmd msg
+getArtist id errorMsg msg =
+   Http.get artistDecoder (baseUrl ++ &quot;/artists/&quot; ++ toString id)
+       ❘&amp;gt; Task.perform errorMsg msg&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;admonitionblock tip&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-tip&quot; title=&quot;Tip&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+If you wish to keep the old behavior, you can convert a request to
+a task using &lt;a href=&quot;http://package.elm-lang.org/packages/elm-lang/http/1.0.0/Http#toTask&quot;&gt;toTask&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_changing_a_post_request&quot;&gt;Changing a post request&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;createArtist
+   : ArtistRequest a
+  -&gt; (Result Http.Error Artist -&gt; msg)
+  -&gt; Cmd msg
+createArtist artist msg =
+    Http.post
+        (baseUrl ++ &quot;/artists&quot;)
+        (Http.stringBody              // &lt;1&gt;
+            &quot;application/json&quot;
+            &lt;❘ encodeArtist artist)
+        artistDecoder
+        ❘&gt; Http.send msg&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;With 0.18 we can specify content-type for body and now we can actually use the post function ! Yay :-)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;createArtist
+   : ArtistRequest a
+  -&amp;gt; (Result Http.Error Artist -&amp;gt; msg)
+  -&amp;gt; Cmd msg
+createArtist artist errorMsg msg =
+   Http.send Http.defaultSettings
+       { verb = &quot;POST&quot;
+       , url = baseUrl ++ &quot;/artists&quot;
+       , body = Http.string (encodeArtist artist)
+       , headers =
+           [ ( &quot;Content-Type&quot;
+             , &quot;application/json&quot;
+             )
+           ]
+       }
+       ❘&amp;gt; Http.fromJson artistDecoder
+       ❘&amp;gt; Task.perform errorMsg msg&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_changing_a_put_request&quot;&gt;Changing a put request&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;updateArtist
+   : Artist
+  -&gt; (Result Http.Error Artist -&gt; msg)
+  -&gt; Cmd msg
+updateArtist artist msg =
+    Http.request                           // &lt;1&gt;
+        { method = &quot;PUT&quot;
+        , headers = []                     // &lt;2&gt;
+        , url = baseUrl
+                  ++ &quot;/artists/&quot;
+                  ++ toString artist.id
+        , body = Http.stringBody
+                   &quot;application/json&quot;
+                   &lt;❘ encodeArtist artist
+        , expect = Http.expectJson
+                     artistDecoder // &lt;3&gt;
+        , timeout = Nothing
+        , withCredentials = False
+        }
+        ❘&gt; Http.send msg&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Rather than just passsing a record we use the request function
+to gain full control of the request creation&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We don&amp;#8217;t need to specify the content header here, because we specify that
+when creating the body&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We configure the request to expect a json response providing it with our json decoder&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;updateArtist
+   : Artist
+  -&amp;gt; (Http.Error -&amp;gt; msg)
+  -&amp;gt; (Artist -&amp;gt; msg)
+  -&amp;gt; Cmd msg
+updateArtist artist errorMsg msg =
+   Http.send Http.defaultSettings
+       { verb = &quot;PUT&quot;
+       , headers =
+            [ ( &quot;Content-Type&quot;
+              , &quot;application/json&quot;
+              )
+            ]
+       , url = baseUrl
+                 ++ &quot;/artists/&quot;
+                 ++ toString artist.id
+       , body = Http.string (encodeArtist artist)
+       }
+       ❘&amp;gt; Http.fromJson artistDecoder
+       ❘&amp;gt; Task.perform errorMsg msg&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_changing_json_decoding&quot;&gt;Changing Json Decoding&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;albumDecoder : JsonD.Decoder Album
+albumDecoder =
+JsonD.map4 Album                           &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+  (JsonD.field &quot;albumId&quot;  JsonD.int)       &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+  (JsonD.field &quot;albumName&quot;  JsonD.string)
+  (JsonD.field &quot;albumArtistId&quot;  JsonD.int)
+  (JsonD.field &quot;albumTracks&quot;
+     &amp;lt;❘ JsonD.list trackDecoder)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;You can use the map&amp;lt;n&amp;gt; functions to map several fields&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Infix syntax has been removed in favor of the explicit field function&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;albumDecoder : JsonD.Decoder Album
+albumDecoder =
+JsonD.object4 Album
+  (&quot;albumId&quot; := JsonD.int) JsonD.int)
+  (&quot;albumName&quot; := JsonD.string)
+  (&quot;albumArtistId&quot; := JsonD.int)
+  (&quot;albumTracks&quot; := JsonD.list trackDecoder)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+You can view the complete diff for the Service Api &lt;a href=&quot;https://github.com/rundis/albums/commit/20a9ff4a459ab5d04821b45bf2fdae18b36e0605&quot;&gt;here&lt;/a&gt;.
+(Please note that the headers for the put request should not be there, fixed in another commit)
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_handling_the_service_api_changes&quot;&gt;Handling the Service API changes&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We&amp;#8217;ll use the artistlisting page as an example for handling the api changes.
+The big change is really that the messages has changed signature and we can remove a few.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_msg_type_changes&quot;&gt;Msg type changes&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Msg
+    = Show
+    ❘ HandleArtistsRetrieved
+       (Result Http.Error (List Artist))   &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+    ❘ DeleteArtist Int
+    ❘ HandleArtistDeleted
+       (Result Http.Error String)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We handle the success case and failure case with the same message using the Result type&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;type Msg
+   = Show
+   ❘ HandleArtistsRetrieved (List Artist)
+   ❘ FetchArtistsFailed Http.Error
+   ❘ DeleteArtist Int
+   ❘ HandleArtistDeleted
+   ❘ DeleteFailed&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_changes_to_the_update_function&quot;&gt;Changes to the update function&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update action model =
+    case action of
+        Show -&amp;gt;
+            ( model, mountCmd )
+
+        HandleArtistsRetrieved res -&amp;gt;
+            case res of
+                Result.Ok artists -&amp;gt;    &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+                    ( { model ❘ artists = artists }
+                    , Cmd.none
+                    )
+
+                Result.Err err -&amp;gt;      &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+                    let _ =
+                        Debug.log &quot;Error retrieving artist&quot; err
+                    in
+                        (model, Cmd.none)
+
+
+        DeleteArtist id -&amp;gt;
+            ( model
+            , deleteArtist id HandleArtistDeleted
+            )
+
+        HandleArtistDeleted res -&amp;gt;
+            case res of
+                Result.Ok _ -&amp;gt;
+                    update Show model
+
+                Result.Err err -&amp;gt;
+                    let _ =
+                        Debug.log &quot;Error deleting artist&quot; err
+                    in
+                        (model, Cmd.none)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Handling the success case is similar to how we did in 0.17&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Poor man&amp;#8217;s error handling&amp;#8230;&amp;#8203; don&amp;#8217;t do this for realz !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update action model =
+    case action of
+        Show -&amp;gt;
+            ( model, mountCmd )
+
+        HandleArtistsRetrieved artists -&amp;gt;
+            ( { model ❘ artists = artists }
+            , Cmd.none
+            )
+
+        FetchArtistsFailed err -&amp;gt;
+            ( model, Cmd.none )
+
+        DeleteArtist id -&amp;gt;
+            ( model
+            , deleteArtist
+                id
+                DeleteFailed
+                HandleArtistDeleted )
+
+        HandleArtistDeleted -&amp;gt;
+            update Show model
+
+        DeleteFailed -&amp;gt;
+            ( model, Cmd.none )&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The diffs for the various pages can be found here:&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/rundis/albums/commit/2c7ced33102f54ee974034c20a5eaa7198da9c49&quot;&gt;ArtistListing.elm&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/rundis/albums/commit/64f0aa1276fd26ba69fca748504a5324292d2db2&quot;&gt;ArtistDetail.elm&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/rundis/albums/commit/2a8f8dbdba0c17a15764734c6d83b15e848f279f&quot;&gt;AlbumDetail.elm&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_handling_changes_to_url_parser&quot;&gt;Handling changes to url-parser&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The &lt;a href=&quot;http://package.elm-lang.org/packages/evancz/url-parser/latest&quot;&gt;url-parser&lt;/a&gt; package has had a few changes.
+Let&amp;#8217;s have a closer look&lt;/p&gt;
+&lt;/div&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;routeParser : Parser (Route -&amp;gt; a) a
+routeParser =
+    UrlParser.oneOf
+        [ UrlParser.map Home (s &quot;&quot;)   &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+        , UrlParser.map
+            NewArtistPage (s &quot;artists&quot; &amp;lt;/&amp;gt; s &quot;new&quot;)
+        , UrlParser.map
+            NewArtistAlbumPage
+            (s &quot;artists&quot;
+             &amp;lt;/&amp;gt; int
+             &amp;lt;/&amp;gt; s &quot;albums&quot;
+             &amp;lt;/&amp;gt; s &quot;new&quot;)
+        , UrlParser.map
+            ArtistDetailPage
+            (s &quot;artists&quot; &amp;lt;/&amp;gt; int)
+        , UrlParser.map
+            ArtistListingPage
+            (s &quot;artists&quot;)
+        , UrlParser.map
+            AlbumDetailPage
+            (s &quot;albums&quot; &amp;lt;/&amp;gt; int)
+        ]
+
+
+decode : Location -&amp;gt; Maybe Route    &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+decode location =
+    UrlParser.parsePath
+       routeParser location &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Consistency matters, format is now map !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Rather than returning a Result, we now return a Maybe&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;You can use parsePath and/or parseHash to parse the url. For our case
+parsePath is what we need here.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;routeParser : Parser (Route -&amp;gt; a) a
+routeParser =
+    oneOf
+        [ format Home (s &quot;&quot;)
+        , format
+            NewArtistPage
+            (s &quot;artists&quot; &amp;lt;/&amp;gt; s &quot;new&quot;)
+        , format
+            NewArtistAlbumPage
+            ( s &quot;artists&quot;
+              &amp;lt;/&amp;gt; int
+              &amp;lt;/&amp;gt; s &quot;albums&quot;
+              &amp;lt;/&amp;gt; s &quot;new&quot;
+            )
+        , format
+            ArtistDetailPage
+            (s &quot;artists&quot; &amp;lt;/&amp;gt; int)
+        , format
+            ArtistListingPage (s &quot;artists&quot;)
+        , format
+            AlbumDetailPage (s &quot;albums&quot; &amp;lt;/&amp;gt; int)
+        ]
+
+
+decode : Location -&amp;gt; Result String Route
+decode location =
+    parse
+      identity
+      routeParser
+      (String.dropLeft 1 location.pathname)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_handling_changes_to_navigation_in_main&quot;&gt;Handling changes to Navigation in Main&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_changing_the_main_function&quot;&gt;Changing the main function&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;main : Program Never Model Msg    &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+main =
+    Navigation.program UrlChange  &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+        { init = init
+        , view = view
+        , update = update         &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+        , subscriptions = \_ -&amp;gt; Sub.none
+        }&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The function signature for main has become more specific
+(probably triggered by the introduction of the debugger)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We now supply a message constructor for url changes. This message
+is passed into our update function as any other message. Nice !&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;The urlUpdate field is gone, all updates flows through our provider update function&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;main : Program Never
+main =
+    Navigation.program
+        (Navigation.makeParser Routes.decode)
+        { init = init
+        , view = view
+        , update = update
+        , urlUpdate = urlUpdate
+        , subscriptions = \_ -&amp;gt; Sub.none
+        }&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_changing_the_init_function&quot;&gt;Changing the init function&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;init : Navigation.Location -&amp;gt; ( Model, Cmd Msg )
+init loc =
+    update (UrlChange loc) initialModel&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We get the initial url passed as a Location to the init function.
+We just delegate to the update function to handle the url to load the appropriate
+page.&lt;/p&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;init : Result String Route -&amp;gt; ( Model, Cmd Msg )
+init result =
+    urlUpdate result initialModel&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_changing_the_main_update_function&quot;&gt;Changing the main update function&lt;/h4&gt;
+&lt;table class=&quot;tableblock frame-all grid-all spread&quot;&gt;
+&lt;colgroup&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;col style=&quot;width: 50%;&quot;&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.18&lt;/th&gt;
+&lt;th class=&quot;tableblock halign-left valign-top&quot;&gt;0.17&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update msg model =
+-- .. everything else the same really, exept;
+
+   UrlChange loc -&amp;gt;              &lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;(1)&lt;/b&gt;
+            urlUpdate loc model
+
+
+urlUpdate                        &lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;(2)&lt;/b&gt;
+   : Navigation.Location
+  -&amp;gt; Model
+  -&amp;gt; ( Model, Cmd Msg )
+urlUpdate loc model =
+    case (Routes.decode loc) of  &lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;(3)&lt;/b&gt;
+        Nothing  -&amp;gt;    &lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;(4)&lt;/b&gt;
+            model ! [ Navigation.modifyUrl
+                       (Routes.encode model.route) ]
+
+        Just (ArtistListingPage as route) -&amp;gt;  &lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;(5)&lt;/b&gt;
+            { model ❘ route = route }
+                ! [ Cmd.map
+                      ArtistListingMsg
+                      ArtistListing.mountCmd ]
+
+        -- etc for the rest of the routes&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;colist arabic&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;1&quot;&gt;&lt;/i&gt;&lt;b&gt;1&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We have a new case for the UrlChange Msg we provided in the main function
+We just delegate to our exising urlUpdate function (more or less)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;2&quot;&gt;&lt;/i&gt;&lt;b&gt;2&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;We&amp;#8217;ve changed the signagure to receive a Location rather that are result&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Routes.decode return a Maybe so we pattern match on the result&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;4&quot;&gt;&lt;/i&gt;&lt;b&gt;4&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;If parsing the url was unsuccessful we change the url to our default url (provided by initialModel, the first time otherwise it will change the url back to the previously successful one)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;5&quot;&gt;&lt;/i&gt;&lt;b&gt;5&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;When successful we change the url and initialize the appropriate route (/page)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;td class=&quot;tableblock halign-left valign-top&quot;&gt;&lt;div&gt;&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;prettyprint highlight&quot;&gt;&lt;code class=&quot;language-elm&quot; data-lang=&quot;elm&quot;&gt;update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+
+    -- .. etc
+
+urlUpdate
+   : Result String Route
+  -&amp;gt; Model
+  -&amp;gt; ( Model, Cmd Msg )
+urlUpdate result model =
+    case result of
+        Err _ -&amp;gt;
+            model ! [ Navigation.modifyUrl
+                        (Routes.encode model.route) ]
+
+        Ok (ArtistListingPage as route) -&amp;gt;
+            { model ❘ route = route }
+                ! [ Cmd.map
+                      ArtistListingMsg
+                      ArtistListing.mountCmd ]
+
+        -- etc for the reset of the routes&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+You can see the complete diff &lt;a href=&quot;https://github.com/rundis/albums/commit/eade9f1880382fe13e43c00a2e7bf7de940ec599&quot;&gt;here&lt;/a&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Obviosuly there were quite a few changes, but none of the were really that big and to my mind all of the changed things for the better.
+Using elm-upgrade and the upgrade feature in elm-format really helped kick-start the conversion, I have great hopes for this getting even better in the future.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I haven&amp;#8217;t covered the the re-introduction of the debugger in elm-reactor, which was the big new feature in Elm 0.18.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In addition to Elm 0.18 being a nice incremental improvement, it has been great to see that the community
+has really worked hard to upgrade packages and helping out making the upgrade as smooth as possible. Great stuff !&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock warning&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-warning&quot; title=&quot;Warning&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+A little mind-you that even though this simple app was easy to upgrade that might not be the case for you. But stories
+I&amp;#8217;ve heard so far has a similar ring to them. I guess the biggest hurdle for upgrading is dependency on lot&amp;#8217;s of third-party packages
+that might take some time before being upgraded to 0.18. Some patience might be needed.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Elm Light 0.4.0 - AST driven Elm features in Light Table using PEG.js</title>
       <link>http://rundis.github.io/blog/2016/elm_light_ast.html</link>
