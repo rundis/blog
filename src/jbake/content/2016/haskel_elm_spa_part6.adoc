@@ -1,0 +1,625 @@
+= Typed up CRUD SPA with Haskell and Elm - Part 6: Elm 0.18 Upgrade
+Magnus Rundberget
+2016-11-21
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: haskell, elm, haskellelmspa
+:imagesdir: /blog/2016/
+:icons: font
+:id: haskell_elm_spa_part6
+:toc: macro
+
+
+Another http://elm-lang.org/blog/the-perfect-bug-report[Elm release] and it's time for yet another upgrade post.
+The changes outlined in the https://github.com/elm-lang/elm-platform/blob/master/upgrade-docs/0.18.md[migration guide] didn't look
+to intimidating, so I jumped into it with pretty high confidence. It took me about 2 hours to get through and it was almost an instant success.
+The compiler had my back all along, helped by my https://github.com/rundis/elm-light[editor] showing errors inline and docs/signatures whenever I was in doubt.
+I didn't even have to resort to google once to figure out what to do. I said it almost worked the first time. Well
+I had managed to add a http header twice which Servant wasn't to impressed by, but once that was fixed everything was working hunky dory !
+
+[NOTE]
+====
+.Useful resources
+* Check out the other http://rundis.github.io/blog/tags/haskellelmspa.html[episodes] in this blog series.
+* The accompanying https://github.com/rundis/albums[Albums] sample app is on github, and there is a tag
+for each episode
+====
+
+
+toc::[]
+
+== Introduction
+The Albums app is about 1400 lines of Elm code, so it's small, but still it might give you some pointers to the effort
+involved when upgrading. With this upgrade I tried to be semi-structured in my commits so I'll be referring to them as we go along.
+
+
+== Upgrade steps
+
+=== Preconditions
+- Install https://guide.elm-lang.org/install.html[Elm 0.18]
+- Install https://github.com/avh4/elm-format#installation-[elm-format]
+
+=== Running elm-upgrade
+For this release https://github.com/avh4[@avh4] and https://github.com/eeue56[@eeue56] created the very
+handy https://github.com/avh4/elm-upgrade[elm-upgrade] util to ease the upgrade process.
+
+To summarize what elm-upgrade does; It upgrades your project definition (elm-package.json) and it runs elm-format on your
+code in "upgrade mode" so that most of the syntax changes in core is fixed.
+
+[NOTE]
+====
+It worked great ! Only snag I had was that it failed to upgrade elm-community/json-extra, but hey that was simple enough for me to do afterwords.
+
+Here you can see the resulting  https://github.com/rundis/albums/commit/f9284e22767f4b7e5c9a0524a06406d2f40767cc[diff].
+====
+
+
+=== Service API - Http and Json changes
+
+
+==== Changing a simple get request
+
+|===
+|0.18  |0.17
+
+a|
+[source,elm,subs=""]
+----
+getArtist
+  :  Int
+  -> (Result Http.Error Artist -> msg)
+  -> Cmd msg             // <1>
+getArtist id msg =
+   Http.get
+       (baseUrl ++ "/artists/" ++ toString id)
+       artistDecoder     // <2>
+       ❘> Http.send msg  // <3>
+
+----
+<1> We no longer have a separate msg for errors. Our msg type constructor
+should now take a Result
+<2> The order of url and decoder has swapped
+<3> To send the request created in 2, we use the send function
+
+a|
+[source,elm]
+----
+getArtist
+    :  Int
+    -> (Http.Error -> msg)
+    -> (Artist -> msg)
+    -> Cmd msg
+getArtist id errorMsg msg =
+   Http.get artistDecoder (baseUrl ++ "/artists/" ++ toString id)
+       ❘> Task.perform errorMsg msg
+----
+
+|===
+
+TIP: If you wish to keep the old behavior, you can convert a request to
+a task using http://package.elm-lang.org/packages/elm-lang/http/1.0.0/Http#toTask[toTask]
+
+==== Changing a post request
+
+|===
+|0.18  |0.17
+
+a|
+[source,elm,subs=""]
+----
+createArtist
+   : ArtistRequest a
+  -> (Result Http.Error Artist -> msg)
+  -> Cmd msg
+createArtist artist msg =
+    Http.post
+        (baseUrl ++ "/artists")
+        (Http.stringBody              // <1>
+            "application/json"
+            <❘ encodeArtist artist)
+        artistDecoder
+        ❘> Http.send msg
+
+----
+<1> With 0.18 we can specify content-type for body and now we can actually use the post function ! Yay :-)
+
+a|
+[source,elm]
+----
+createArtist
+   : ArtistRequest a
+  -> (Result Http.Error Artist -> msg)
+  -> Cmd msg
+createArtist artist errorMsg msg =
+   Http.send Http.defaultSettings
+       { verb = "POST"
+       , url = baseUrl ++ "/artists"
+       , body = Http.string (encodeArtist artist)
+       , headers =
+           [ ( "Content-Type"
+             , "application/json"
+             )
+           ]
+       }
+       ❘> Http.fromJson artistDecoder
+       ❘> Task.perform errorMsg msg
+----
+
+|===
+
+
+==== Changing a put request
+
+|===
+|0.18  |0.17
+
+a|
+[source,elm,subs=""]
+----
+updateArtist
+   : Artist
+  -> (Result Http.Error Artist -> msg)
+  -> Cmd msg
+updateArtist artist msg =
+    Http.request                           // <1>
+        { method = "PUT"
+        , headers = []                     // <2>
+        , url = baseUrl
+                  ++ "/artists/"
+                  ++ toString artist.id
+        , body = Http.stringBody
+                   "application/json"
+                   <❘ encodeArtist artist
+        , expect = Http.expectJson
+                     artistDecoder // <3>
+        , timeout = Nothing
+        , withCredentials = False
+        }
+        ❘> Http.send msg
+
+----
+<1> Rather than just passsing a record we use the request function
+to gain full control of the request creation
+<2> We don't need to specify the content header here, because we specify that
+when creating the body
+<3> We configure the request to expect a json response providing it with our json decoder
+
+a|
+[source,elm]
+----
+updateArtist
+   : Artist
+  -> (Http.Error -> msg)
+  -> (Artist -> msg)
+  -> Cmd msg
+updateArtist artist errorMsg msg =
+   Http.send Http.defaultSettings
+       { verb = "PUT"
+       , headers =
+            [ ( "Content-Type"
+              , "application/json"
+              )
+            ]
+       , url = baseUrl
+                 ++ "/artists/"
+                 ++ toString artist.id
+       , body = Http.string (encodeArtist artist)
+       }
+       ❘> Http.fromJson artistDecoder
+       ❘> Task.perform errorMsg msg
+----
+
+|===
+
+
+==== Changing Json Decoding
+
+|===
+|0.18  |0.17
+
+a|
+[source,elm]
+----
+albumDecoder : JsonD.Decoder Album
+albumDecoder =
+JsonD.map4 Album                           // <1>
+  (JsonD.field "albumId"  JsonD.int)       // <2>
+  (JsonD.field "albumName"  JsonD.string)
+  (JsonD.field "albumArtistId"  JsonD.int)
+  (JsonD.field "albumTracks"
+     <❘ JsonD.list trackDecoder)
+----
+<1> You can use the map<n> functions to map several fields
+<2> Infix syntax has been removed in favor of the explicit field function
+
+a|
+[source,elm]
+----
+albumDecoder : JsonD.Decoder Album
+albumDecoder =
+JsonD.object4 Album
+  ("albumId" := JsonD.int) JsonD.int)
+  ("albumName" := JsonD.string)
+  ("albumArtistId" := JsonD.int)
+  ("albumTracks" := JsonD.list trackDecoder)
+----
+
+|===
+
+
+NOTE: You can view the complete diff for the Service Api https://github.com/rundis/albums/commit/20a9ff4a459ab5d04821b45bf2fdae18b36e0605[here].
+(Please note that the headers for the put request should not be there, fixed in another commit)
+
+=== Handling the Service API changes
+
+We'll use the artistlisting page as an example for handling the api changes.
+The big change is really that the messages has changed signature and we can remove a few.
+
+
+==== Msg type changes
+|===
+|0.18  |0.17
+
+a|
+[source,elm]
+----
+type Msg
+    = Show
+    ❘ HandleArtistsRetrieved
+       (Result Http.Error (List Artist))   // <1>
+    ❘ DeleteArtist Int
+    ❘ HandleArtistDeleted
+       (Result Http.Error String)
+----
+<1> We handle the success case and failure case with the same message using the Result type
+
+a|
+[source,elm]
+----
+type Msg
+   = Show
+   ❘ HandleArtistsRetrieved (List Artist)
+   ❘ FetchArtistsFailed Http.Error
+   ❘ DeleteArtist Int
+   ❘ HandleArtistDeleted
+   ❘ DeleteFailed
+----
+
+|===
+
+==== Changes to the update function
+|===
+|0.18  |0.17
+
+a|
+[source,elm]
+----
+update : Msg -> Model -> ( Model, Cmd Msg )
+update action model =
+    case action of
+        Show ->
+            ( model, mountCmd )
+
+        HandleArtistsRetrieved res ->
+            case res of
+                Result.Ok artists ->    // <1>
+                    ( { model ❘ artists = artists }
+                    , Cmd.none
+                    )
+
+                Result.Err err ->      // <2>
+                    let _ =
+                        Debug.log "Error retrieving artist" err
+                    in
+                        (model, Cmd.none)
+
+
+        DeleteArtist id ->
+            ( model
+            , deleteArtist id HandleArtistDeleted
+            )
+
+        HandleArtistDeleted res ->
+            case res of
+                Result.Ok _ ->
+                    update Show model
+
+                Result.Err err ->
+                    let _ =
+                        Debug.log "Error deleting artist" err
+                    in
+                        (model, Cmd.none)
+----
+<1> Handling the success case is similar to how we did in 0.17
+<2> Poor man's error handling... don't do this for realz !
+
+a|
+[source,elm]
+----
+update : Msg -> Model -> ( Model, Cmd Msg )
+update action model =
+    case action of
+        Show ->
+            ( model, mountCmd )
+
+        HandleArtistsRetrieved artists ->
+            ( { model ❘ artists = artists }
+            , Cmd.none
+            )
+
+        FetchArtistsFailed err ->
+            ( model, Cmd.none )
+
+        DeleteArtist id ->
+            ( model
+            , deleteArtist
+                id
+                DeleteFailed
+                HandleArtistDeleted )
+
+        HandleArtistDeleted ->
+            update Show model
+
+        DeleteFailed ->
+            ( model, Cmd.none )
+
+----
+|===
+
+[NOTE]
+====
+The diffs for the various pages can be found here:
+
+- https://github.com/rundis/albums/commit/2c7ced33102f54ee974034c20a5eaa7198da9c49[ArtistListing.elm]
+- https://github.com/rundis/albums/commit/64f0aa1276fd26ba69fca748504a5324292d2db2[ArtistDetail.elm]
+- https://github.com/rundis/albums/commit/2a8f8dbdba0c17a15764734c6d83b15e848f279f[AlbumDetail.elm]
+====
+
+=== Handling changes to url-parser
+The http://package.elm-lang.org/packages/evancz/url-parser/latest[url-parser] package has had a few changes.
+Let's have a closer look
+
+
+|===
+|0.18  |0.17
+
+a|
+[source,elm]
+----
+routeParser : Parser (Route -> a) a
+routeParser =
+    UrlParser.oneOf
+        [ UrlParser.map Home (s "")   // <1>
+        , UrlParser.map
+            NewArtistPage (s "artists" </> s "new")
+        , UrlParser.map
+            NewArtistAlbumPage
+            (s "artists"
+             </> int
+             </> s "albums"
+             </> s "new")
+        , UrlParser.map
+            ArtistDetailPage
+            (s "artists" </> int)
+        , UrlParser.map
+            ArtistListingPage
+            (s "artists")
+        , UrlParser.map
+            AlbumDetailPage
+            (s "albums" </> int)
+        ]
+
+
+decode : Location -> Maybe Route    // <2>
+decode location =
+    UrlParser.parsePath
+       routeParser location // <3>
+----
+<1> Consistency matters, format is now map !
+<2> Rather than returning a Result, we now return a Maybe
+<3> You can use parsePath and/or parseHash to parse the url. For our case
+parsePath is what we need here.
+
+a|
+[source,elm]
+----
+routeParser : Parser (Route -> a) a
+routeParser =
+    oneOf
+        [ format Home (s "")
+        , format
+            NewArtistPage
+            (s "artists" </> s "new")
+        , format
+            NewArtistAlbumPage
+            ( s "artists"
+              </> int
+              </> s "albums"
+              </> s "new"
+            )
+        , format
+            ArtistDetailPage
+            (s "artists" </> int)
+        , format
+            ArtistListingPage (s "artists")
+        , format
+            AlbumDetailPage (s "albums" </> int)
+        ]
+
+
+decode : Location -> Result String Route
+decode location =
+    parse
+      identity
+      routeParser
+      (String.dropLeft 1 location.pathname)
+----
+
+|===
+
+
+
+=== Handling changes to Navigation in Main
+
+
+==== Changing the main function
+|===
+|0.18  |0.17
+
+a|
+[source,elm]
+----
+main : Program Never Model Msg    // <1>
+main =
+    Navigation.program UrlChange  // <2>
+        { init = init
+        , view = view
+        , update = update         // <3>
+        , subscriptions = \_ -> Sub.none
+        }
+----
+<1> The function signature for main has become more specific
+(probably triggered by the introduction of the debugger)
+<2> We now supply a message constructor for url changes. This message
+is passed into our update function as any other message. Nice !
+<3> The urlUpdate field is gone, all updates flows through our provider update function
+
+a|
+[source,elm]
+----
+main : Program Never
+main =
+    Navigation.program
+        (Navigation.makeParser Routes.decode)
+        { init = init
+        , view = view
+        , update = update
+        , urlUpdate = urlUpdate
+        , subscriptions = \_ -> Sub.none
+        }
+----
+
+|===
+
+
+==== Changing the init function
+
+|===
+|0.18  |0.17
+
+a|
+[source,elm]
+----
+init : Navigation.Location -> ( Model, Cmd Msg )
+init loc =
+    update (UrlChange loc) initialModel
+
+----
+We get the initial url passed as a Location to the init function.
+We just delegate to the update function to handle the url to load the appropriate
+page.
+
+a|
+[source,elm]
+----
+init : Result String Route -> ( Model, Cmd Msg )
+init result =
+    urlUpdate result initialModel
+----
+
+|===
+
+==== Changing the main update function
+
+|===
+|0.18  |0.17
+
+a|
+[source,elm]
+----
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+-- .. everything else the same really, exept;
+
+   UrlChange loc ->              // <1>
+            urlUpdate loc model
+
+
+urlUpdate                        // <2>
+   : Navigation.Location
+  -> Model
+  -> ( Model, Cmd Msg )
+urlUpdate loc model =
+    case (Routes.decode loc) of  // <3>
+        Nothing  ->    // <4>
+            model ! [ Navigation.modifyUrl
+                       (Routes.encode model.route) ]
+
+        Just (ArtistListingPage as route) ->  // <5>
+            { model ❘ route = route }
+                ! [ Cmd.map
+                      ArtistListingMsg
+                      ArtistListing.mountCmd ]
+
+        -- etc for the rest of the routes
+
+----
+<1> We have a new case for the UrlChange Msg we provided in the main function
+We just delegate to our exising urlUpdate function (more or less)
+<2> We've changed the signagure to receive a Location rather that are result
+<3> Routes.decode return a Maybe so we pattern match on the result
+<4> If parsing the url was unsuccessful we change the url to our default url (provided by initialModel, the first time otherwise it will change the url back to the previously successful one)
+<5> When successful we change the url and initialize the appropriate route (/page)
+
+a|
+[source,elm]
+----
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+
+    -- .. etc
+
+urlUpdate
+   : Result String Route
+  -> Model
+  -> ( Model, Cmd Msg )
+urlUpdate result model =
+    case result of
+        Err _ ->
+            model ! [ Navigation.modifyUrl
+                        (Routes.encode model.route) ]
+
+        Ok (ArtistListingPage as route) ->
+            { model ❘ route = route }
+                ! [ Cmd.map
+                      ArtistListingMsg
+                      ArtistListing.mountCmd ]
+
+        -- etc for the reset of the routes
+----
+
+|===
+
+
+NOTE: You can see the complete diff https://github.com/rundis/albums/commit/eade9f1880382fe13e43c00a2e7bf7de940ec599[here]
+
+
+
+== Summary
+Obviosuly there were quite a few changes, but none of the were really that big and to my mind all of the changed things for the better.
+Using elm-upgrade and the upgrade feature in elm-format really helped kick-start the conversion, I have great hopes for this getting even better in the future.
+
+I haven't covered the the re-introduction of the debugger in elm-reactor, which was the big new feature in Elm 0.18.
+
+In addition to Elm 0.18 being a nice incremental improvement, it has been great to see that the community
+has really worked hard to upgrade packages and helping out making the upgrade as smooth as possible. Great stuff !
+
+
+WARNING: A little mind-you that even though this simple app was easy to upgrade that might not be the case for you. But stories
+I've heard so far has a similar ring to them. I guess the biggest hurdle for upgrading is dependency on lot's of third-party packages
+that might take some time before being upgraded to 0.18. Some patience might be needed.
+
+
+
+
