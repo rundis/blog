@@ -252,8 +252,8 @@ NOTE: You can view the complete diff for the Service Api https://github.com/rund
 
 === Handling the Service API changes
 
-We'll use the artistlisting page as an example for handling the api changes.
-The big change is really that the messages has changed signature and we can remove a few.
+We'll use the artist listing page as an example for handling the api changes.
+The big change is really that the messages have changed signature and we can remove a few.
 
 
 ==== Msg type changes
@@ -482,7 +482,7 @@ main =
 (probably triggered by the introduction of the debugger)
 <2> We now supply a message constructor for url changes. This message
 is passed into our update function as any other message. Nice !
-<3> The urlUpdate field is gone, all updates flows through our provider update function
+<3> The urlUpdate field is gone, all updates flows through our provided update function
 
 a|
 [source,elm]
@@ -610,14 +610,14 @@ NOTE: You can see the complete diff https://github.com/rundis/albums/commit/eade
 Obviosuly there were quite a few changes, but none of the were really that big and to my mind all of the changed things for the better.
 Using elm-upgrade and the upgrade feature in elm-format really helped kick-start the conversion, I have great hopes for this getting even better in the future.
 
-I haven't covered the the re-introduction of the debugger in elm-reactor, which was the big new feature in Elm 0.18.
+I haven't covered the re-introduction of the debugger in elm-reactor, which was the big new feature in Elm 0.18.
 
 In addition to Elm 0.18 being a nice incremental improvement, it has been great to see that the community
 has really worked hard to upgrade packages and helping out making the upgrade as smooth as possible. Great stuff !
 
 
 WARNING: A little mind-you that even though this simple app was easy to upgrade that might not be the case for you. But stories
-I've heard so far has a similar ring to them. I guess the biggest hurdle for upgrading is dependency on lot's of third-party packages
+I've heard so far has a similar ring to them. I guess the biggest hurdle for upgrading is dependending on lot's of third-party packages
 that might take some time before being upgraded to 0.18. Some patience might be needed.
 
 
