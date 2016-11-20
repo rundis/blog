@@ -6,8 +6,8 @@
     <atom:link href="http://rundis.github.io/blog/elmfeed.xml" rel="self" type="application/rss+xml" />
     <description>Elm feed from rundis.github.com/blog</description>
     <language>en-gb</language>
-    <pubDate>Fri, 18 Nov 2016 23:46:02 +0100</pubDate>
-    <lastBuildDate>Fri, 18 Nov 2016 23:46:02 +0100</lastBuildDate>
+    <pubDate>Sun, 20 Nov 2016 11:31:47 +0100</pubDate>
+    <lastBuildDate>Sun, 20 Nov 2016 11:31:47 +0100</lastBuildDate>
 
       <item>
         <title>Typed up CRUD SPA with Haskell and Elm - Part 6: Elm 0.18 Upgrade</title>
@@ -416,8 +416,8 @@ You can view the complete diff for the Service Api &lt;a href=&quot;https://gith
 &lt;div class=&quot;sect2&quot;&gt;
 &lt;h3 id=&quot;_handling_the_service_api_changes&quot;&gt;Handling the Service API changes&lt;/h3&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;We&amp;#8217;ll use the artistlisting page as an example for handling the api changes.
-The big change is really that the messages has changed signature and we can remove a few.&lt;/p&gt;
+&lt;p&gt;We&amp;#8217;ll use the artist listing page as an example for handling the api changes.
+The big change is really that the messages have changed signature and we can remove a few.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;sect3&quot;&gt;
 &lt;h4 id=&quot;_msg_type_changes&quot;&gt;Msg type changes&lt;/h4&gt;
@@ -745,7 +745,7 @@ is passed into our update function as any other message. Nice !&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;i class=&quot;conum&quot; data-value=&quot;3&quot;&gt;&lt;/i&gt;&lt;b&gt;3&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;The urlUpdate field is gone, all updates flows through our provider update function&lt;/td&gt;
+&lt;td&gt;The urlUpdate field is gone, all updates flows through our provided update function&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;&lt;/div&gt;&lt;/td&gt;
@@ -928,7 +928,7 @@ You can see the complete diff &lt;a href=&quot;https://github.com/rundis/albums/
 Using elm-upgrade and the upgrade feature in elm-format really helped kick-start the conversion, I have great hopes for this getting even better in the future.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;I haven&amp;#8217;t covered the the re-introduction of the debugger in elm-reactor, which was the big new feature in Elm 0.18.&lt;/p&gt;
+&lt;p&gt;I haven&amp;#8217;t covered the re-introduction of the debugger in elm-reactor, which was the big new feature in Elm 0.18.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;In addition to Elm 0.18 being a nice incremental improvement, it has been great to see that the community
@@ -942,7 +942,7 @@ has really worked hard to upgrade packages and helping out making the upgrade as
 &lt;/td&gt;
 &lt;td class=&quot;content&quot;&gt;
 A little mind-you that even though this simple app was easy to upgrade that might not be the case for you. But stories
-I&amp;#8217;ve heard so far has a similar ring to them. I guess the biggest hurdle for upgrading is dependency on lot&amp;#8217;s of third-party packages
+I&amp;#8217;ve heard so far has a similar ring to them. I guess the biggest hurdle for upgrading is dependending on lot&amp;#8217;s of third-party packages
 that might take some time before being upgraded to 0.18. Some patience might be needed.
 &lt;/td&gt;
 &lt;/tr&gt;
