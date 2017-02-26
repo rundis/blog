@@ -1,0 +1,177 @@
+= Introducing Elm Bootstrap
+Magnus Rundberget
+2017-03-01
+:jbake-type: post
+:jbake-status: published
+:jbake-tags: elm, bootstrap
+:imagesdir: /blog/2017/
+:icons: font
+:id: elm_bootstrap_launch
+:toc: macro
+
+
+
+Today I'm happy that I can finally announce version 1.0.0 of http://elm-bootstrap.info/[Elm Bootstrap].
+When I set out to develop Elm Bootstrap, my goal was to make an http://elm-lang.org/[Elm] package that
+makes it easy to build responsive and reliable web applications in Elm. This version is the first step
+towards that goal.
+
+
+== What is it then ?
+Elm Bootstrap is a fairly comprehensive library package that wraps the upcoming Twitter Bootstrap 4 CSS framework.
+It provides a range of modules and functions to make it pleasant and reasonably typesafe to create a Bootstrap styled
+web application in Elm without giving up too much on flexibility. Most of Twitter Bootstrap is opt-in and the same applies to Elm Bootstrap.
+That means that you can pick and choose which parts you wish to use for your application.
+
+NOTE: You will find modules in Elm Bootstrap that corresponds to most of what Twitter Bootstrap refers to as components.
+There is no such thing as components in Elm, there are only functions, and functions can be grouped in modules.
+When I speak about modules you know I'm talking about Elm and when you see components mentioned you know it's about
+Twitter Bootstrap.
+
+
+.These are the main modules that ship with version 1.0.0
+* Layout related
+** Grid - Provides functions to easily create flexbox based responsive grid (rows, columns) layouts.
+** Text - Helper functions for working with text alignment
+* Forms
+** Form, Input, Select, Checkbox, Radio, Textarea and Fieldset - These modules provides functions to create
+nice Bootstrap styled forms with a lot of flexibility
+* Interactive elements
+** Tab, Accordion, Modal, Dropdown and Navbar are modules that provides functions to work with interative elements.
+In Twitter Bootstrap, the corresponding components are backed by JavaScript in Elm Bootstrap it's all Elm of course.
+* Misc
+** Alert, Badge, Button, Card, Listgroup and Progress provides you functions to create elements that correspond to their Twitter Bootstrap counterpart.
+
+
+**<ELLIE TAB EXAMPLE HERE>**
+
+
+=== Documentation/help
+
+The most comprehensive (and only) application using Elm Bootstrap at the time of writing this is the
+user documention site http://elm-bootstrap.info. You can find the source for the site application on https://github.com/rundis/elm-bootstrap.info[github] too.
+In time this will improve a lot. With the introduction of https://ellie-app.com/[Ellie] we know also
+have a great way to share interactive/editable examples of how to use Elm Bootstrap.
+
+
+If you need help, there is a #elm-bootstrap channel on the Elm slack where you can ask for help.
+I'll try to help when I can and hopefully otheres can help out there going forward too.
+
+
+**<ELLIE NAVBAR DOCSITE LOOKALIKE EXMPLE HERE>**
+
+
+== Built on top of Twitter Bootstrap version 4
+https://v4-alpha.getbootstrap.com/[Twitter Bootstrap] is one of the most popular CSS (with som JS) frameworks for building responsive, mobile first web sites.
+At the time of writing version 4 is in alpha-6 and apparantly the plan is to move into beta fairly soon.
+Version 4 is fully embracing flexbox, which will provide much better control and flexibility.
+
+
+Creating a wrapper for Twitter Bootstrap probably doesn't score very high on the hipster scale. However
+it's no denying it's still very popular and probably will be for some time to come. More importantly I'm using
+it in projects and have done so several times in the past, so I know it would be useful to me when I get
+a chance to work on an Elm project. Hopefully others will find Elm Bootstrap useful too.
+
+
+
+== Reasonably type safe you say ?
+What's reasonable is obviously a matter of opinion. But since it's an Elm package we're talking about, the
+context is that it's for use in a statically typed language that promotes reliability as a core characteristic.
+There is also no denying that Elm doesn't have the most advanced type system out there. But in my humble opinion it's
+one of the most approachble ones I've come across in terms of statically typed functional languages.
+
+There's no stopping you from just including the CSS from Bootstrap and start using it with the standard Elm Html functions today.
+Let's face it, Twitter Bootstrap is mostly just a whole bunch of classes you apply to relevant elements you compose and voila.
+But applying a bunch of class strings is quite error prone, and it's easy to nest elements incorrectly or apply incorrect classes to
+incorrect elements. Trying to allieveate that to some extent is what I've been trying to balance with necessary flexibility
+when defining the API for Elm Bootstrap.
+
+I'm under no illusions that I've found the sweetspot that perfectly balances type safety, flexibility and usability.
+But given the constraints (the type system in Elm and my relatively short experience with statically typed functional languages),
+I'm reasonably happy with the API as a starting point. Real life use and feedback will surely help it develop
+in a direction where more and more people can agreed that it really is reasonably type safe !
+
+
+
+== The development story - aka refactoring galore
+For quite some time my main endevaours in Elm has been developing editor support for Elm in Light Table
+through my https://github.com/rundis/elm-light[elm-light] plugin. I've also been working http://rundis.github.io/blog/tags/haskellelmspa.html[blogging] a bit on
+my journey learning Elm (and s little Haskell). But in November last year I decided I wanted to dive deeper into Elm, trying to make something
+substantial. Ideally something useful, but first and foremost something that would gain me experience in designing an API for use by others in Elm.
+
+The Bootstrap wrapper idea has crossed my mind several times in the past, but never materialized. I did some
+research, but couldn't find anything out there for Elm that was quite as ambitious as I had in mind.
+
+
+=== Where to start ?
+I first started looking at the very impressive https://github.com/debois/elm-mdl[elm-mdl] which brings
+awesome Google Material Design support to Elm. I got a ton of inspiration from this library.
+Next up I had a look through https://github.com/evancz/elm-sortable-table[elm-sortable-table], trying to pick
+up on good advice and experience for tackling the interactive components in Twitter Bootstrap.
+
+Hmm okay, let's just start and see where it leads me.
+
+=== Think, code, refactor ad infinitum
+So I started with a couple of modules using a record based api for everthing.
+That gave me an API that was pretty type safe and certainly explicit. But it looked horribly verbose
+where in many cases it didn't provide enough value and even in some cases put way to many restrictions on what you could do.
+DOH. Back to the drawing board.
+I know ! Let's have 3 list arguments for everything; Options (exposed union types), attributes and children.
+So I refactored almost everything (silly I know), but it didn't really feel right with all those lists and I also started
+to get concerned that users would find it confusing with the std Elm Html functions taking 2 lists.
+Time to think and refactor again. After that I started to run into cases where I wanted to compose stuff from
+several modules, well because stuff is related.
+
+
+
+I'll spare you all the details, but I can't remember ever having refactored so much code so frequently that I have been during
+this process. Doing this in Elm has been an absolute pleasure. Truly fearless refactoring. The kind that is really hard
+to explain to other peope who hasn't experienced it. The Elm compiler and I have become the best of buddies during evenings
+and nights the past few months.
+
+
+[quote, Magnus Rundberget]
+____
+I can't remember ever having refactored so much code so frequently that I have been during
+this process.
+____
+
+
+( why a ELM Html style design makes sense for this)
+**<ELLIE LIST GROUP EXAMPLE HERE>**
+
+
+
+(why pipeline style makes sense in this case)
+**<ELLIE CARD EXMPLE HERE, TO DEMONSTRATE PIPELINE STYLE>**
+
+
+
+( why the need for flexibility slightly different approach for forms )
+**<ELLIE FORM EXAMPLE HERE>**
+
+
+
+
+=== Reaching out to the Elm Community
+In the middle/end of January I reached a point where I on one hand was ready to just ship something.
+At the same time I was really unsure about what I had created so I reached out for comments on the elm-slack.
+Turns out that both Mike Onslow and Richard Feldman both have had overlapping ideas about creating a Bootstrap package for Elm.
+We quickly decided to see if we could cooperate in some fashion and decided to hook up on Google Hangout.
+Awesome ! We've had many really interesting discussions on slack especially related to API design. It's been really great
+to have someone to talk to about these things (other than my analysis paralysis brain).
+
+
+
+
+== Going forward
+I could have been iterating for ever trying to nail the best possible API and/or try to support every bit of Twitter Bootstrap,
+but I've decided it's better to just get it out there and get feedback.
+
+The API will certainly get breaking changes going forward, but I don't see that as such a big negative given
+the semantic versioning guarantees and version diffing support provided by the Elm package manager.
+
+
+I'm hoping people find this interesting and useful enough to give it a try and give feedback on their
+experiences. In the mean time I'm going to work on improving the documentation, test support, API consistency and support for missing
+Twitter Bootstrap features.
