@@ -13,7 +13,7 @@ Magnus Rundberget
 
 Today I'm happy that I can finally announce version 1.0.0 of http://elm-bootstrap.info/[Elm Bootstrap].
 When I set out to develop Elm Bootstrap, my goal was to make an http://elm-lang.org/[Elm] package that
-makes it easy to build responsive and reliable web applications in Elm. This version is the first step
+makes it easy to build responsive and reliable web applications in Elm using Twitter Bootstrap. This version is the first step
 towards that goal.
 
 
@@ -24,7 +24,7 @@ web application in Elm without giving up too much on flexibility. Most of Twitte
 That means that you can pick and choose which parts you wish to use for your application.
 
 NOTE: You will find modules in Elm Bootstrap that corresponds to most of what Twitter Bootstrap refers to as components.
-There is no such thing as components in Elm, there are only functions, and functions can be grouped in modules.
+There are no such thing as components in Elm, there are only functions, and functions can be grouped into modules
 When I speak about modules you know I'm talking about Elm and when you see components mentioned you know it's about
 Twitter Bootstrap.
 
@@ -37,32 +37,35 @@ Twitter Bootstrap.
 ** Form, Input, Select, Checkbox, Radio, Textarea and Fieldset - These modules provides functions to create
 nice Bootstrap styled forms with a lot of flexibility
 * Interactive elements
-** Tab, Accordion, Modal, Dropdown and Navbar are modules that provides functions to work with interative elements.
+** Tab, Accordion, Modal, Dropdown and Navbar are modules that provide functions to work with interative elements.
 In Twitter Bootstrap, the corresponding components are backed by JavaScript in Elm Bootstrap it's all Elm of course.
 * Misc
-** Alert, Badge, Button, Card, Listgroup and Progress provides you functions to create elements that correspond to their Twitter Bootstrap counterpart.
+** Alert, Badge, Button, Card, Listgroup and Progress provide you functions to create elements that correspond to their Twitter Bootstrap counterpart.
 
 
-**<ELLIE TAB EXAMPLE HERE>**
+++++
+<iframe src="https://embed.ellie-app.com/wQPwn22Znba1/2" style="width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;" sandbox="allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+++++
+
 
 
 === Documentation/help
 
 The most comprehensive (and only) application using Elm Bootstrap at the time of writing this is the
 user documention site http://elm-bootstrap.info. You can find the source for the site application on https://github.com/rundis/elm-bootstrap.info[github] too.
-In time this will improve a lot. With the introduction of https://ellie-app.com/[Ellie] we know also
+In time this will improve a lot. With the introduction of https://ellie-app.com/[Ellie] we now also
 have a great way to share interactive/editable examples of how to use Elm Bootstrap.
 
 
 If you need help, there is a #elm-bootstrap channel on the Elm slack where you can ask for help.
-I'll try to help when I can and hopefully otheres can help out there going forward too.
+I'll try to help when I can and hopefully others can help out there going forward too.
 
+image::http://rundis.github.io/blog/2017/docssite.png[]
 
-**<ELLIE NAVBAR DOCSITE LOOKALIKE EXMPLE HERE>**
 
 
 == Built on top of Twitter Bootstrap version 4
-https://v4-alpha.getbootstrap.com/[Twitter Bootstrap] is one of the most popular CSS (with som JS) frameworks for building responsive, mobile first web sites.
+https://v4-alpha.getbootstrap.com/[Twitter Bootstrap] is one of the most popular CSS (with some JS) frameworks for building responsive, mobile first web sites.
 At the time of writing version 4 is in alpha-6 and apparantly the plan is to move into beta fairly soon.
 Version 4 is fully embracing flexbox, which will provide much better control and flexibility.
 
@@ -83,20 +86,20 @@ one of the most approachble ones I've come across in terms of statically typed f
 There's no stopping you from just including the CSS from Bootstrap and start using it with the standard Elm Html functions today.
 Let's face it, Twitter Bootstrap is mostly just a whole bunch of classes you apply to relevant elements you compose and voila.
 But applying a bunch of class strings is quite error prone, and it's easy to nest elements incorrectly or apply incorrect classes to
-incorrect elements. Trying to allieveate that to some extent is what I've been trying to balance with necessary flexibility
+incorrect elements. Trying to alleviate that to some extent is what I've been trying to balance with necessary flexibility
 when defining the API for Elm Bootstrap.
 
 I'm under no illusions that I've found the sweetspot that perfectly balances type safety, flexibility and usability.
 But given the constraints (the type system in Elm and my relatively short experience with statically typed functional languages),
 I'm reasonably happy with the API as a starting point. Real life use and feedback will surely help it develop
-in a direction where more and more people can agreed that it really is reasonably type safe !
+in a direction where more and more people can agree that it really is reasonably type safe !
 
 
 
 == The development story - aka refactoring galore
 For quite some time my main endevaours in Elm has been developing editor support for Elm in Light Table
 through my https://github.com/rundis/elm-light[elm-light] plugin. I've also been working http://rundis.github.io/blog/tags/haskellelmspa.html[blogging] a bit on
-my journey learning Elm (and s little Haskell). But in November last year I decided I wanted to dive deeper into Elm, trying to make something
+my journey learning Elm (and a little Haskell). But in November last year I decided I wanted to dive deeper into Elm, trying to make something
 substantial. Ideally something useful, but first and foremost something that would gain me experience in designing an API for use by others in Elm.
 
 The Bootstrap wrapper idea has crossed my mind several times in the past, but never materialized. I did some
@@ -126,7 +129,7 @@ several modules, well because stuff is related.
 
 I'll spare you all the details, but I can't remember ever having refactored so much code so frequently that I have been during
 this process. Doing this in Elm has been an absolute pleasure. Truly fearless refactoring. The kind that is really hard
-to explain to other peope who hasn't experienced it. The Elm compiler and I have become the best of buddies during evenings
+to explain to other peope who haven't experienced it. The Elm compiler and I have become the best of buddies during evenings
 and nights the past few months.
 
 
@@ -137,18 +140,27 @@ this process.
 ____
 
 
-( why a ELM Html style design makes sense for this)
-**<ELLIE LIST GROUP EXAMPLE HERE>**
+==== Two list arguments
+++++
+<iframe src="https://embed.ellie-app.com/wRt74By5s7a1/0" style="width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;" sandbox="allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+++++
+
+
+For most elements functions take two list arguments. The first argument is a list of
+options, the second is a list of child elements.
 
 
 
-(why pipeline style makes sense in this case)
-**<ELLIE CARD EXMPLE HERE, TO DEMONSTRATE PIPELINE STYLE>**
+==== Pipeline friendly composition
+++++
+<iframe src="https://embed.ellie-app.com/wRWjrSnkCTa1/1" style="width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;" sandbox="allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+++++
+
+Composition of more complex elements is done by calling pipeline friendly functions. This design gives
+a nice balance between type safety and flexibility.
 
 
 
-( why the need for flexibility slightly different approach for forms )
-**<ELLIE FORM EXAMPLE HERE>**
 
 
 
@@ -165,7 +177,7 @@ to have someone to talk to about these things (other than my analysis paralysis 
 
 
 == Going forward
-I could have been iterating for ever trying to nail the best possible API and/or try to support every bit of Twitter Bootstrap,
+I could have been iterating forever trying to nail the best possible API and/or try to support every bit of Twitter Bootstrap,
 but I've decided it's better to just get it out there and get feedback.
 
 The API will certainly get breaking changes going forward, but I don't see that as such a big negative given
