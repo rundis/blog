@@ -16,6 +16,7 @@ When I set out to develop Elm Bootstrap, my goal was to make an http://elm-lang.
 makes it easy to build responsive and reliable web applications in Elm using Twitter Bootstrap. This version is the first step
 towards that goal.
 
+image::http://rundis.github.io/blog/2017/docssite.png[]
 
 == What is it then ?
 Elm Bootstrap is a fairly comprehensive library package that wraps the upcoming Twitter Bootstrap 4 CSS framework.
@@ -60,7 +61,7 @@ have a great way to share interactive/editable examples of how to use Elm Bootst
 If you need help, there is a #elm-bootstrap channel on the Elm slack where you can ask for help.
 I'll try to help when I can and hopefully others can help out there going forward too.
 
-image::http://rundis.github.io/blog/2017/docssite.png[]
+
 
 
 
