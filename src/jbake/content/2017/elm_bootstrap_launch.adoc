@@ -31,22 +31,23 @@ Twitter Bootstrap.
 
 
 .These are the main modules that ship with version 1.0.0
-* Layout related
+* **Layout related**
 ** Grid - Provides functions to easily create flexbox based responsive grid (rows, columns) layouts.
 ** Text - Helper functions for working with text alignment
-* Forms
+* **Forms**
 ** Form, Input, Select, Checkbox, Radio, Textarea and Fieldset - These modules provides functions to create
 nice Bootstrap styled forms with a lot of flexibility
-* Interactive elements
+* **Interactive elements**
 ** Tab, Accordion, Modal, Dropdown and Navbar are modules that provide functions to work with interative elements.
 In Twitter Bootstrap, the corresponding components are backed by JavaScript in Elm Bootstrap it's all Elm of course.
-* Misc
+* **Misc**
 ** Alert, Badge, Button, Card, Listgroup and Progress provide you functions to create elements that correspond to their Twitter Bootstrap counterpart.
 
 
 ++++
 <iframe src="https://embed.ellie-app.com/wQPwn22Znba1/2" style="width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;" sandbox="allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
 ++++
+__Example of using the Elm Bootstrap Tab module to create an interactive tab control.__
 
 
 
@@ -120,6 +121,7 @@ So I started with a couple of modules using a record based api for everthing.
 That gave me an API that was pretty type safe and certainly explicit. But it looked horribly verbose
 where in many cases it didn't provide enough value and even in some cases put way to many restrictions on what you could do.
 DOH. Back to the drawing board.
+
 I know ! Let's have 3 list arguments for everything; Options (exposed union types), attributes and children.
 So I refactored almost everything (silly I know), but it didn't really feel right with all those lists and I also started
 to get concerned that users would find it confusing with the std Elm Html functions taking 2 lists.
@@ -147,8 +149,8 @@ ____
 ++++
 
 
-For most elements functions take two list arguments. The first argument is a list of
-options, the second is a list of child elements.
+__For most elements functions take two list arguments. The first argument is a list of
+options, the second is a list of child elements. You create options by calling functions defined in the relevant module.__
 
 
 
@@ -157,8 +159,8 @@ options, the second is a list of child elements.
 <iframe src="https://embed.ellie-app.com/wRWjrSnkCTa1/1" style="width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;" sandbox="allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
 ++++
 
-Composition of more complex elements is done by calling pipeline friendly functions. This design gives
-a nice balance between type safety and flexibility.
+__Composition of more complex elements is done by calling pipeline friendly functions. This design gives
+a nice balance between type safety and flexibility.__
 
 
 
@@ -185,6 +187,6 @@ The API will certainly get breaking changes going forward, but I don't see that 
 the semantic versioning guarantees and version diffing support provided by the Elm package manager.
 
 
-I'm hoping people find this interesting and useful enough to give it a try and give feedback on their
+I'm hoping folks find this interesting and useful enough to give it a try and give feedback on their
 experiences. In the mean time I'm going to work on improving the documentation, test support, API consistency and support for missing
 Twitter Bootstrap features.
