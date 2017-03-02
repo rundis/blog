@@ -6,9 +6,270 @@
     <atom:link href="http://rundis.github.io/blog/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Sun, 20 Nov 2016 11:31:47 +0100</pubDate>
-    <lastBuildDate>Sun, 20 Nov 2016 11:31:47 +0100</lastBuildDate>
+    <pubDate>Thu, 2 Mar 2017 11:52:27 +0100</pubDate>
+    <lastBuildDate>Thu, 2 Mar 2017 11:52:27 +0100</lastBuildDate>
 
+    <item>
+      <title>Introducing Elm Bootstrap</title>
+      <link>http://rundis.github.io/blog/2017/elm_bootstrap_launch.html</link>
+      <pubDate>Wed, 1 Mar 2017 00:00:00 +0100</pubDate>
+      <guid isPermaLink="false">2017/elm_bootstrap_launch.html</guid>
+      	<description>
+	&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Today I&amp;#8217;m happy that I can finally announce version 1.0.0 of &lt;a href=&quot;http://elm-bootstrap.info/&quot;&gt;Elm Bootstrap&lt;/a&gt;.
+When I set out to develop Elm Bootstrap, my goal was to make an &lt;a href=&quot;http://elm-lang.org/&quot;&gt;Elm&lt;/a&gt; package that
+makes it easy to build responsive and reliable web applications in Elm using Twitter Bootstrap. This version is the first step
+towards that goal.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;http://rundis.github.io/blog/2017/docssite.png&quot; alt=&quot;docssite&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_what_is_it_then&quot;&gt;What is it then ?&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Elm Bootstrap is a fairly comprehensive library package that wraps the upcoming Twitter Bootstrap 4 CSS framework.
+It provides a range of modules and functions to make it pleasant and reasonably typesafe to create a Bootstrap styled
+web application in Elm without giving up too much on flexibility. Most of Twitter Bootstrap is opt-in and the same applies to Elm Bootstrap.
+That means that you can pick and choose which parts you wish to use for your application.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+You will find modules in Elm Bootstrap that corresponds to most of what Twitter Bootstrap refers to as components.
+There are no such thing as components in Elm, there are only functions, and functions can be grouped into modules
+When I speak about modules you know I&amp;#8217;m talking about Elm and when you see components mentioned you know it&amp;#8217;s about
+Twitter Bootstrap.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;These are the main modules that ship with version 1.0.0&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Layout related&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Grid - Provides functions to easily create flexbox based responsive grid (rows, columns) layouts.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Text - Helper functions for working with text alignment&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Forms&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Form, Input, Select, Checkbox, Radio, Textarea and Fieldset - These modules provides functions to create
+nice Bootstrap styled forms with a lot of flexibility&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Interactive elements&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Tab, Accordion, Modal, Dropdown and Navbar are modules that provide functions to work with interative elements.
+In Twitter Bootstrap, the corresponding components are backed by JavaScript in Elm Bootstrap it&amp;#8217;s all Elm of course.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Misc&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Alert, Badge, Button, Card, Listgroup and Progress provide you functions to create elements that correspond to their Twitter Bootstrap counterpart.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;iframe src=&quot;https://embed.ellie-app.com/wQPwn22Znba1/2&quot; style=&quot;width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;&quot; sandbox=&quot;allow-forms allow-popups allow-scripts allow-same-origin&quot;&gt;&lt;/iframe&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;em&gt;Example of using the Elm Bootstrap Tab module to create an interactive tab control.&lt;/em&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_documentation_help&quot;&gt;Documentation/help&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The most comprehensive (and only) application using Elm Bootstrap at the time of writing this is the
+user documention site &lt;a href=&quot;http://elm-bootstrap.info&quot; class=&quot;bare&quot;&gt;http://elm-bootstrap.info&lt;/a&gt;. You can find the source for the site application on &lt;a href=&quot;https://github.com/rundis/elm-bootstrap.info&quot;&gt;github&lt;/a&gt; too.
+In time this will improve a lot. With the introduction of &lt;a href=&quot;https://ellie-app.com/&quot;&gt;Ellie&lt;/a&gt; we now also
+have a great way to share interactive/editable examples of how to use Elm Bootstrap.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;If you need help, there is a #elm-bootstrap channel on the Elm slack where you can ask for help.
+I&amp;#8217;ll try to help when I can and hopefully others can help out there going forward too.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_built_on_top_of_twitter_bootstrap_version_4&quot;&gt;Built on top of Twitter Bootstrap version 4&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://v4-alpha.getbootstrap.com/&quot;&gt;Twitter Bootstrap&lt;/a&gt; is one of the most popular CSS (with some JS) frameworks for building responsive, mobile first web sites.
+At the time of writing version 4 is in alpha-6 and apparantly the plan is to move into beta fairly soon.
+Version 4 is fully embracing flexbox, which will provide much better control and flexibility.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Creating a wrapper for Twitter Bootstrap probably doesn&amp;#8217;t score very high on the hipster scale. However
+it&amp;#8217;s no denying it&amp;#8217;s still very popular and probably will be for some time to come. More importantly I&amp;#8217;m using
+it in projects and have done so several times in the past, so I know it would be useful to me when I get
+a chance to work on an Elm project. Hopefully others will find Elm Bootstrap useful too.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_reasonably_type_safe_you_say&quot;&gt;Reasonably type safe you say ?&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;What&amp;#8217;s reasonable is obviously a matter of opinion. But since it&amp;#8217;s an Elm package we&amp;#8217;re talking about, the
+context is that it&amp;#8217;s for use in a statically typed language that promotes reliability as a core characteristic.
+There is also no denying that Elm doesn&amp;#8217;t have the most advanced type system out there. But in my humble opinion it&amp;#8217;s
+one of the most approachble ones I&amp;#8217;ve come across in terms of statically typed functional languages.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;There&amp;#8217;s no stopping you from just including the CSS from Bootstrap and start using it with the standard Elm Html functions today.
+Let&amp;#8217;s face it, Twitter Bootstrap is mostly just a whole bunch of classes you apply to relevant elements you compose and voila.
+But applying a bunch of class strings is quite error prone, and it&amp;#8217;s easy to nest elements incorrectly or apply incorrect classes to
+incorrect elements. Trying to alleviate that to some extent is what I&amp;#8217;ve been trying to balance with necessary flexibility
+when defining the API for Elm Bootstrap.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m under no illusions that I&amp;#8217;ve found the sweetspot that perfectly balances type safety, flexibility and usability.
+But given the constraints (the type system in Elm and my relatively short experience with statically typed functional languages),
+I&amp;#8217;m reasonably happy with the API as a starting point. Real life use and feedback will surely help it develop
+in a direction where more and more people can agree that it really is reasonably type safe !&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_the_development_story_aka_refactoring_galore&quot;&gt;The development story - aka refactoring galore&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For quite some time my main endevaours in Elm has been developing editor support for Elm in Light Table
+through my &lt;a href=&quot;https://github.com/rundis/elm-light&quot;&gt;elm-light&lt;/a&gt; plugin. I&amp;#8217;ve also been working &lt;a href=&quot;http://rundis.github.io/blog/tags/haskellelmspa.html&quot;&gt;blogging&lt;/a&gt; a bit on
+my journey learning Elm (and a little Haskell). But in November last year I decided I wanted to dive deeper into Elm, trying to make something
+substantial. Ideally something useful, but first and foremost something that would gain me experience in designing an API for use by others in Elm.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The Bootstrap wrapper idea has crossed my mind several times in the past, but never materialized. I did some
+research, but couldn&amp;#8217;t find anything out there for Elm that was quite as ambitious as I had in mind.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_where_to_start&quot;&gt;Where to start ?&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I first started looking at the very impressive &lt;a href=&quot;https://github.com/debois/elm-mdl&quot;&gt;elm-mdl&lt;/a&gt; which brings
+awesome Google Material Design support to Elm. I got a ton of inspiration from this library.
+Next up I had a look through &lt;a href=&quot;https://github.com/evancz/elm-sortable-table&quot;&gt;elm-sortable-table&lt;/a&gt;, trying to pick
+up on good advice and experience for tackling the interactive components in Twitter Bootstrap.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Hmm okay, let&amp;#8217;s just start and see where it leads me.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_think_code_refactor_ad_infinitum&quot;&gt;Think, code, refactor ad infinitum&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;So I started with a couple of modules using a record based api for everthing.
+That gave me an API that was pretty type safe and certainly explicit. But it looked horribly verbose
+where in many cases it didn&amp;#8217;t provide enough value and even in some cases put way to many restrictions on what you could do.
+DOH. Back to the drawing board.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I know ! Let&amp;#8217;s have 3 list arguments for everything; Options (exposed union types), attributes and children.
+So I refactored almost everything (silly I know), but it didn&amp;#8217;t really feel right with all those lists and I also started
+to get concerned that users would find it confusing with the std Elm Html functions taking 2 lists.
+Time to think and refactor again. After that I started to run into cases where I wanted to compose stuff from
+several modules, well because stuff is related.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;ll spare you all the details, but I can&amp;#8217;t remember ever having refactored so much code so frequently that I have been during
+this process. Doing this in Elm has been an absolute pleasure. Truly fearless refactoring. The kind that is really hard
+to explain to other peope who haven&amp;#8217;t experienced it. The Elm compiler and I have become the best of buddies during evenings
+and nights the past few months.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;quoteblock&quot;&gt;
+&lt;blockquote&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I can&amp;#8217;t remember ever having refactored so much code so frequently that I have been during
+this process.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;div class=&quot;attribution&quot;&gt;
+&amp;#8212; Magnus Rundberget
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_two_list_arguments&quot;&gt;Two list arguments&lt;/h4&gt;
+&lt;iframe src=&quot;https://embed.ellie-app.com/wRt74By5s7a1/0&quot; style=&quot;width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;&quot; sandbox=&quot;allow-forms allow-popups allow-scripts allow-same-origin&quot;&gt;&lt;/iframe&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;em&gt;For most elements functions take two list arguments. The first argument is a list of
+options, the second is a list of child elements. You create options by calling functions defined in the relevant module.&lt;/em&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;_pipeline_friendly_composition&quot;&gt;Pipeline friendly composition&lt;/h4&gt;
+&lt;iframe src=&quot;https://embed.ellie-app.com/wRWjrSnkCTa1/1&quot; style=&quot;width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;&quot; sandbox=&quot;allow-forms allow-popups allow-scripts allow-same-origin&quot;&gt;&lt;/iframe&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;em&gt;Composition of more complex elements is done by calling pipeline friendly functions. This design gives
+a nice balance between type safety and flexibility.&lt;/em&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;_reaching_out_to_the_elm_community&quot;&gt;Reaching out to the Elm Community&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;In the middle/end of January I reached a point where I on one hand was ready to just ship something.
+At the same time I was really unsure about what I had created so I reached out for comments on the elm-slack.
+Turns out that both Mike Onslow and Richard Feldman both have had overlapping ideas about creating a Bootstrap package for Elm.
+We quickly decided to see if we could cooperate in some fashion and decided to hook up on Google Hangout.
+Awesome ! We&amp;#8217;ve had many really interesting discussions on slack especially related to API design. It&amp;#8217;s been really great
+to have someone to talk to about these things (other than my analysis paralysis brain).&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;_going_forward&quot;&gt;Going forward&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I could have been iterating forever trying to nail the best possible API and/or try to support every bit of Twitter Bootstrap,
+but I&amp;#8217;ve decided it&amp;#8217;s better to just get it out there and get feedback.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;The API will certainly get breaking changes going forward, but I don&amp;#8217;t see that as such a big negative given
+the semantic versioning guarantees and version diffing support provided by the Elm package manager.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;I&amp;#8217;m hoping folks find this interesting and useful enough to give it a try and give feedback on their
+experiences. In the mean time I&amp;#8217;m going to work on improving the documentation, test support, API consistency and support for missing
+Twitter Bootstrap features.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+	</description>
+    </item>
     <item>
       <title>Typed up CRUD SPA with Haskell and Elm - Part 6: Elm 0.18 Upgrade</title>
       <link>http://rundis.github.io/blog/2016/haskel_elm_spa_part6.html</link>

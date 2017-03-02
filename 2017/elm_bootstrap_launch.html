@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Introducing Elm Bootstrap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <link href="/blog/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/blog/css/asciidoctor.css" rel="stylesheet">
+    <link href="/blog/css/base.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="/blog/css/prettify.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/blog/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/blog/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/blog/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/blog/assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58695124-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/blog/index.html">Rundis</a>
+        </div>
+        <div class="navbar-collapse collapse bs-navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/blog/archive.html">Archive</a></li>
+                <li><a href="/blog/about.html">About</a></li>
+                <li><a href="/blog/feed.xml">Subscribe</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="https://github.com/rundis/blog"><i class="fa fa-lg fa-github"></i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="container">
+
+	<div class="page-header">
+		<h1>Introducing Elm Bootstrap</h1>
+	</div>
+
+	<p><em>01 March 2017</em></p>
+  <p><em>Tags: </em>
+    <a href="/blog/tags/elm.html">elm</a>
+  </em>
+    <a href="/blog/tags/bootstrap.html">bootstrap</a>
+  </p>
+  <a href="https://twitter.com/share" class="twitter-share-button"
+    data-url="http://rundis.github.io/blog/2017/elm_bootstrap_launch.html"
+    data-via="mrundberget"
+    data-lang="en">Tweet</a>
+  <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+	<p><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Today I&#8217;m happy that I can finally announce version 1.0.0 of <a href="http://elm-bootstrap.info/">Elm Bootstrap</a>.
+When I set out to develop Elm Bootstrap, my goal was to make an <a href="http://elm-lang.org/">Elm</a> package that
+makes it easy to build responsive and reliable web applications in Elm using Twitter Bootstrap. This version is the first step
+towards that goal.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="http://rundis.github.io/blog/2017/docssite.png" alt="docssite">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_is_it_then">What is it then ?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Elm Bootstrap is a fairly comprehensive library package that wraps the upcoming Twitter Bootstrap 4 CSS framework.
+It provides a range of modules and functions to make it pleasant and reasonably typesafe to create a Bootstrap styled
+web application in Elm without giving up too much on flexibility. Most of Twitter Bootstrap is opt-in and the same applies to Elm Bootstrap.
+That means that you can pick and choose which parts you wish to use for your application.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+You will find modules in Elm Bootstrap that corresponds to most of what Twitter Bootstrap refers to as components.
+There are no such thing as components in Elm, there are only functions, and functions can be grouped into modules
+When I speak about modules you know I&#8217;m talking about Elm and when you see components mentioned you know it&#8217;s about
+Twitter Bootstrap.
+</td>
+</tr>
+</table>
+</div>
+<div class="ulist">
+<div class="title">These are the main modules that ship with version 1.0.0</div>
+<ul>
+<li>
+<p><strong>Layout related</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Grid - Provides functions to easily create flexbox based responsive grid (rows, columns) layouts.</p>
+</li>
+<li>
+<p>Text - Helper functions for working with text alignment</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Forms</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Form, Input, Select, Checkbox, Radio, Textarea and Fieldset - These modules provides functions to create
+nice Bootstrap styled forms with a lot of flexibility</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Interactive elements</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Tab, Accordion, Modal, Dropdown and Navbar are modules that provide functions to work with interative elements.
+In Twitter Bootstrap, the corresponding components are backed by JavaScript in Elm Bootstrap it&#8217;s all Elm of course.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Misc</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Alert, Badge, Button, Card, Listgroup and Progress provide you functions to create elements that correspond to their Twitter Bootstrap counterpart.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<iframe src="https://embed.ellie-app.com/wQPwn22Znba1/2" style="width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;" sandbox="allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+<div class="paragraph">
+<p><em>Example of using the Elm Bootstrap Tab module to create an interactive tab control.</em></p>
+</div>
+<div class="sect2">
+<h3 id="_documentation_help">Documentation/help</h3>
+<div class="paragraph">
+<p>The most comprehensive (and only) application using Elm Bootstrap at the time of writing this is the
+user documention site <a href="http://elm-bootstrap.info" class="bare">http://elm-bootstrap.info</a>. You can find the source for the site application on <a href="https://github.com/rundis/elm-bootstrap.info">github</a> too.
+In time this will improve a lot. With the introduction of <a href="https://ellie-app.com/">Ellie</a> we now also
+have a great way to share interactive/editable examples of how to use Elm Bootstrap.</p>
+</div>
+<div class="paragraph">
+<p>If you need help, there is a #elm-bootstrap channel on the Elm slack where you can ask for help.
+I&#8217;ll try to help when I can and hopefully others can help out there going forward too.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_built_on_top_of_twitter_bootstrap_version_4">Built on top of Twitter Bootstrap version 4</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="https://v4-alpha.getbootstrap.com/">Twitter Bootstrap</a> is one of the most popular CSS (with some JS) frameworks for building responsive, mobile first web sites.
+At the time of writing version 4 is in alpha-6 and apparantly the plan is to move into beta fairly soon.
+Version 4 is fully embracing flexbox, which will provide much better control and flexibility.</p>
+</div>
+<div class="paragraph">
+<p>Creating a wrapper for Twitter Bootstrap probably doesn&#8217;t score very high on the hipster scale. However
+it&#8217;s no denying it&#8217;s still very popular and probably will be for some time to come. More importantly I&#8217;m using
+it in projects and have done so several times in the past, so I know it would be useful to me when I get
+a chance to work on an Elm project. Hopefully others will find Elm Bootstrap useful too.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reasonably_type_safe_you_say">Reasonably type safe you say ?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>What&#8217;s reasonable is obviously a matter of opinion. But since it&#8217;s an Elm package we&#8217;re talking about, the
+context is that it&#8217;s for use in a statically typed language that promotes reliability as a core characteristic.
+There is also no denying that Elm doesn&#8217;t have the most advanced type system out there. But in my humble opinion it&#8217;s
+one of the most approachble ones I&#8217;ve come across in terms of statically typed functional languages.</p>
+</div>
+<div class="paragraph">
+<p>There&#8217;s no stopping you from just including the CSS from Bootstrap and start using it with the standard Elm Html functions today.
+Let&#8217;s face it, Twitter Bootstrap is mostly just a whole bunch of classes you apply to relevant elements you compose and voila.
+But applying a bunch of class strings is quite error prone, and it&#8217;s easy to nest elements incorrectly or apply incorrect classes to
+incorrect elements. Trying to alleviate that to some extent is what I&#8217;ve been trying to balance with necessary flexibility
+when defining the API for Elm Bootstrap.</p>
+</div>
+<div class="paragraph">
+<p>I&#8217;m under no illusions that I&#8217;ve found the sweetspot that perfectly balances type safety, flexibility and usability.
+But given the constraints (the type system in Elm and my relatively short experience with statically typed functional languages),
+I&#8217;m reasonably happy with the API as a starting point. Real life use and feedback will surely help it develop
+in a direction where more and more people can agree that it really is reasonably type safe !</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_development_story_aka_refactoring_galore">The development story - aka refactoring galore</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For quite some time my main endevaours in Elm has been developing editor support for Elm in Light Table
+through my <a href="https://github.com/rundis/elm-light">elm-light</a> plugin. I&#8217;ve also been working <a href="http://rundis.github.io/blog/tags/haskellelmspa.html">blogging</a> a bit on
+my journey learning Elm (and a little Haskell). But in November last year I decided I wanted to dive deeper into Elm, trying to make something
+substantial. Ideally something useful, but first and foremost something that would gain me experience in designing an API for use by others in Elm.</p>
+</div>
+<div class="paragraph">
+<p>The Bootstrap wrapper idea has crossed my mind several times in the past, but never materialized. I did some
+research, but couldn&#8217;t find anything out there for Elm that was quite as ambitious as I had in mind.</p>
+</div>
+<div class="sect2">
+<h3 id="_where_to_start">Where to start ?</h3>
+<div class="paragraph">
+<p>I first started looking at the very impressive <a href="https://github.com/debois/elm-mdl">elm-mdl</a> which brings
+awesome Google Material Design support to Elm. I got a ton of inspiration from this library.
+Next up I had a look through <a href="https://github.com/evancz/elm-sortable-table">elm-sortable-table</a>, trying to pick
+up on good advice and experience for tackling the interactive components in Twitter Bootstrap.</p>
+</div>
+<div class="paragraph">
+<p>Hmm okay, let&#8217;s just start and see where it leads me.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_think_code_refactor_ad_infinitum">Think, code, refactor ad infinitum</h3>
+<div class="paragraph">
+<p>So I started with a couple of modules using a record based api for everthing.
+That gave me an API that was pretty type safe and certainly explicit. But it looked horribly verbose
+where in many cases it didn&#8217;t provide enough value and even in some cases put way to many restrictions on what you could do.
+DOH. Back to the drawing board.</p>
+</div>
+<div class="paragraph">
+<p>I know ! Let&#8217;s have 3 list arguments for everything; Options (exposed union types), attributes and children.
+So I refactored almost everything (silly I know), but it didn&#8217;t really feel right with all those lists and I also started
+to get concerned that users would find it confusing with the std Elm Html functions taking 2 lists.
+Time to think and refactor again. After that I started to run into cases where I wanted to compose stuff from
+several modules, well because stuff is related.</p>
+</div>
+<div class="paragraph">
+<p>I&#8217;ll spare you all the details, but I can&#8217;t remember ever having refactored so much code so frequently that I have been during
+this process. Doing this in Elm has been an absolute pleasure. Truly fearless refactoring. The kind that is really hard
+to explain to other peope who haven&#8217;t experienced it. The Elm compiler and I have become the best of buddies during evenings
+and nights the past few months.</p>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p>I can&#8217;t remember ever having refactored so much code so frequently that I have been during
+this process.</p>
+</div>
+</blockquote>
+<div class="attribution">
+&#8212; Magnus Rundberget
+</div>
+</div>
+<div class="sect3">
+<h4 id="_two_list_arguments">Two list arguments</h4>
+<iframe src="https://embed.ellie-app.com/wRt74By5s7a1/0" style="width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;" sandbox="allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+<div class="paragraph">
+<p><em>For most elements functions take two list arguments. The first argument is a list of
+options, the second is a list of child elements. You create options by calling functions defined in the relevant module.</em></p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_pipeline_friendly_composition">Pipeline friendly composition</h4>
+<iframe src="https://embed.ellie-app.com/wRWjrSnkCTa1/1" style="width:100%; height:400px; border:0; border-radius: 3px; overflow:hidden;" sandbox="allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+<div class="paragraph">
+<p><em>Composition of more complex elements is done by calling pipeline friendly functions. This design gives
+a nice balance between type safety and flexibility.</em></p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_reaching_out_to_the_elm_community">Reaching out to the Elm Community</h3>
+<div class="paragraph">
+<p>In the middle/end of January I reached a point where I on one hand was ready to just ship something.
+At the same time I was really unsure about what I had created so I reached out for comments on the elm-slack.
+Turns out that both Mike Onslow and Richard Feldman both have had overlapping ideas about creating a Bootstrap package for Elm.
+We quickly decided to see if we could cooperate in some fashion and decided to hook up on Google Hangout.
+Awesome ! We&#8217;ve had many really interesting discussions on slack especially related to API design. It&#8217;s been really great
+to have someone to talk to about these things (other than my analysis paralysis brain).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_going_forward">Going forward</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>I could have been iterating forever trying to nail the best possible API and/or try to support every bit of Twitter Bootstrap,
+but I&#8217;ve decided it&#8217;s better to just get it out there and get feedback.</p>
+</div>
+<div class="paragraph">
+<p>The API will certainly get breaking changes going forward, but I don&#8217;t see that as such a big negative given
+the semantic versioning guarantees and version diffing support provided by the Elm package manager.</p>
+</div>
+<div class="paragraph">
+<p>I&#8217;m hoping folks find this interesting and useful enough to give it a try and give feedback on their
+experiences. In the mean time I&#8217;m going to work on improving the documentation, test support, API consistency and support for missing
+Twitter Bootstrap features.</p>
+</div>
+</div>
+</div></p>
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'rundis';
+	      var disqus_identifier = 'elm_bootstrap_launch';
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	<hr />
+
+		</div>
+		<div id="push"></div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 Magnus Rundberget
+          <a class="pull-right btn btn-xs" href="https://twitter.com/mrundberget"><i class="fa fa-twitter"></i></a>
+          <a class="pull-right btn btn-xs" href="https://github.com/rundis"><i class="fa fa-github"></i></a>
+          <a class="pull-right btn btn-xs" href="http://no.linkedin.com/in/mrundberget"><i class="fa fa-linkedin"></i></a>
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+  </body>
+</html>
