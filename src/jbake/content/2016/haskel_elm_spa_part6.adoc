@@ -238,7 +238,7 @@ a|
 albumDecoder : JsonD.Decoder Album
 albumDecoder =
 JsonD.object4 Album
-  ("albumId" := JsonD.int) JsonD.int)
+  ("albumId" := JsonD.int)
   ("albumName" := JsonD.string)
   ("albumArtistId" := JsonD.int)
   ("albumTracks" := JsonD.list trackDecoder)
