@@ -76,7 +76,7 @@ to dig deeper into.
 
 == Dates across process boundaries
 Our services unsurpringly uses JSON as the data exchange format. I suppose the defacto standard date format is http://www.iso.org/iso/home/standards/iso8601.htm[ISO-8601],
-it makes sence to use that. It so happens this is the standard format for DateTime when you stringify it.
+it makes sense to use that. It so happens this is the standard format for DateTime when you stringify it.
 
 
 TIP: You might want to look into https://github.com/cognitect/transit-format[transit]. It would probably have been very useful for us :)
