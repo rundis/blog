@@ -1085,7 +1085,7 @@ NOTE: The pattern we used here is just one of many possible ways of solving this
 but the bottom line is that it will most likely be some variation of return values from update functions and/or input params to the view function in the parent/child communucation.
 The days of "magic" juggling with mailboxes are gone. Simple input/output FTW !
 Oh, and finally, for this particular case I think there might be a good case for arguing that perhaps remove/moveup/movedown doesn't really belong in `TrackRow` at all, it might
-actually make more sence to use a decorator-kind of approach instead.
+actually make more sense to use a decorator-kind of approach instead.
 
 
 WARNING: Some flavors of using "global" or dummy effects (using say dummy tasks) for communicating between components have briefly surfaced. Pls think really carefully
